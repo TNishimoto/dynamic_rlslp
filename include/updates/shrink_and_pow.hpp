@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./dynamic_grammar_for_layered_rlslp.hpp"
+#include "../dynamic_rlslp/dynamic_grammar_for_layered_rlslp.hpp"
 #include "../local_parsings/locally_consistent_parsing.hpp"
 #include "../local_parsings/naive_parsing.hpp"
 #include "../local_parsings/mu.hpp"

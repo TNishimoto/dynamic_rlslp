@@ -1,7 +1,7 @@
 #pragma once
-#include "./dynamic_grammar_for_layered_rlslp.hpp"
+#include "../dynamic_rlslp/dynamic_grammar_for_layered_rlslp.hpp"
 #include "./common_sequence_compiler.hpp"
-#include "../static_operations/fast_common_sequence_builder.hpp"
+#include "../rlslp/static_operations/fast_common_sequence_builder.hpp"
 //#include "dynamic_grammar_for_layered_rlslp.hpp"
 //#include "../local_parsings/locally_consistent_parsing.hpp"
 

@@ -26,7 +26,5 @@
 /// @}
 
 #include "./local_parsings/locally_consistent_parsing.hpp"
-#include "./rlslp/dictionary_for_layered_rlslp.hpp"
-#include "./dynamic_dictionary/split_and_concatenation.hpp"
-#include "./dynamic_dictionary/compress.hpp"
+#include "./rlslp/grammar_for_layered_rlslp.hpp"
 #include "./dynamic_string.hpp"

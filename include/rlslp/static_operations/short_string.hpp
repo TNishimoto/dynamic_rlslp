@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include <functional>
 #include <algorithm>
-#include "./run_rule_vector.hpp"
+#include "../rules/all.hpp"
 
 
 namespace dynRLSLP

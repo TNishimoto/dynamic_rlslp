@@ -1,6 +1,6 @@
 #pragma once
 #include <limits>
-#include "../../types/types.hpp"
+#include "../../../types/types.hpp"
 
 namespace dynRLSLP
 {

@@ -5,7 +5,7 @@
 #include <cassert>
 #include <stack>
 #include <list>
-#include "./dictionary_for_layered_rlslp.hpp"
+#include "../components/dictionary_for_layered_rlslp.hpp"
 #include "stool/include/all.hpp"
 
 namespace dynRLSLP

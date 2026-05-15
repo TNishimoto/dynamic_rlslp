@@ -7,9 +7,9 @@
 #include <unordered_set>
 #include <functional>
 #include "stool/include/all.hpp"
-#include "./rlslp_rule_body.hpp"
-#include "./rlslp_rule_info.hpp"
-#include "./run_rule_body.hpp"
+#include "../rules/rlslp_rule_body.hpp"
+#include "../rules/rlslp_rule_info.hpp"
+#include "../rules/run_rule_body.hpp"
 
 namespace dynRLSLP
 {

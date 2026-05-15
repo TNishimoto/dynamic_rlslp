@@ -9,7 +9,7 @@
 #include <list>
 #include <set>
 #include <cassert>
-#include "../types/types.hpp"
+#include "../../types/types.hpp"
 #include "./signature_functions.hpp"
 
 namespace dynRLSLP

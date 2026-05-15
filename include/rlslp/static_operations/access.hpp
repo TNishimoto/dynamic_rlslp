@@ -6,7 +6,7 @@
 #include <stack>
 #include <exception>
 #include <set>
-#include "../rlslp/rlslp_rule_body.hpp"
+#include "../rules/all.hpp"
 #include <cassert>
 #include <random>
 namespace dynRLSLP

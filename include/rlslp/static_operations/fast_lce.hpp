@@ -5,10 +5,10 @@
 #include <stack>
 #include <algorithm>
 #include <limits>
-#include "../rlslp/rlslp_rule_body.hpp"
-#include "../rlslp/run_rule_vector.hpp"
-#include "../rlslp/short_string.hpp"
-#include "../types/types.hpp"
+#include "../rules/all.hpp"
+#include "./run_rule_vector.hpp"
+#include "./short_string.hpp"
+#include "../../types/types.hpp"
 
 namespace dynRLSLP
 {

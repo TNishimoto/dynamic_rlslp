@@ -1,10 +1,8 @@
 #pragma once
 #include "stool/include/all.hpp"
-#include "../../rlslp/run_rule_vector.hpp"
-#include "../../rlslp/nonterminal_less_comparer.hpp"
-#include "./many_parents_manager.hpp"
-#include "./few_parents_manager.hpp"
-#include "./parent_vector_manager.hpp"
+#include "./sub/many_parents_manager.hpp"
+#include "./sub/few_parents_manager.hpp"
+#include "./sub/parent_vector_manager.hpp"
 #include "../../types/types.hpp"
 
 namespace dynRLSLP

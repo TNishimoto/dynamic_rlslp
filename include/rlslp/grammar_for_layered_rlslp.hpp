@@ -6,10 +6,13 @@
 #include <fstream>
 #include <unordered_set>
 #include <functional>
-#include "./random_bit_dictionary.hpp"
-#include "./dictionary_for_layered_rlslp.hpp"
+#include "./components/random_bit_dictionary.hpp"
+#include "./components/dictionary_for_layered_rlslp.hpp"
 #include "../local_parsings/locally_consistent_parsing.hpp"
-#include "../rlslp/nonterminal_less_comparer.hpp"
+#include "./helper/nonterminal_less_comparer.hpp"
+#include "./helper/derivation_tree_visualizer.hpp"
+#include "./static_operations/all.hpp"
+
 
 namespace dynRLSLP
 {

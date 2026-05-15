@@ -6,7 +6,7 @@
 #include <fstream>
 #include <unordered_set>
 #include <functional>
-#include "./run_rule_vector.hpp"
+#include "../rules/rlslp_rule_info.hpp"
 
 namespace dynRLSLP
 {

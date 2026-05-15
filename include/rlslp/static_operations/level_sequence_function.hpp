@@ -5,8 +5,7 @@
 #include <stack>
 #include <algorithm>
 #include <limits>
-#include "../rlslp/rlslp_rule_body.hpp"
-#include "../rlslp/run_rule_vector.hpp"
+#include "../rules/all.hpp"
 
 namespace dynRLSLP
 {

@@ -5,9 +5,8 @@
 #include <cassert>
 #include <stack>
 #include <list>
-#include "../types/types.hpp"
-#include "../local_parsings/mu.hpp"
-#include "../types/types.hpp"
+#include "../../types/types.hpp"
+#include "../../local_parsings/mu.hpp"
 
 namespace dynRLSLP
 {

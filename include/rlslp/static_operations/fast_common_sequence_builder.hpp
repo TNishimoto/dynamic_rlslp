@@ -1,10 +1,8 @@
 #pragma once
-#include "../rlslp/rlslp_rule_body.hpp"
-#include "../rlslp/rlslp_rule_body.hpp"
-#include "../rlslp/run_rule_body.hpp"
-#include "../rlslp/run_rule_vector.hpp"
-#include "../local_parsings/locally_consistent_parsing.hpp"
-#include "../static_operations/level_sequence_function.hpp"
+#include "../rules/all.hpp"
+#include "./run_rule_vector.hpp"
+#include "../../local_parsings/locally_consistent_parsing.hpp"
+#include "./level_sequence_function.hpp"
 
 namespace dynRLSLP
 {

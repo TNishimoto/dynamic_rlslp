@@ -5,9 +5,7 @@
 #include <cassert>
 #include <stack>
 #include <list>
-#include "./rlslp_rule_body.hpp"
-#include "./run_rule_body.hpp"
-
+#include "../rules/all.hpp"
 #include "stool/include/all.hpp"
 
 namespace dynRLSLP

@@ -2,7 +2,7 @@
 #include "stool/include/all.hpp"
 #include "./fast_parent_dictionary.hpp"
 #include "./occurrence_node.hpp"
-#include "./occurrence_pointer.hpp"
+#include "./sub/occurrence_pointer.hpp"
 
 namespace dynRLSLP
 {

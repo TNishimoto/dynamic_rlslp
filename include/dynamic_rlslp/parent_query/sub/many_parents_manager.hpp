@@ -6,8 +6,8 @@
 #include <fstream>
 #include <unordered_set>
 #include <functional>
-#include "../../rlslp/run_rule_vector.hpp"
-#include "../../rlslp/nonterminal_less_comparer.hpp"
+#include "../../../rlslp/static_operations/run_rule_vector.hpp"
+
 
 namespace dynRLSLP
 {

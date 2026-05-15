@@ -1,7 +1,5 @@
 #pragma once
-#include "./rlslp_rule_body.hpp"
-#include "./run_rule_body.hpp"
-#include "./rlslp_rule_info.hpp"
+#include "../rules/all.hpp"
 
 namespace dynRLSLP
 {

@@ -6,14 +6,8 @@
 #include <fstream>
 #include <unordered_set>
 #include <filesystem>
-#include "dynamic_dictionary/dynamic_grammar_for_layered_rlslp.hpp"
-#include "static_operations/access.hpp"
-#include "dynamic_dictionary/compress.hpp"
-#include "dynamic_dictionary/split_and_concatenation.hpp"
-#include "rlslp/derivation_tree_visualizer.hpp"
-#include "static_operations/fast_lce.hpp"
-#include "static_operations/fast_common_sequence_builder.hpp"
-#include "dynamic_dictionary/try_common_sequence_compiler.hpp"
+#include "dynamic_rlslp/dynamic_grammar_for_layered_rlslp.hpp"
+#include "updates/all.hpp"
 
 namespace dynRLSLP
 {
