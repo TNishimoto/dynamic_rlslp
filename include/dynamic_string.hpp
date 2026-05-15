@@ -109,8 +109,8 @@ namespace dynRLSLP
 
                 uint64_t signature = grammar.get_root();
                 RLSLPRuleBody item = small_dic.get_item(signature);
-                auto pair = Access::random_access(item, pos, base_signature_rule_list, base_signature_length_list);
-                return pair.first;
+                auto c = Access::random_access(item, pos, base_signature_rule_list, base_signature_length_list);
+                return c;
             }
         }
 
