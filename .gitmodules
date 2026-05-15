@@ -1,0 +1,3 @@
+[submodule "modules/stool"]
+	path = modules/stool
+	url = git@github.com:TNishimoto/stool.git
