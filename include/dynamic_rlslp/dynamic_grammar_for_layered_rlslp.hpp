@@ -235,14 +235,6 @@ namespace dynRLSLP
 				return this->grammar.signature_count() - this->unused_signatures.size();
 			}
 
-			/**
-			 * @brief Returns the number of active base signatures excluding unused null slots.
-			 * @return Base signature count minus unused signatures.
-			 */
-			int64_t base_signature_count_without_null_signatures() const
-			{
-				return this->base_signature_count() - this->unused_signatures.size();
-			}
 
 			/**
 			 * @brief Return \p true if |D| = 0. Otherwise, return \p false.
@@ -928,7 +920,7 @@ namespace dynRLSLP
 
 				for (uint64_t i = 0; i < rlslp_dictionary.base_signature_count(); i++)
 				{
-					RLSLPRuleBody rule = RLSLPRuleBody::decodeRule(i, base_signature_rule_list);
+					RLSLPRuleBody rule = RLSLPRuleBody::decode_rule(i, base_signature_rule_list);
 					if (rule.get_type() == RLSLPRuleType::Character)
 					{
 						r.character_signature_item_map[rule.A] = i;
@@ -1109,7 +1101,7 @@ namespace dynRLSLP
 				const std::vector<RLSLPRuleBody> &base_signature_rule_list = this->get_base_signature_rule_list();
 				const std::unordered_map<SignatureWithRelativeLevel, uint64_t> &document_counter = this->grammar.get_document_counter();
 
-				assert(RLSLPRuleBody::decodeRule(removed_node_signature, base_signature_rule_list).get_type() != RLSLPRuleType::Null);
+				assert(RLSLPRuleBody::decode_rule(removed_node_signature, base_signature_rule_list).get_type() != RLSLPRuleType::Null);
 
 				auto f = document_counter.find(removed_node_signature);
 
@@ -1125,17 +1117,17 @@ namespace dynRLSLP
 
 					assert(level == this->get_relative_max_level_list()[base_signature]);
 
-					RLSLPRuleBody removed_item = RLSLPRuleBody::decodeRule(removed_node_signature, base_signature_rule_list);
+					RLSLPRuleBody removed_item = RLSLPRuleBody::decode_rule(removed_node_signature, base_signature_rule_list);
 
 					if (removed_item.get_type() == RLSLPRuleType::Pair)
 					{
 
-						assert(RLSLPRuleBody::decodeRule(removed_item.A, base_signature_rule_list).get_type() != RLSLPRuleType::Null);
+						assert(RLSLPRuleBody::decode_rule(removed_item.A, base_signature_rule_list).get_type() != RLSLPRuleType::Null);
 						this->fastParentDictionary.erase_signature(removed_item.A, removed_node_signature, base_signature_rule_list);
 
 						__remove_document_sub(removed_item.A, removed_node_signature, preprocessor);
 
-						RLSLPRuleBody right_item = RLSLPRuleBody::decodeRule(removed_item.B, base_signature_rule_list);
+						RLSLPRuleBody right_item = RLSLPRuleBody::decode_rule(removed_item.B, base_signature_rule_list);
 						if (right_item.get_type() != RLSLPRuleType::Null)
 						{
 							this->fastParentDictionary.erase_signature(removed_item.B, removed_node_signature, base_signature_rule_list);

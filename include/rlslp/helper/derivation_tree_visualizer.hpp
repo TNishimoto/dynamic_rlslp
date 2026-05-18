@@ -67,24 +67,24 @@ namespace dynRLSLP
                     uint64_t height = SignatureFunctions::get_level(sig, base_signature_level_list);
                     if (height > target_level)
                     {
-                        RLSLPRuleType type = (RLSLPRuleType)RLSLPRuleBody::decodeRule(sig, base_signature_rule_list).type;
+                        RLSLPRuleType type = (RLSLPRuleType)RLSLPRuleBody::decode_rule(sig, base_signature_rule_list).type;
                         if (type == RLSLPRuleType::Pair)
                         {
-                            SignatureWithRelativeLevel left = RLSLPRuleBody::decodeRule(sig, base_signature_rule_list).A;
-                            SignatureWithRelativeLevel right = RLSLPRuleBody::decodeRule(sig, base_signature_rule_list).B;
+                            SignatureWithRelativeLevel left = RLSLPRuleBody::decode_rule(sig, base_signature_rule_list).A;
+                            SignatureWithRelativeLevel right = RLSLPRuleBody::decode_rule(sig, base_signature_rule_list).B;
                             tmp.push_back(left);
                             tmp.push_back(right);
                         }
                         else if (type == RLSLPRuleType::Power)
                         {
-                            for (int64_t i = 0; i < RLSLPRuleBody::decodeRule(sig, base_signature_rule_list).B; i++)
+                            for (int64_t i = 0; i < RLSLPRuleBody::decode_rule(sig, base_signature_rule_list).B; i++)
                             {
-                                tmp.push_back(RLSLPRuleBody::decodeRule(sig, base_signature_rule_list).A);
+                                tmp.push_back(RLSLPRuleBody::decode_rule(sig, base_signature_rule_list).A);
                             }
                         }
                         else if (type == RLSLPRuleType::Signature)
                         {
-                            tmp.push_back(RLSLPRuleBody::decodeRule(sig, base_signature_rule_list).A);
+                            tmp.push_back(RLSLPRuleBody::decode_rule(sig, base_signature_rule_list).A);
                         }
                         else
                         {
@@ -171,7 +171,7 @@ namespace dynRLSLP
                 uint64_t max_length = 0;
                 for (uint64_t i = 0; i < next_items.size(); i++)
                 {
-                    RLSLPRuleBody body = RLSLPRuleBody::decodeRule(next_items[i], base_signature_rule_list);
+                    RLSLPRuleBody body = RLSLPRuleBody::decode_rule(next_items[i], base_signature_rule_list);
                     assert(body.get_type() == RLSLPRuleType::Character);
                     char c = (char)body.A;
                     output_strings[i].push_back(c);

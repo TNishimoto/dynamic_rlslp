@@ -14,14 +14,21 @@
 
 namespace dynRLSLP
 {
-
+	/**
+	 * @brief A representation of an RLSLP rule body.
+	 * @ingroup RLSLPClasses
+	 */
 	class RLSLPRuleBody
 	{
 
 	public:
+		/** @brief First operand of the rule body. */
 		SignatureWithRelativeLevel A;
+		/** @brief Second operand of the rule body. */
 		SignatureWithRelativeLevel B;
-		uint8_t type;
+
+		/** @brief Type of the rule body. */
+		RLSLPRuleType type;
 		/**
 		 * @brief Default constructor.
 		 */
@@ -34,125 +41,13 @@ namespace dynRLSLP
 		 * @param b Second operand (right child, exponent, or sentinel).
 		 * @param type_ Rule type tag.
 		 */
-		RLSLPRuleBody(SignatureWithRelativeLevel a, SignatureWithRelativeLevel b, RLSLPRuleType type_) : A(a), B(b), type((uint8_t)type_)
+		RLSLPRuleBody(SignatureWithRelativeLevel a, SignatureWithRelativeLevel b, RLSLPRuleType type_) : A(a), B(b), type(type_)
 		{
-		}
-		// RLSLPRuleBody &operator=(const RLSLPRuleBody &rhs) = default;
-
-		/**
-		 * @brief Create a terminal (character) rule body.
-		 * @param c Character code stored as a signature-with-level value.
-		 * @return Rule body of type Character.
-		 */
-		static RLSLPRuleBody create_char_item(SignatureWithRelativeLevel c)
-		{
-			return RLSLPRuleBody(c, -1, RLSLPRuleType::Character);
-		}
-		/**
-		 * @brief Create a pair rule body.
-		 * @param left Left nonterminal or operand.
-		 * @param right Right nonterminal or operand.
-		 * @return Rule body of type Pair.
-		 */
-		static RLSLPRuleBody create_pair_item(SignatureWithRelativeLevel left, SignatureWithRelativeLevel right)
-		{
-			return RLSLPRuleBody(left, right, RLSLPRuleType::Pair);
-		}
-		/**
-		 * @brief Create a unary signature (alias) rule body.
-		 * @param single Child signature referenced at a higher relative level.
-		 * @return Rule body of type Signature.
-		 */
-		static RLSLPRuleBody create_signature_item(SignatureWithRelativeLevel single)
-		{
-			return RLSLPRuleBody(single, INT64_MAX, RLSLPRuleType::Signature);
-		}
-		/**
-		 * @brief Decode an encoded signature to its rule body.
-		 * @param sig Encoded signature with relative level.
-		 * @param base_signature_rule_list Base-signature rule list (D).
-		 * @return Decoded rule body at the given level, or the base rule when level is zero.
-		 */
-		static RLSLPRuleBody decodeRule(SignatureWithRelativeLevel sig, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
-		{
-			int64_t base_sig = SignatureFunctions::get_base_signature(sig);
-			int64_t level = SignatureFunctions::get_relative_level(sig);
-			if (level > 0)
-			{
-				return RLSLPRuleBody::create_signature_item(SignatureFunctions::get_signature(level - 1, base_sig));
-			}
-			else
-			{
-				return base_signature_rule_list[base_sig];
-			}
-		}
-		/**
-		 * @brief Return a const reference to the rule body of a base signature.
-		 * @param sig Base signature index.
-		 * @param base_signature_rule_list Base-signature rule list (D).
-		 * @return Const reference to the rule body at @p sig.
-		 */
-		static const RLSLPRuleBody &refer_body_of_base_signature(BaseSignature sig, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
-		{
-			return base_signature_rule_list[sig];
-		}
-
-		
-		/**
-		 * @brief Create a pair rule body from a single operand (legacy overload).
-		 * @param single Child signature for a signature rule.
-		 * @return Rule body of type Pair with unary operand.
-		 */
-		static RLSLPRuleBody create_pair_item(SignatureWithRelativeLevel single)
-		{
-			return RLSLPRuleBody(single, INT64_MAX, RLSLPRuleType::Pair);
-		}
-		
-
-		/**
-		 * @brief Create a power (run) rule body X^e.
-		 * @param number Encoded signature of the repeated substring.
-		 * @param power Exponent (repeat count).
-		 * @return Rule body of type Power.
-		 */
-		static RLSLPRuleBody create_run_rule_body(SignatureWithRelativeLevel number, SignatureWithRelativeLevel power)
-		{
-			return RLSLPRuleBody(number, power, RLSLPRuleType::Power);
-		}
-		/**
-		 * @brief Reconstruct a rule body from serialized binary operands.
-		 * @param a First operand (left child, character, or base signature).
-		 * @param b Second operand; negative denotes power, INT64_MAX denotes character.
-		 * @return Character, pair, or power rule body inferred from @p b.
-		 */
-		static RLSLPRuleBody create_item_from_binary(SignatureWithRelativeLevel a, SignatureWithRelativeLevel b)
-		{
-			if (b < 0)
-			{
-				return RLSLPRuleBody::create_run_rule_body(a, -b);
-			}
-			else if (b == std::numeric_limits<int64_t>::max())
-			{
-				return RLSLPRuleBody::create_char_item(a);
-			}
-			else
-			{
-				return RLSLPRuleBody::create_pair_item(a, b);
-			}
-		}
-		/**
-		 * @brief Create a null (empty) rule body.
-		 * @return Rule body of type Null.
-		 */
-		static RLSLPRuleBody create_null_item()
-		{
-			return RLSLPRuleBody(0, 0, RLSLPRuleType::Null);
 		}
 
 		/**
 		 * @brief Return the string length represented by this rule body.
 		 * @param base_signature_length_list Base-signature length list (L).
-		 * @return Expanded string length of this rule.
 		 */
 		uint64_t get_length(const std::vector<uint64_t> &base_signature_length_list) const
 		{
@@ -177,18 +72,18 @@ namespace dynRLSLP
 				return 0;
 			}
 		}
+
 		/**
 		 * @brief Return a hash value for the rule body.
-		 * @return Hash combining type and operands for use in containers.
 		 */
 		uint64_t get_hash() const
 		{
 			int64_t c = this->A < this->B ? 3 : 4;
-			return (this->type + 1) * (this->A * this->B + this->A + this->B) * c;
+			return ((int64_t)this->type + 1) * (this->A * this->B + this->A + this->B) * c;
 		}
+
 		/**
 		 * @brief Return the rule type tag.
-		 * @return Rule type as RLSLPRuleType.
 		 */
 		RLSLPRuleType get_type() const
 		{
@@ -198,8 +93,6 @@ namespace dynRLSLP
 		/**
 		 * @brief Split a power rule X^e into left factor X and right factor X^(e-1).
 		 * @param itemList Base-signature rule list (D).
-		 * @return Pair (X, X^(e-1)) when e > 2, or (X, X) when e == 2.
-		 * @throws std::logic_error if exponent is less than 2.
 		 */
 		std::pair<const RLSLPRuleBody, const RLSLPRuleBody> break_power(const std::vector<RLSLPRuleBody> &itemList) const
 		{
@@ -221,7 +114,6 @@ namespace dynRLSLP
 
 		/**
 		 * @brief Return a compact string description of the rule.
-		 * @return Human-readable summary of operands and type.
 		 */
 		std::string get_info() const
 		{
@@ -308,9 +200,8 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return the derivation-tree height using a height list.
-		 * @param heightList Per-signature height list.
-		 * @return Derivation-tree height of the string represented by this rule.
+		 * @brief Return the level of this rule body.
+		 * @param heightList Base-signature level list (H).
 		 */
 		uint64_t get_height(const std::vector<uint16_t> &heightList) const
 		{
@@ -335,8 +226,9 @@ namespace dynRLSLP
 				return 0;
 			}
 		}
+
 		/**
-		 * @brief Append the expanded string of this rule to an output container.
+		 * @brief Return the string derived by this rule body.
 		 * @tparam OUTPUT_VEC_TYPE Container type supporting push_back (default std::vector<uint8_t>).
 		 * @param itemList Base-signature rule list (D).
 		 * @param output Output container; expanded bytes are appended in place.
@@ -380,6 +272,17 @@ namespace dynRLSLP
 		}
 
 		/**
+		 * @brief Return the string derived by this rule body.
+		 * @param base_signature_rule_list Base-signature rule list (D).
+		 */
+		std::string decompress2(const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
+		{
+			std::string r;
+			this->decompress(base_signature_rule_list, r);
+			return r;
+		}
+
+		/**
 		 * @brief Lexicographic comparison for ordering rule bodies.
 		 * @param item Other rule body.
 		 * @return True if this body is less than @p item (type, then A, then B).
@@ -413,23 +316,77 @@ namespace dynRLSLP
 		}
 
 		/**
+		 * @brief Create a character rule body representing a given character.
+		 */
+		static RLSLPRuleBody create_char_item(int64_t c)
+		{
+			return RLSLPRuleBody(c, -1, RLSLPRuleType::Character);
+		}
+		/**
+		 * @brief Create a pair rule body representing a given pair of signatures.
+		 */
+		static RLSLPRuleBody create_pair_item(SignatureWithRelativeLevel left, SignatureWithRelativeLevel right)
+		{
+			return RLSLPRuleBody(left, right, RLSLPRuleType::Pair);
+		}
+		/**
+		 * @brief Create a run rule body X^k.
+		 */
+		static RLSLPRuleBody create_run_rule_body(SignatureWithRelativeLevel X, SignatureWithRelativeLevel k)
+		{
+			return RLSLPRuleBody(X, k, RLSLPRuleType::Power);
+		}
+
+		/**
+		 * @brief Create a unary signature representing a given signature.
+		 */
+		static RLSLPRuleBody create_signature_item(SignatureWithRelativeLevel single)
+		{
+			return RLSLPRuleBody(single, INT64_MAX, RLSLPRuleType::Signature);
+		}
+
+		/**
+		 * @brief Create a null (empty) rule body.
+		 */
+		static RLSLPRuleBody create_null_item()
+		{
+			return RLSLPRuleBody(0, 0, RLSLPRuleType::Null);
+		}
+
+		/**
+		 * @brief Return the RLSLP rule body representing a given signature.
+		 * @param base_signature_rule_list Base-signature rule list (D).
+		 */
+		static RLSLPRuleBody decode_rule(SignatureWithRelativeLevel sig, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
+		{
+			int64_t base_sig = SignatureFunctions::get_base_signature(sig);
+			int64_t level = SignatureFunctions::get_relative_level(sig);
+			if (level > 0)
+			{
+				return RLSLPRuleBody::create_signature_item(SignatureFunctions::get_signature(level - 1, base_sig));
+			}
+			else
+			{
+				return base_signature_rule_list[base_sig];
+			}
+		}
+
+		/**
+		 * @brief Return a const reference to the rule body of a given base signature.
+		 * @param base_signature_rule_list Base-signature rule list (D).
+		 */
+		static const RLSLPRuleBody &refer_body_of_base_signature(BaseSignature sig, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
+		{
+			return base_signature_rule_list[sig];
+		}
+
+		/**
 		 * @brief Return the serialized size in bytes of a rule body.
 		 * @return Size in bytes of the on-disk/binary representation.
 		 */
 		static uint64_t get_byte()
 		{
 			return (2 * sizeof(SignatureWithRelativeLevel)) + sizeof(unsigned char);
-		}
-		/**
-		 * @brief Expand this rule to the original plaintext string.
-		 * @param base_signature_rule_list Base-signature rule list (D).
-		 * @return Decompressed string represented by this rule.
-		 */
-		std::string to_original_text_str(const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
-		{
-			std::string r;
-			this->decompress(base_signature_rule_list, r);
-			return r;
 		}
 	};
 

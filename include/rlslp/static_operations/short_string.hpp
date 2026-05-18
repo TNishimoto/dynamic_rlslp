@@ -406,8 +406,8 @@ namespace dynRLSLP
              */
             static bool verify_left_short_string(SignatureWithRelativeLevel signature, uint8_t alphabet_bit_size, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t> &leftShortStringList, 
                 const std::unordered_map<int64_t, uint64_t> &character_id_map){
-                RLSLPRuleBody item = RLSLPRuleBody::decodeRule(signature, base_signature_rule_list);
-                std::string original_string = item.to_original_text_str(base_signature_rule_list);
+                RLSLPRuleBody item = RLSLPRuleBody::decode_rule(signature, base_signature_rule_list);
+                std::string original_string = item.decompress2(base_signature_rule_list);
                 uint64_t length = SignatureFunctions::get_length(signature, base_signature_length_list);
                 uint64_t minLen = std::min<uint64_t>(length, 64ULL / alphabet_bit_size);
 
@@ -419,7 +419,7 @@ namespace dynRLSLP
                 
                 if(short_string_str != prefix){
                     std::cout << std::endl;
-                    RLSLPRuleBody item = RLSLPRuleBody::decodeRule(signature, base_signature_rule_list);
+                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(signature, base_signature_rule_list);
                     if(item.get_type() == RLSLPRuleType::Pair){
                         SignatureWithRelativeLevel left_signature = item.A;
                         SignatureWithRelativeLevel right_signature = item.B;

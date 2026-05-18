@@ -361,7 +361,7 @@ namespace dynRLSLP
                 const std::vector<RLSLPRuleBody> &base_signature_rule_list = this->dynamic_grammar.get_base_signature_rule_list();
                 const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
                 SignatureWithRelativeLevel root = grammar.get_root();
-                RLSLPRuleBody rootBody = RLSLPRuleBody::decodeRule(root, base_signature_rule_list);
+                RLSLPRuleBody rootBody = RLSLPRuleBody::decode_rule(root, base_signature_rule_list);
                 rootBody.decompress(base_signature_rule_list, text);
                 return text;
             }
@@ -649,7 +649,7 @@ namespace dynRLSLP
 
             for (BaseSignature i = 0; i < (int64_t)this->dynamic_grammar.base_signature_count(); i++)
             {
-                RLSLPRuleBody item = RLSLPRuleBody::decodeRule(i, base_signature_rule_list);
+                RLSLPRuleBody item = RLSLPRuleBody::decode_rule(i, base_signature_rule_list);
                 if (item.get_type() != RLSLPRuleType::Null)
                 {
                     TemporaryOccurrence occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_signature_using_limited_depth(i, fast_parent_dictionary, base_signature_rule_list, base_signature_length_list, DynamicString::ANCESTOR_CACHE_DEPTH, 0);
@@ -1155,7 +1155,7 @@ namespace dynRLSLP
                 BaseSignature base_signature = SignatureFunctions::get_base_signature(sig);
                 if (sig == base_signature)
                 {
-                    RLSLPRuleBody item = RLSLPRuleBody::decodeRule(sig, base_signature_rule_list);
+                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, base_signature_rule_list);
 
                     while ((uint64_t)this->leftShortStringList.size() <= (uint64_t)sig)
                     {
@@ -1216,7 +1216,7 @@ namespace dynRLSLP
                 for (uint64_t i = 0; i < changed_signatures_list.size(); i++)
                 {
                     BaseSignature sig = changed_signatures_list[i];
-                    RLSLPRuleBody item = RLSLPRuleBody::decodeRule(sig, base_signature_rule_list);
+                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, base_signature_rule_list);
                     if (item.get_type() != RLSLPRuleType::Null)
                     {
                         if ((uint64_t)this->ancestorCacheList.size() <= (uint64_t)sig)
@@ -1256,7 +1256,7 @@ namespace dynRLSLP
             {
                 changed_signatures.insert(base_signature);
 
-                RLSLPRuleBody item = RLSLPRuleBody::decodeRule(sig, base_signature_rule_list);
+                RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, base_signature_rule_list);
                 if (item.get_type() == RLSLPRuleType::Pair)
                 {
                     BaseSignature left_base_signature = SignatureFunctions::get_base_signature(item.A);
@@ -1308,7 +1308,7 @@ namespace dynRLSLP
                 {
                     SignatureWithRelativeLevel sig = signatureStack.top();
                     signatureStack.pop();
-                    RLSLPRuleBody item = RLSLPRuleBody::decodeRule(sig, base_signature_rule_list);
+                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, base_signature_rule_list);
                     if (!flags[sig])
                     {
                         if (item.get_type() == RLSLPRuleType::Pair)

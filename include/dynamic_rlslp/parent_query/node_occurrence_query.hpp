@@ -17,7 +17,7 @@ namespace dynRLSLP
              * @brief Finds a type-2 primary occurrence by walking up a single-ancestor chain.
              * @param sig Base signature to locate.
              * @param fastParentDictionary Parent dictionary of the grammar.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_rule_list Base-signature rule list (D).
              * @param base_signature_length_list Derived string lengths indexed by base signature.
              * @return Pair of the primary temporary occurrence and the walk depth.
              */
@@ -73,7 +73,7 @@ namespace dynRLSLP
              * @brief Resolves type-2 secondary occurrences, optionally expanding through type-1 parents.
              * @param sig Base signature to locate.
              * @param fastParentDictionary Parent dictionary of the grammar.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_rule_list Base-signature rule list (D).
              * @param base_signature_length_list Derived string lengths indexed by base signature.
              * @param occCacheList Optional per-base-signature occurrence cache; nullptr disables the cache.
              * @param output Stack receiving expanded temporary occurrences when multiple parents exist.
@@ -153,7 +153,7 @@ namespace dynRLSLP
              * @brief Enumerates all leaf occurrence positions by expanding type-1 primary occurrences.
              * @param input Seed temporary occurrences to start enumeration from.
              * @param fastParentDictionary Parent dictionary of the grammar.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_rule_list Base-signature rule list (D).
              * @param base_signature_length_list Derived string lengths indexed by base signature.
              * @return All absolute occurrence positions.
              */
@@ -198,9 +198,9 @@ namespace dynRLSLP
              * @brief Enumerates occurrences level-by-level using extra memory for grouping by signature level.
              * @param input Seed temporary occurrences to start enumeration from.
              * @param fastParentDictionary Parent dictionary of the grammar.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
-             * @param base_signature_length_list Derived string lengths indexed by base signature.
-             * @param base_signature_level_list Height levels indexed by base signature.
+             * @param base_signature_rule_list Base-signature rule list (D).
+             * @param base_signature_length_list Base-signature length list (L).
+             * @param base_signature_level_list Base-signature level list (H).
              * @param tree_max_level Maximum level in the derivation forest.
              * @param occCacheList Optional per-base-signature occurrence cache; nullptr disables the cache.
              * @return All absolute occurrence positions.

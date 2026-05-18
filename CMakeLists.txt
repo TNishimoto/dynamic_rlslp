@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.21)
-project(signature_encoding CXX)
+project(dynamic_rlslp CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(CPP_STATIC)
-set(CMAKE_CXX_FLAGS "-m64  -D_INT128 -Wall -Wextra -static")
+set(CMAKE_CXX_FLAGS "-m64 -Wall -Wextra -static")
 else(CPP_STATIC)
-set(CMAKE_CXX_FLAGS "-m64  -D_INT128 -Wall -Wextra")
+set(CMAKE_CXX_FLAGS "-m64 -Wall -Wextra")
 endif(CPP_STATIC)
 
 

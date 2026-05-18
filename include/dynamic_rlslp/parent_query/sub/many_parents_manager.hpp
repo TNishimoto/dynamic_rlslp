@@ -220,7 +220,7 @@ namespace dynRLSLP
                     }else{
                         assert(this->tertiary_parent_list_[0].size() == 1);
                         SignatureWithRelativeLevel parent = this->tertiary_parent_list_[0][0];
-                        RLSLPRuleBody parent_item = RLSLPRuleBody::decodeRule(parent, base_signature_rule_list);
+                        RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, base_signature_rule_list);
                         return parent_item.get_type() == RLSLPRuleType::Pair;    
                     }
                 }else{
@@ -257,7 +257,7 @@ namespace dynRLSLP
              * @brief Pushes type-1 primary occurrences for all parents onto the stack.
              * @param sig Base signature of the queried nonterminal.
              * @param position_offset Position offset of the occurrence within its parent.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_rule_list Base-signature rule list (D).
              * @param base_signature_length_list Derived string lengths indexed by base signature.
              * @param output Stack receiving temporary occurrences to expand further.
              * @return True if at least one parent occurrence was pushed.
@@ -332,7 +332,7 @@ namespace dynRLSLP
              * @param right_child Right child signature.
              * @param quaternary_key Quaternary lookup key for hash-map parents.
              * @param level_diff_list_ Shared relative-level index table.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_rule_list Base-signature rule list (D).
              * @return Parent signature if found, otherwise -1.
              */
             int64_t get_pair_signature(uint16_t level_diff, uint16_t list_offset, SignatureWithRelativeLevel left_child, SignatureWithRelativeLevel right_child, QuaternaryKey quaternary_key, 
@@ -373,7 +373,7 @@ namespace dynRLSLP
              * @param power Exponent of the power rule.
              * @param quaternary_key Quaternary lookup key for hash-map parents.
              * @param level_diff_list_ Shared relative-level index table.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_rule_list Base-signature rule list (D).
              * @return Parent signature if found, otherwise -1.
              */
             int64_t get_power_signature(uint16_t level_diff, uint16_t list_offset, SignatureWithRelativeLevel child, uint64_t power, QuaternaryKey quaternary_key, const std::vector<uint16_t> &level_diff_list_, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
@@ -832,7 +832,7 @@ namespace dynRLSLP
              * @param sig Base signature of the child occurrence.
              * @param position_offset Position offset of the occurrence within its parent.
              * @param parent Base signature of the parent rule.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_rule_list Base-signature rule list (D).
              * @param base_signature_length_list Derived string lengths indexed by base signature.
              * @param output Stack receiving the temporary occurrence.
              */
@@ -864,15 +864,8 @@ namespace dynRLSLP
                     throw std::runtime_error("get_all_important_occurrences: unknown rule type");
                 }
             }
-            /**
-             * @brief Returns one important occurrence of a child within a parent rule.
-             * @param sig Base signature of the child occurrence.
-             * @param position_offset Position offset of the occurrence within its parent.
-             * @param parent Base signature of the parent rule.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
-             * @param base_signature_length_list Derived string lengths indexed by base signature.
-             * @return A single temporary occurrence for the child within the parent.
-             */
+
+            /*
             static TemporaryOccurrence take_any_important_occurrence_sub(BaseSignature sig, int64_t position_offset, BaseSignature parent,
                                                           const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list)
             {
@@ -904,11 +897,13 @@ namespace dynRLSLP
                     throw std::runtime_error("get_all_important_occurrences: unknown rule type");
                 }
             }
+            */
+
             /**
              * @brief Determines which child slot of a parent rule contains the given child.
              * @param child Child signature to locate.
              * @param parent Base signature of the parent rule.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_rule_list Base-signature rule list (D).
              * @param useBaseSignature True to compare base signatures only; false for full signature equality.
              * @return ChildType indicating left, right, power, signature child, or none.
              */
@@ -977,7 +972,7 @@ namespace dynRLSLP
              * @brief Returns the start position of a child occurrence within the string derived from a parent.
              * @param child Child signature to locate.
              * @param parent Base signature of the parent rule.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_rule_list Base-signature rule list (D).
              * @param base_signature_length_list Derived string lengths indexed by base signature.
              * @param useBaseSignature True to compare base signatures only; false for full signature equality.
              * @return Position offset of the child within the parent's derived string.

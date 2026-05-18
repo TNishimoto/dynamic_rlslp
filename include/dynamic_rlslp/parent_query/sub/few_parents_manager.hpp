@@ -70,11 +70,7 @@ namespace dynRLSLP
                 return this->count_;
             }
 
-            /**
-             * @brief Tests whether exactly one pair parent is stored with no overflow manager.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
-             * @return True if a unique pair parent exists at the secondary tier only.
-             */
+            /*
             bool has_single_parent(const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
             {
                 if (this->secondary_parent_list_.size() >= 2)
@@ -84,7 +80,7 @@ namespace dynRLSLP
                 else if (this->secondary_parent_list_.size() == 1)
                 {
                     SignatureWithRelativeLevel parent = this->secondary_parent_list_[0];
-                    RLSLPRuleBody parent_item = RLSLPRuleBody::decodeRule(parent, base_signature_rule_list);
+                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, base_signature_rule_list);
                     if (parent_item.get_type() == RLSLPRuleType::Pair)
                     {
                         return this->many_parents_manager_ == nullptr;
@@ -99,6 +95,7 @@ namespace dynRLSLP
                     return false;
                 }
             }
+            */
 
             //}@
 
@@ -112,7 +109,7 @@ namespace dynRLSLP
              * @brief Pushes type-1 primary occurrences for all parents onto the stack.
              * @param sig Base signature of the queried nonterminal.
              * @param position_offset Position offset of the occurrence within its parent.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_rule_list Base-signature rule list (D).
              * @param base_signature_length_list Derived string lengths indexed by base signature.
              * @param output Stack receiving temporary occurrences to expand further.
              * @return True if at least one parent occurrence was pushed.
@@ -155,7 +152,7 @@ namespace dynRLSLP
              * @param left_sig Left child signature.
              * @param right_sig Right child signature.
              * @param quaternary_key Quaternary lookup key for overflow parents.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_rule_list Base-signature rule list (D).
              * @return Parent signature if found, otherwise -1.
              */
             int64_t get_pair_signature(SignatureWithRelativeLevel left_sig, SignatureWithRelativeLevel right_sig, QuaternaryKey quaternary_key, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
@@ -165,7 +162,7 @@ namespace dynRLSLP
                 if (secondary_index != -1)
                 {
                     int64_t parent = this->secondary_parent_list_[secondary_index];
-                    RLSLPRuleBody parent_item = RLSLPRuleBody::decodeRule(parent, base_signature_rule_list);
+                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, base_signature_rule_list);
                     if (parent_item.get_type() == RLSLPRuleType::Pair && parent_item.A == left_sig && parent_item.B == right_sig)
                     {
                         return parent;
@@ -182,7 +179,7 @@ namespace dynRLSLP
              * @param child_sig Child signature.
              * @param power Exponent of the power rule.
              * @param quaternary_key Quaternary lookup key for overflow parents.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_rule_list Base-signature rule list (D).
              * @return Parent signature if found, otherwise -1.
              */
             int64_t get_power_signature(SignatureWithRelativeLevel child_sig, uint64_t power, QuaternaryKey quaternary_key, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
@@ -192,7 +189,7 @@ namespace dynRLSLP
                 if (secondary_index != -1)
                 {
                     int64_t parent = this->secondary_parent_list_[secondary_index];
-                    RLSLPRuleBody parent_item = RLSLPRuleBody::decodeRule(parent, base_signature_rule_list);
+                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, base_signature_rule_list);
                     if (parent_item.get_type() == RLSLPRuleType::Power && parent_item.A == child_sig && (uint64_t)parent_item.B == power)
                     {
                         return parent;
@@ -371,12 +368,12 @@ namespace dynRLSLP
              * @brief Populates this manager from a vector of parent signatures.
              * @param descendant Base signature of the child nonterminal.
              * @param parents Initial parent signatures to register.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_rule_list Base-signature rule list (D).
              * @param is_restricted_recompression_mode True when restricted block compression is active.
              */
             void initialize(BaseSignature descendant, const std::vector<SignatureWithRelativeLevel> &parents, const std::vector<RLSLPRuleBody> &base_signature_rule_list, bool is_restricted_recompression_mode) {
                 for(auto parent : parents){
-                    RLSLPRuleBody parent_item = RLSLPRuleBody::decodeRule(parent, base_signature_rule_list);
+                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, base_signature_rule_list);
                     assert(parent_item.get_type() == RLSLPRuleType::Pair || parent_item.get_type() == RLSLPRuleType::Power);
                     ChildType child_type = ManyParentsManager::get_child_type(descendant, parent, base_signature_rule_list, true);
                     SignatureWithRelativeLevel child;
@@ -449,10 +446,8 @@ namespace dynRLSLP
                     return ManyParentsManager::EMPTY_FLAG;
                 }
             }
-            /**
-             * @brief Removes and returns the parent at the highest stored relative level.
-             * @return Pair of relative level and parent signature, or (0, EMPTY_FLAG) if empty.
-             */
+
+            /*
             std::pair<uint16_t, SignatureWithRelativeLevel> take_any_parent_with_diff_level()
             {
                 if (this->is_empty())
@@ -467,6 +462,7 @@ namespace dynRLSLP
                     return {last_level, any_parent};
                 }
             }
+            */
 
             /**
              * @brief Removes one parent at the given relative level.

@@ -30,8 +30,8 @@ namespace dynRLSLP
             assert(base_signature_rule_list != nullptr);
             // assert(left < (int64_t)itemList->size());
             // assert(right < (int64_t)itemList->size());
-            RLSLPRuleBody left_item = RLSLPRuleBody::decodeRule(left, *base_signature_rule_list);
-            RLSLPRuleBody right_item = RLSLPRuleBody::decodeRule(right, *base_signature_rule_list);
+            RLSLPRuleBody left_item = RLSLPRuleBody::decode_rule(left, *base_signature_rule_list);
+            RLSLPRuleBody right_item = RLSLPRuleBody::decode_rule(right, *base_signature_rule_list);
             return left_item < right_item;
         }
         /**
@@ -44,7 +44,7 @@ namespace dynRLSLP
         {
             assert(base_signature_rule_list != nullptr);
 
-            RLSLPRuleBody left_item = RLSLPRuleBody::decodeRule(left, *base_signature_rule_list);
+            RLSLPRuleBody left_item = RLSLPRuleBody::decode_rule(left, *base_signature_rule_list);
             return left_item < right;
         }
         /**
@@ -56,7 +56,7 @@ namespace dynRLSLP
         bool operator()(const RLSLPRuleBody left, const int64_t right) const
         {
             assert(base_signature_rule_list != nullptr);
-            RLSLPRuleBody right_item = RLSLPRuleBody::decodeRule(right, *base_signature_rule_list);
+            RLSLPRuleBody right_item = RLSLPRuleBody::decode_rule(right, *base_signature_rule_list);
             return left < right_item;
         }
     };

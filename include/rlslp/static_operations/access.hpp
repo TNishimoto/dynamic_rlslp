@@ -13,22 +13,12 @@ namespace dynRLSLP
 {
 
 	/**
-	 * @brief Static string access (random access, prefix, suffix) on RLSLP rule bodies.
+	 * @brief A class for accessing the string represented by RLSLP.
 	 * @ingroup StaticOperationsClasses
 	 */
 	class Access
 	{
 		private:
-		/**
-		 * @brief Fill the first @p len characters of a rule body into an output array (recursive helper).
-		 * @tparam ARRAY Output container type supporting indexed assignment.
-		 * @param item Rule body whose string is read left-to-right.
-		 * @param current_pos Next write index in @p output.
-		 * @param len Number of characters to collect.
-		 * @param base_signature_rule_list Base-signature rule list (D).
-		 * @param output Output array; prefix is written starting at index 0.
-		 * @return Index after the last written character, or @p len when complete.
-		 */
 		template <typename ARRAY>
 		static int64_t get_prefix(RLSLPRuleBody item, int64_t current_pos, uint64_t len, const std::vector<RLSLPRuleBody> &base_signature_rule_list, ARRAY &output)
 		{
@@ -39,7 +29,7 @@ namespace dynRLSLP
 			}
 			else if (item.get_type() == RLSLPRuleType::Pair)
 			{
-				RLSLPRuleBody left = RLSLPRuleBody::decodeRule(item.A, base_signature_rule_list);
+				RLSLPRuleBody left = RLSLPRuleBody::decode_rule(item.A, base_signature_rule_list);
 
 				current_pos = Access::get_prefix(left, current_pos, len, base_signature_rule_list, output);
 				if (current_pos == (int64_t)len)
@@ -48,7 +38,7 @@ namespace dynRLSLP
 				}
 				else
 				{
-					RLSLPRuleBody right = RLSLPRuleBody::decodeRule(item.B, base_signature_rule_list);
+					RLSLPRuleBody right = RLSLPRuleBody::decode_rule(item.B, base_signature_rule_list);
 					current_pos = Access::get_prefix(right, current_pos, len, base_signature_rule_list, output);
 					return current_pos;
 				}
@@ -57,7 +47,7 @@ namespace dynRLSLP
 			{
 				for (int64_t i = 0; i < item.B; i++)
 				{
-					current_pos = Access::get_prefix(RLSLPRuleBody::decodeRule(item.A, base_signature_rule_list), current_pos, len, base_signature_rule_list, output);
+					current_pos = Access::get_prefix(RLSLPRuleBody::decode_rule(item.A, base_signature_rule_list), current_pos, len, base_signature_rule_list, output);
 					if (current_pos == (int64_t)len)
 					{
 						return current_pos;
@@ -67,7 +57,7 @@ namespace dynRLSLP
 			}
 			else if (item.get_type() == RLSLPRuleType::Signature)
 			{
-				return Access::get_prefix(RLSLPRuleBody::decodeRule(item.A, base_signature_rule_list), current_pos, len, base_signature_rule_list, output);
+				return Access::get_prefix(RLSLPRuleBody::decode_rule(item.A, base_signature_rule_list), current_pos, len, base_signature_rule_list, output);
 			}
 			else
 			{
@@ -76,16 +66,6 @@ namespace dynRLSLP
 		}
 
 		template <typename ARRAY>
-		/**
-		 * @brief Fill the last @p len characters of a rule body into an output array (recursive helper).
-		 * @tparam ARRAY Output container type supporting indexed assignment.
-		 * @param item Rule body whose string is read right-to-left.
-		 * @param current_pos Next write index in @p output (counts down from len-1).
-		 * @param len Number of characters to collect.
-		 * @param base_signature_rule_list Base-signature rule list (D).
-		 * @param output Output array; suffix is written ending at index len-1.
-		 * @return Index after the last written character, or -1 when complete.
-		 */
 		static int64_t get_suffix(RLSLPRuleBody item, int64_t current_pos, uint64_t len, const std::vector<RLSLPRuleBody> &base_signature_rule_list, ARRAY &output)
 		{
 			if (item.get_type() == RLSLPRuleType::Character)
@@ -95,7 +75,7 @@ namespace dynRLSLP
 			}
 			else if (item.get_type() == RLSLPRuleType::Pair)
 			{
-				RLSLPRuleBody right = RLSLPRuleBody::decodeRule(item.B, base_signature_rule_list);
+				RLSLPRuleBody right = RLSLPRuleBody::decode_rule(item.B, base_signature_rule_list);
 
 				current_pos = Access::get_suffix(right, current_pos, len, base_signature_rule_list, output);
 				if (current_pos == -1)
@@ -104,7 +84,7 @@ namespace dynRLSLP
 				}
 				else
 				{
-					RLSLPRuleBody left = RLSLPRuleBody::decodeRule(item.A, base_signature_rule_list);
+					RLSLPRuleBody left = RLSLPRuleBody::decode_rule(item.A, base_signature_rule_list);
 					current_pos = Access::get_suffix(left, current_pos, len, base_signature_rule_list, output);
 					return current_pos;
 				}
@@ -113,7 +93,7 @@ namespace dynRLSLP
 			{
 				for (int64_t i = 0; i < item.B; i++)
 				{
-					current_pos = Access::get_suffix(RLSLPRuleBody::decodeRule(item.A, base_signature_rule_list), current_pos, len, base_signature_rule_list, output);
+					current_pos = Access::get_suffix(RLSLPRuleBody::decode_rule(item.A, base_signature_rule_list), current_pos, len, base_signature_rule_list, output);
 					if (current_pos == -1)
 					{
 						return current_pos;
@@ -123,7 +103,7 @@ namespace dynRLSLP
 			}
 			else if (item.get_type() == RLSLPRuleType::Signature)
 			{
-				return Access::get_suffix(RLSLPRuleBody::decodeRule(item.A, base_signature_rule_list), current_pos, len, base_signature_rule_list, output);
+				return Access::get_suffix(RLSLPRuleBody::decode_rule(item.A, base_signature_rule_list), current_pos, len, base_signature_rule_list, output);
 			}
 			else
 			{
@@ -133,21 +113,19 @@ namespace dynRLSLP
 
 	public:
 		/**
-		 * @brief Return the character at a position in a rule body string.
-		 * @param X RLSLP rule body.
-		 * @param pos Start position in the represented string.
+		 * @brief Return @ref term_val "val(X)"[pos].
 		 * @param base_signature_rule_list Base-signature rule list (D).
-		 * @param base_signature_length_list Base-signature length list (L).
-		 * @return Character code at zero-based position @p pos in the expanded string.
+		 * @param base_signature_length_list The length list of DictionaryForLayeredRLSLP.
+		 * @return *val(X)[pos]*.
 		 */
 		static uint64_t random_access(RLSLPRuleBody X, int64_t pos, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list)
 		{
 			uint64_t result = 0; // The character at pos.
 			if (X.get_type() == RLSLPRuleType::Pair)
 			{
-				auto left = RLSLPRuleBody::decodeRule(X.A, base_signature_rule_list);					 // The left child of X.
+				auto left = RLSLPRuleBody::decode_rule(X.A, base_signature_rule_list);					 // The left child of X.
 				auto leftLen = (int64_t)SignatureFunctions::get_length(X.A, base_signature_length_list); // The length of the left child of X.
-				auto right = RLSLPRuleBody::decodeRule(X.B, base_signature_rule_list);					 // The right child of X.
+				auto right = RLSLPRuleBody::decode_rule(X.B, base_signature_rule_list);					 // The right child of X.
 				if (leftLen <= pos)
 				{
 					auto nextPos = pos - leftLen;
@@ -160,7 +138,7 @@ namespace dynRLSLP
 			}
 			else if (X.get_type() == RLSLPRuleType::Power)
 			{
-				auto child = RLSLPRuleBody::decodeRule(X.A, base_signature_rule_list);
+				auto child = RLSLPRuleBody::decode_rule(X.A, base_signature_rule_list);
 				auto childLen = SignatureFunctions::get_length(X.A, base_signature_length_list);
 				auto nextPos = pos % childLen;
 				// auto nextPos = pos - (childLen * k);
@@ -186,7 +164,7 @@ namespace dynRLSLP
 			}
 			else if (X.get_type() == RLSLPRuleType::Signature)
 			{
-				result = Access::random_access(RLSLPRuleBody::decodeRule(X.A, base_signature_rule_list), pos, base_signature_rule_list, base_signature_length_list);
+				result = Access::random_access(RLSLPRuleBody::decode_rule(X.A, base_signature_rule_list), pos, base_signature_rule_list, base_signature_length_list);
 			}
 			else
 			{
@@ -197,17 +175,16 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return the string value of a rule body or run sequence.
-		 * @param items Sequence of run rules or integers.
+		 * @brief Return @ref term_val "val"(X_{1}, X_{2}, ..., X_{k}), where *X_{1}, X_{2}, ..., X_{k}* are the sequence of nonterminals repersented by *items*..
 		 * @param base_signature_rule_list Base-signature rule list (D).
-		 * @return Concatenated expanded string of all run rules in @p items.
+		 * @return val(X_{1}, X_{2}, ..., X_{k}).
 		 */
 		static std::string get_string(const std::vector<RunRuleBody> &items, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
 		{
 			std::string r = "";
 			for (auto item : items)
 			{
-				RLSLPRuleBody item2 = RLSLPRuleBody::decodeRule(item.number, base_signature_rule_list);
+				RLSLPRuleBody item2 = RLSLPRuleBody::decode_rule(item.number, base_signature_rule_list);
 				for (uint64_t i = 0; i < item.power; i++)
 				{
 					r.append(Access::get_string(item2, base_signature_rule_list));
@@ -217,10 +194,9 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return the string value of a rule body or run sequence.
-		 * @param X RLSLP rule body.
+		 * @brief Return @ref term_val "val(X)".
 		 * @param base_signature_rule_list Base-signature rule list (D).
-		 * @return Full expanded string represented by rule body @p X.
+		 * @return *val(X)*.
 		 */
 		static std::string get_string(RLSLPRuleBody X, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
 		{
@@ -232,14 +208,14 @@ namespace dynRLSLP
 			}
 			else if (X.get_type() == RLSLPRuleType::Pair)
 			{
-				auto left = Access::get_string(RLSLPRuleBody::decodeRule(X.A, base_signature_rule_list), base_signature_rule_list);
-				auto right = Access::get_string(RLSLPRuleBody::decodeRule(X.B, base_signature_rule_list), base_signature_rule_list);
+				auto left = Access::get_string(RLSLPRuleBody::decode_rule(X.A, base_signature_rule_list), base_signature_rule_list);
+				auto right = Access::get_string(RLSLPRuleBody::decode_rule(X.B, base_signature_rule_list), base_signature_rule_list);
 				left.append(right);
 				return left;
 			}
 			else if (X.get_type() == RLSLPRuleType::Power)
 			{
-				auto raw = Access::get_string(RLSLPRuleBody::decodeRule(X.A, base_signature_rule_list), base_signature_rule_list);
+				auto raw = Access::get_string(RLSLPRuleBody::decode_rule(X.A, base_signature_rule_list), base_signature_rule_list);
 				std::string r;
 				for (int64_t i = 0; i < X.B; i++)
 				{
@@ -249,7 +225,7 @@ namespace dynRLSLP
 			}
 			else if (X.get_type() == RLSLPRuleType::Signature)
 			{
-				return Access::get_string(RLSLPRuleBody::decodeRule(X.A, base_signature_rule_list), base_signature_rule_list);
+				return Access::get_string(RLSLPRuleBody::decode_rule(X.A, base_signature_rule_list), base_signature_rule_list);
 			}
 			else
 			{
@@ -258,11 +234,9 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return the length-prefix of a rule body string.
-		 * @param X RLSLP rule body.
-		 * @param len Length of the substring or prefix/suffix.
+		 * @brief Return @ref term_val "val(X)[0..len-1]".
 		 * @param base_signature_rule_list Base-signature rule list (D).
-		 * @return Prefix string of length @p len from the expanded string of @p X.
+		 * @return *val(X)[0..len-1]*.
 		 */
 		static std::string get_prefix(RLSLPRuleBody X, uint64_t len, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
 		{
@@ -281,11 +255,9 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return the length-suffix of a rule body string.
-		 * @param X RLSLP rule body.
-		 * @param len Length of the substring or prefix/suffix.
+		 * @brief Return @ref term_val "val(X)[|X|-len..|X|-1]", where |X| is the length of *val(X)*.
 		 * @param base_signature_rule_list Base-signature rule list (D).
-		 * @return Suffix string of length @p len from the expanded string of @p X.
+		 * @return *val(X)[|X|-len..|X|-1]*.
 		 */
 		static std::string get_suffix(RLSLPRuleBody X, uint64_t len, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
 		{
@@ -304,22 +276,21 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return the left substring of a rule body.
-		 * @param X RLSLP rule body.
+		 * @brief Return the @ref left_string "left string" of a given RLSLPRuleBody *X*.
 		 * @param base_signature_rule_list Base-signature rule list (D).
-		 * @return Left factor string (first child for Pair, single block for Power).
+		 * @return The left string of *X*.
 		 */
 		static std::string get_left_string(RLSLPRuleBody X, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
 		{
 			std::string r;
 			if (X.get_type() == RLSLPRuleType::Pair)
 			{
-				r = Access::get_string(RLSLPRuleBody::decodeRule(X.A, base_signature_rule_list), base_signature_rule_list);
+				r = Access::get_string(RLSLPRuleBody::decode_rule(X.A, base_signature_rule_list), base_signature_rule_list);
 				return r;
 			}
 			else if (X.get_type() == RLSLPRuleType::Power)
 			{
-				r = Access::get_string(RLSLPRuleBody::decodeRule(X.A, base_signature_rule_list), base_signature_rule_list);
+				r = Access::get_string(RLSLPRuleBody::decode_rule(X.A, base_signature_rule_list), base_signature_rule_list);
 				return r;
 			}
 			else
@@ -329,22 +300,21 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return the right substring of a rule body.
-		 * @param X RLSLP rule body.
+		 * @brief Return the @ref right_string "right string" of a given RLSLPRuleBody *X*.
 		 * @param base_signature_rule_list Base-signature rule list (D).
-		 * @return Right factor string (second child for Pair, tail repeats for Power).
+		 * @return The right string of *X*.
 		 */
 		static std::string get_right_string(RLSLPRuleBody X, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
 		{
 			std::string r = "";
 			if (X.get_type() == RLSLPRuleType::Pair)
 			{
-				r = Access::get_string(RLSLPRuleBody::decodeRule(X.B, base_signature_rule_list), base_signature_rule_list);
+				r = Access::get_string(RLSLPRuleBody::decode_rule(X.B, base_signature_rule_list), base_signature_rule_list);
 				return r;
 			}
 			else if (X.get_type() == RLSLPRuleType::Power)
 			{
-				auto child_str = Access::get_string(RLSLPRuleBody::decodeRule(X.A, base_signature_rule_list), base_signature_rule_list);
+				auto child_str = Access::get_string(RLSLPRuleBody::decode_rule(X.A, base_signature_rule_list), base_signature_rule_list);
 				for (int64_t i = 0; i < X.B - 1; i++)
 				{
 					r.append(child_str);
@@ -358,10 +328,9 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return the string as a vector of characters.
-		 * @param item Rule body item.
+		 * @brief Return @ref term_val "val(X)".
 		 * @param base_signature_rule_list Base-signature rule list (D).
-		 * @return Expanded string as a vector of character codes.
+		 * @return *val(X)*.
 		 */
 		static std::vector<sig_char_type> get_string_as_vector(RLSLPRuleBody item, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
 		{
@@ -373,8 +342,8 @@ namespace dynRLSLP
 			}
 			else if (item.get_type() == RLSLPRuleType::Pair)
 			{
-				auto left = Access::get_string_as_vector(RLSLPRuleBody::decodeRule(item.A, base_signature_rule_list), base_signature_rule_list);
-				auto right = Access::get_string_as_vector(RLSLPRuleBody::decodeRule(item.B, base_signature_rule_list), base_signature_rule_list);
+				auto left = Access::get_string_as_vector(RLSLPRuleBody::decode_rule(item.A, base_signature_rule_list), base_signature_rule_list);
+				auto right = Access::get_string_as_vector(RLSLPRuleBody::decode_rule(item.B, base_signature_rule_list), base_signature_rule_list);
 				for (auto it : right)
 				{
 					left.push_back(it);
@@ -383,7 +352,7 @@ namespace dynRLSLP
 			}
 			else if (item.get_type() == RLSLPRuleType::Power)
 			{
-				std::vector<sig_char_type> raw = Access::get_string_as_vector(RLSLPRuleBody::decodeRule(item.A, base_signature_rule_list), base_signature_rule_list);
+				std::vector<sig_char_type> raw = Access::get_string_as_vector(RLSLPRuleBody::decode_rule(item.A, base_signature_rule_list), base_signature_rule_list);
 				std::vector<sig_char_type> r;
 				for (int64_t i = 0; i < item.B; i++)
 				{
@@ -396,7 +365,7 @@ namespace dynRLSLP
 			}
 			else if (item.get_type() == RLSLPRuleType::Signature)
 			{
-				return Access::get_string_as_vector(RLSLPRuleBody::decodeRule(item.A, base_signature_rule_list), base_signature_rule_list);
+				return Access::get_string_as_vector(RLSLPRuleBody::decode_rule(item.A, base_signature_rule_list), base_signature_rule_list);
 			}
 			else
 			{

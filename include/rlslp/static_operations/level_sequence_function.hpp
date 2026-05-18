@@ -43,7 +43,7 @@ namespace dynRLSLP
          */
         static VStack<RunRuleBody> create_right_sequence(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
         {
-            RLSLPRuleBody item = RLSLPRuleBody::decodeRule(signature, base_signature_rule_list);
+            RLSLPRuleBody item = RLSLPRuleBody::decode_rule(signature, base_signature_rule_list);
             VStack<RunRuleBody> st;
             if (item.get_type() == RLSLPRuleType::Pair)
             {
@@ -68,7 +68,7 @@ namespace dynRLSLP
          */
         static RunRuleBody create_right_run_rule(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
         {
-            RLSLPRuleBody item = RLSLPRuleBody::decodeRule(signature, base_signature_rule_list);
+            RLSLPRuleBody item = RLSLPRuleBody::decode_rule(signature, base_signature_rule_list);
             if (item.get_type() == RLSLPRuleType::Pair)
             {
                 return RunRuleBody(item.B, 1);
@@ -94,7 +94,7 @@ namespace dynRLSLP
         static VStack<RunRuleBody> create_left_sequence(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
         {
 
-            RLSLPRuleBody item = RLSLPRuleBody::decodeRule(signature, base_signature_rule_list);
+            RLSLPRuleBody item = RLSLPRuleBody::decode_rule(signature, base_signature_rule_list);
             VStack<RunRuleBody> st;
             if (item.get_type() == RLSLPRuleType::Pair)
             {
@@ -121,7 +121,7 @@ namespace dynRLSLP
         static RunRuleBody create_left_run_rule(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
         {
 
-            RLSLPRuleBody item = RLSLPRuleBody::decodeRule(signature, base_signature_rule_list);
+            RLSLPRuleBody item = RLSLPRuleBody::decode_rule(signature, base_signature_rule_list);
             if (item.get_type() == RLSLPRuleType::Pair)
             {
                 return RunRuleBody(item.A, 1);

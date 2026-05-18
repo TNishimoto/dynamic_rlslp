@@ -658,14 +658,14 @@ namespace dynRLSLP
                 {
                     for (RunRuleBody it : this->left_lines[i])
                     {
-                        if (RLSLPRuleBody::decodeRule(it.number, base_signature_rule_list).get_type() == RLSLPRuleType::Null)
+                        if (RLSLPRuleBody::decode_rule(it.number, base_signature_rule_list).get_type() == RLSLPRuleType::Null)
                         {
                             return true;
                         }
                     }
                     for (RunRuleBody it : this->right_lines[i])
                     {
-                        if (RLSLPRuleBody::decodeRule(it.number, base_signature_rule_list).get_type() == RLSLPRuleType::Null)
+                        if (RLSLPRuleBody::decode_rule(it.number, base_signature_rule_list).get_type() == RLSLPRuleType::Null)
                         {
                             return true;
                         }
@@ -2077,7 +2077,7 @@ namespace dynRLSLP
                     for (auto it : items)
                     {
                         int64_t power = it.power;
-                        char c = RLSLPRuleBody::decodeRule(it.number, vec.dic.get_base_signature_rule_list()).A;
+                        char c = RLSLPRuleBody::decode_rule(it.number, vec.dic.get_base_signature_rule_list()).A;
                         for (int64_t i = 0; i < power; i++)
                         {
                             assert(p < output_strings.size());

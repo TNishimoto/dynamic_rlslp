@@ -104,7 +104,7 @@ namespace dynRLSLP
             template <typename OUTPUT_VEC_TYPE = std::vector<uint8_t>>
             void decompress(const std::vector<RLSLPRuleBody> &base_signature_rule_list, OUTPUT_VEC_TYPE &output) const {
                 for(int64_t i = 0; i < (int64_t)this->power; i++){
-                    RLSLPRuleBody item = RLSLPRuleBody::decodeRule(this->number, base_signature_rule_list);
+                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(this->number, base_signature_rule_list);
                     item.decompress(base_signature_rule_list, output);
                 }
             }
@@ -250,7 +250,7 @@ namespace dynRLSLP
             static void y_break(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint16_t> &base_signature_level_list, std::vector<RunRuleBody> &output)
             {
                 uint16_t child_level = SignatureFunctions::get_level(signature, base_signature_level_list);
-                RLSLPRuleBody child = RLSLPRuleBody::decodeRule(signature, base_signature_rule_list);
+                RLSLPRuleBody child = RLSLPRuleBody::decode_rule(signature, base_signature_rule_list);
                 if(child.get_type() == RLSLPRuleType::Power){
                     output.push_back(RunRuleBody(child.A, child.B));
                 }else if(child.get_type() == RLSLPRuleType::Pair){

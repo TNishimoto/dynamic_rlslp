@@ -90,7 +90,7 @@ namespace dynRLSLP
 		 */
 		RLSLPRuleBody get_rule_body(SignatureWithRelativeLevel sig) const
 		{
-			return RLSLPRuleBody::decodeRule(sig, this->base_signature_rule_list_);
+			return RLSLPRuleBody::decode_rule(sig, this->base_signature_rule_list_);
 		}
 
 		/**
@@ -109,7 +109,7 @@ namespace dynRLSLP
 		 */
 		uint64_t get_single_signature_count(GrammarParsingType grammar_parsing_type, BaseSignature base_signature) const
 		{
-			RLSLPRuleBody rule_body = RLSLPRuleBody::decodeRule(base_signature, this->base_signature_rule_list_);
+			RLSLPRuleBody rule_body = RLSLPRuleBody::decode_rule(base_signature, this->base_signature_rule_list_);
 			if (rule_body.get_type() != RLSLPRuleType::Null)
 			{
 				if (grammar_parsing_type == GrammarParsingType::RestrictedBlockCompression)
@@ -178,7 +178,7 @@ namespace dynRLSLP
 		 */
 		bool check_empty_item(SignatureWithRelativeLevel i) const
 		{
-			return RLSLPRuleBody::decodeRule(i, this->base_signature_rule_list_).get_type() == RLSLPRuleType::Null;
+			return RLSLPRuleBody::decode_rule(i, this->base_signature_rule_list_).get_type() == RLSLPRuleType::Null;
 		}
 		/**
 		 * @brief Return rule body, length, and level for a signature index.
@@ -189,7 +189,7 @@ namespace dynRLSLP
 		{
 			uint64_t length = this->get_length(i);
 			uint64_t level = this->get_level(i);
-			return RLSLPRuleInfo(RLSLPRuleBody::decodeRule(i, this->base_signature_rule_list_), length, level);
+			return RLSLPRuleInfo(RLSLPRuleBody::decode_rule(i, this->base_signature_rule_list_), length, level);
 		}
 
 		/**
@@ -257,11 +257,11 @@ namespace dynRLSLP
 		/**
 		 * @brief Return the decoded rule body for a signature index.
 		 * @param i Signature or base-signature index.
-		 * @return Decoded rule body at index @p i (alias for decodeRule).
+		 * @return Decoded rule body at index @p i (alias for decode_rule).
 		 */
 		RLSLPRuleBody get_item(int64_t i) const
 		{
-			return RLSLPRuleBody::decodeRule(i, this->base_signature_rule_list_);
+			return RLSLPRuleBody::decode_rule(i, this->base_signature_rule_list_);
 		}
 
 		/**
@@ -355,7 +355,7 @@ namespace dynRLSLP
 						continue;
 					}
 					SignatureWithRelativeLevel sig = SignatureFunctions::get_signature(j, i);
-					RLSLPRuleBody rule_body = RLSLPRuleBody::decodeRule(sig, this->base_signature_rule_list_);
+					RLSLPRuleBody rule_body = RLSLPRuleBody::decode_rule(sig, this->base_signature_rule_list_);
 					if (rule_body.get_type() != RLSLPRuleType::Null)
 					{
 						std::cout << stool::Message::get_paragraph_string(message_paragraph) << x << ": " << rule_body.get_detailed_info(i, j) << ",\t level = "

@@ -65,7 +65,7 @@ namespace dynRLSLP
                 {
                     item.push(RunRuleBody(top.number, top.power - 1));
                 }
-                RLSLPRuleBody rule = RLSLPRuleBody::decodeRule(top.number, base_signature_rule_list);
+                RLSLPRuleBody rule = RLSLPRuleBody::decode_rule(top.number, base_signature_rule_list);
                 if (rule.get_type() == RLSLPRuleType::Pair)
                 {
                     if (is_reverse)
@@ -544,8 +544,8 @@ namespace dynRLSLP
                         {
                             if (h1 == BSignatureBottomLevel && h2 == BSignatureBottomLevel)
                             {
-                                RLSLPRuleBody front_item1 = RLSLPRuleBody::decodeRule(top1.number, base_signature_rule_list);
-                                RLSLPRuleBody front_item2 = RLSLPRuleBody::decodeRule(top2.number, base_signature_rule_list);
+                                RLSLPRuleBody front_item1 = RLSLPRuleBody::decode_rule(top1.number, base_signature_rule_list);
+                                RLSLPRuleBody front_item2 = RLSLPRuleBody::decode_rule(top2.number, base_signature_rule_list);
                                 assert(front_item1.get_type() == RLSLPRuleType::Character);
                                 assert(front_item2.get_type() == RLSLPRuleType::Character);
                                 auto c1 = front_item1.A;
@@ -657,8 +657,8 @@ namespace dynRLSLP
                         {
                             if (h1 == BSignatureBottomLevel && h2 == BSignatureBottomLevel)
                             {
-                                RLSLPRuleBody front_item1 = RLSLPRuleBody::decodeRule(top1.number, base_signature_rule_list);
-                                RLSLPRuleBody front_item2 = RLSLPRuleBody::decodeRule(top2.number, base_signature_rule_list);
+                                RLSLPRuleBody front_item1 = RLSLPRuleBody::decode_rule(top1.number, base_signature_rule_list);
+                                RLSLPRuleBody front_item2 = RLSLPRuleBody::decode_rule(top2.number, base_signature_rule_list);
                                 assert(front_item1.get_type() == RLSLPRuleType::Character);
                                 assert(front_item2.get_type() == RLSLPRuleType::Character);
                                 auto c1 = front_item1.A;

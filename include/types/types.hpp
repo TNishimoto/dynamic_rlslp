@@ -6,7 +6,7 @@
 namespace dynRLSLP
 {
 
-		/** @brief Encodes an RLSLP signature together with its relative level in a single integer. */
+		/** @brief The first 48 bits represents a signature and the last 16 bits represents its relative level compared to the base signature. */
 		using SignatureWithRelativeLevel = int64_t;
 		/** @brief Character type used in signature-related string data. */
 		using sig_char_type = char;
@@ -31,7 +31,7 @@ namespace dynRLSLP
 		 * @brief The type of an RLSLP rule.
 		 * @ingroup EnumClasses
 		 */
-		enum class RLSLPRuleType
+		enum class RLSLPRuleType : uint8_t
 		{
 			Null = 0,
 			Character = 1,
