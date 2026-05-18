@@ -5,13 +5,20 @@
 namespace dynRLSLP
 {
         /**
-         * @brief A representation of a run of RLSLP nonterminals
+         * @brief A representation of a run *X^k* of RLSLP nonterminals
          * @ingroup RLSLPClasses
          */
         struct RunRuleBody
         {
         public:
+            /**
+            * X.
+            */
             uint64_t number;
+
+            /**
+            * k.
+            */
             uint64_t power;
 
             RunRuleBody(uint64_t number, uint64_t power)
@@ -27,11 +34,10 @@ namespace dynRLSLP
             RunRuleBody &operator=(const RunRuleBody &) = default;
             RunRuleBody(RunRuleBody &&) = default;
             RunRuleBody &operator=(RunRuleBody &&) = default;
-            /*
-            bool is_dummy_run() const {
-                return this->power == UINT64_MAX;
-            }
-            */
+
+            /**
+             * @brief Return *X^{k+k'}* for a given run *X^{k'}*.
+             */
             RunRuleBody operator+(RunRuleBody item2) const
             {
                 if (this->number == item2.number)
@@ -43,38 +49,63 @@ namespace dynRLSLP
                     throw std::logic_error("RunRuleBody::operator+: this->number != item2.number");
                 }
             }
-            static RunRuleBody construct_repair_grammar(int64_t number, const std::vector<RLSLPRuleBody> &itemList)
-            {
-                RLSLPRuleBody item = itemList[number];
-                if (item.get_type() == RLSLPRuleType::Power)
-                {
-                    return RunRuleBody(item.A, item.B);
-                }
-                else if (item.get_type() == RLSLPRuleType::Pair)
-                {
-                    return RunRuleBody(number, 1);
-                }
-                else if (item.get_type() == RLSLPRuleType::Character)
-                {
-                    return RunRuleBody(number, 1);
-                }
-                else
-                {
-                    throw std::logic_error("RunRuleBody::construct_repair_grammar: unknown rule type");
-                }
-            }
-            
+
+            /**
+             * @brief Return @ref term_val "|\val(X^{k})|".
+             * 
+             * @param base_signature_length_list The length list of DictionaryForLayeredRLSLP.
+             * @return |\val(X^{k})|
+             */
             uint64_t get_length(const std::vector<uint64_t>& base_signature_length_list) const
             {
                 return base_signature_length_list[SignatureFunctions::get_base_signature(this->number)] * this->power;
             }
-            /*
-            uint64_t get_height(const std::vector<uint16_t> &base_signature_level_list) const
+
+            /**
+             * @brief Return the string representation of this run rule body.
+             */
+            std::string to_string() const
             {
-                return SignatureFunctions::get_level(this->number, base_signature_level_list);
+                if (this->power == 1)
+                {
+                    return "R(" + std::to_string(this->number) + ")";
+                }
+                else
+                {
+                    return "R(" + std::to_string(this->number) + "^" + std::to_string(this->power) + ")";
+                }
             }
-            */
-            
+
+            /**
+             * @brief Return the RLSLP rule body corresponding to this run rule body.
+             */
+            RLSLPRuleBody to_rlslp_rule_body()
+            {
+                return RLSLPRuleBody::create_run_rule_body(this->number, this->power);
+            }
+
+            /**
+             * @brief Return the string derived by this run rule body.
+             * 
+             * @param base_signature_rule_list The rule list of DictionaryForLayeredRLSLP.
+             * @param output The outputted string is stored in this vector.
+             */
+            template <typename OUTPUT_VEC_TYPE = std::vector<uint8_t>>
+            void decompress(const std::vector<RLSLPRuleBody> &base_signature_rule_list, OUTPUT_VEC_TYPE &output) const {
+                for(int64_t i = 0; i < (int64_t)this->power; i++){
+                    RLSLPRuleBody item = RLSLPRuleBody::decodeRule(this->number, base_signature_rule_list);
+                    item.decompress(base_signature_rule_list, output);
+                }
+            }
+
+            /**
+             * @brief Converts a vector of integers into a vector of RunRuleBody by counting consecutive equal values.
+             *        Each run of the same number will become a RunRuleBody(number, count).
+             * 
+             * @tparam OUTPUT_VEC_TYPE The type of the output vector, defaults to std::vector<RunRuleBody>
+             * @param items Input vector of integers
+             * @param output Output vector of RunRuleBody objects (cleared on entry)
+             */
             template <typename OUTPUT_VEC_TYPE = std::vector<RunRuleBody>>
             static void pow(const std::vector<int64_t> &items, OUTPUT_VEC_TYPE &output)
             {
@@ -102,18 +133,13 @@ namespace dynRLSLP
                 k = 0;
             }
 
-            std::string to_string() const
-            {
-                if (this->power == 1)
-                {
-                    return "R(" + std::to_string(this->number) + ")";
-                }
-                else
-                {
-                    return "R(" + std::to_string(this->number) + "^" + std::to_string(this->power) + ")";
-                }
-            }
-
+            /**
+             * @brief Checks if the given sequence contains exactly one RunRuleBody and its power is 1.
+             * 
+             * @tparam SEQ_TYPE The type of the vector, defaults to std::vector<RunRuleBody>
+             * @param seq Sequence to check
+             * @return true if the sequence has one element and its power is 1, false otherwise
+             */
             template <typename SEQ_TYPE = std::vector<RunRuleBody>>
             static bool is_single_signature(SEQ_TYPE &seq)
             {
@@ -127,11 +153,14 @@ namespace dynRLSLP
                 }
             }
 
-            RLSLPRuleBody to_signature_item()
-            {
-                return RLSLPRuleBody::create_run_rule_body(this->number, this->power);
-            }
-
+            /**
+             * @brief Prints the content of a vector of RunRuleBody as a string to standard output.
+             * 
+             * @tparam VEC_TYPE The type of the vector, defaults to std::vector<RunRuleBody>
+             * @param items Vector of RunRuleBody to print
+             * @param name Name to appear before the contents
+             * @param message_paragraph Paragraph style for the output (default: stool::Message::SHOW_MESSAGE)
+             */
             template <typename VEC_TYPE = std::vector<RunRuleBody>>
             static void print_vector(const VEC_TYPE &items, const std::string name, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -142,6 +171,15 @@ namespace dynRLSLP
                 }
                 std::cout << std::endl;
             }
+
+            /**
+             * @brief Verifies that no two consecutive elements in the vector have the same 'number'.
+             *        Throws an exception if duplicate consecutive numbers are found.
+             * 
+             * @tparam VEC_TYPE The type of the vector, defaults to std::vector<RunRuleBody>
+             * @param items Vector of RunRuleBody to verify
+             * @return true if verification passes, otherwise throws an exception
+             */
             template <typename VEC_TYPE = std::vector<RunRuleBody>>
             static bool verify_vector(const VEC_TYPE &items)
             {
@@ -154,6 +192,13 @@ namespace dynRLSLP
                 }
                 return true;
             }
+
+            /**
+             * @brief Merges adjacent RunRuleBody elements in the vector that have the same 'number' by combining their 'power'.
+             * 
+             * @tparam VEC_TYPE The type of the vector, defaults to std::vector<RunRuleBody>
+             * @param items Vector of RunRuleBody to merge (modified in place)
+             */
             template <typename VEC_TYPE = std::vector<RunRuleBody>>
             static void merge_same_signatures(VEC_TYPE &items)
             {
@@ -177,6 +222,15 @@ namespace dynRLSLP
                     items.swap(tmp);
                 }
             }
+
+            /**
+             * @brief Computes the total length of the string represented by a vector of RunRuleBody, using the base signature length list.
+             * 
+             * @tparam VEC_TYPE The type of the vector, defaults to std::vector<RunRuleBody>
+             * @param items Vector of RunRuleBody
+             * @param base_signature_length_list The length vector for base signatures
+             * @return The total length represented by the combination of items
+             */
             template <typename VEC_TYPE = std::vector<RunRuleBody>>
             static int64_t compute_string_length(const VEC_TYPE &items, const std::vector<uint64_t>& base_signature_length_list)
             {
@@ -188,14 +242,20 @@ namespace dynRLSLP
                 return length;
             }
 
-            template <typename OUTPUT_VEC_TYPE = std::vector<uint8_t>>
-            void decompress(const std::vector<RLSLPRuleBody> &base_signature_rule_list, OUTPUT_VEC_TYPE &output) const {
-                for(int64_t i = 0; i < (int64_t)this->power; i++){
-                    RLSLPRuleBody item = RLSLPRuleBody::decodeRule(this->number, base_signature_rule_list);
-                    item.decompress(base_signature_rule_list, output);
-                }
-            }
-			static void y_break(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint16_t> &base_signature_level_list, std::vector<RunRuleBody> &output)
+            /**
+             * @brief Recursively decomposes a signature into a sequence of RunRuleBody objects, depending on the signature structure.
+             * 
+             * Power: Pushes RunRuleBody(child.A, child.B) to output.
+             * Pair: Decomposes child.A if its level is not smaller than the current level, otherwise pushes both children as RunRuleBody(..., 1).
+             * Signature: Handles indirection via the level and decomposes if appropriate.
+             * Other types throw an exception.
+             * 
+             * @param signature The signature to decompose
+             * @param base_signature_rule_list The rule list for decoding signatures
+             * @param base_signature_level_list List of levels for signatures
+             * @param output The output vector to which RunRuleBody objects will be appended
+             */
+            static void y_break(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint16_t> &base_signature_level_list, std::vector<RunRuleBody> &output)
             {
                 uint16_t child_level = SignatureFunctions::get_level(signature, base_signature_level_list);
                 RLSLPRuleBody child = RLSLPRuleBody::decodeRule(signature, base_signature_rule_list);
@@ -224,30 +284,11 @@ namespace dynRLSLP
                     throw std::runtime_error("Error in break_item: child.get_type() is not Power, Pair, or Character");
                 }
             }
+
+                
+            
         };
 
-        struct RunRuleBodyWidthLevel
-        {
-            RunRuleBody body;
-            uint16_t level;
-
-            RunRuleBodyWidthLevel(const RunRuleBody &body, uint16_t level) : body(body), level(level) {}
-            RunRuleBodyWidthLevel(uint64_t number, uint64_t power, uint16_t level) : body(number, power), level(level) {}
-
-            RunRuleBodyWidthLevel() {}
-
-            std::string to_string() const
-            {
-                if (this->body.power == 1)
-                {
-                    return "L" + std::to_string(this->level) + "[" + std::to_string(this->body.number) + "]";
-                }
-                else
-                {
-                    return "L" + std::to_string(this->level) + "[" + std::to_string(this->body.number) + "^" + std::to_string(this->body.power) + "]";
-                }
-            }
-        };
 
     
 }

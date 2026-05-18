@@ -5,17 +5,25 @@ namespace dynRLSLP
 {
 
         /**
-         * @brief A representation of an RLSLP rule with its string-length (The length of the substring derived by the rule) and tree-height (The height of the derivation tree corresponding to the rule).
+         * @brief A representation of an RLSLP rule with its string-length and tree-height.
 		 * @ingroup RLSLPClasses
          */
         class RLSLPRuleInfo
         {
         public:
-            RLSLPRuleBody item;
+            RLSLPRuleBody body;
+
+            /** 
+            * The length of the substring derived by the rule.
+            */
             uint64_t length;
+
+            /**
+            * The height of the derivation tree corresponding to the rule.
+            */
             uint16_t level;
 
-            RLSLPRuleInfo(RLSLPRuleBody item, int64_t length, int16_t level) : item(item), length(length), level(level)
+            RLSLPRuleInfo(RLSLPRuleBody body, int64_t length, int16_t level) : body(body), length(length), level(level)
             {
             }
 

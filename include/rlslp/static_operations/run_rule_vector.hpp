@@ -933,7 +933,7 @@ namespace dynRLSLP
                     assert(len <= this->get_string_length());
                     assert(this->front_level() != -1);
                     RLSLPRuleInfo frontItemInfo = this->get_front_info();
-                    int64_t basicLength = frontItemInfo.length / frontItemInfo.item.B;
+                    int64_t basicLength = frontItemInfo.length / frontItemInfo.body.B;
                     if ((int64_t)frontItemInfo.length <= len)
                     {
                         len -= frontItemInfo.length;
@@ -969,7 +969,7 @@ namespace dynRLSLP
                     assert(this->verify());
                     assert(len <= this->get_string_length());
                     RLSLPRuleInfo backItemInfo = this->get_back_info();
-                    int64_t basicLength = backItemInfo.length / backItemInfo.item.B;
+                    int64_t basicLength = backItemInfo.length / backItemInfo.body.B;
                     if ((int64_t)backItemInfo.length <= len)
                     {
                         len -= backItemInfo.length;
