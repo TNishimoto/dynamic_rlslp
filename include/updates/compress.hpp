@@ -28,10 +28,16 @@ namespace dynRLSLP
 		class Compress
 		{
 		public:
-			
-			
-			
-
+			/**
+			 * @brief Compresses a single character into the dynamic grammar.
+			 * @tparam C Character type of the input.
+			 * @tparam CALLBACK Callback type invoked when new signatures are added.
+			 * @param dic Dynamic grammar to update.
+			 * @param input_character Single input character.
+			 * @param callback_for_added_signature Callback invoked for each added signature.
+			 * @param message_paragraph Indentation level for progress messages.
+			 * @return Root signature of the compressed document.
+			 */
 			template <typename C, typename CALLBACK = decltype(no_callback)>
 			static SignatureWithRelativeLevel compress(DynamicGrammarForLayeredRLSLP &dic, C input_character, CALLBACK &callback_for_added_signature = no_callback, int message_paragraph = stool::Message::SHOW_MESSAGE)
 			{
@@ -39,6 +45,16 @@ namespace dynRLSLP
 				return compress(dic, text, callback_for_added_signature, message_paragraph);
 			}
 
+			/**
+			 * @brief Compresses a text into the dynamic grammar.
+			 * @tparam C Character type of the input text.
+			 * @tparam CALLBACK Callback type invoked when new signatures are added.
+			 * @param dic Dynamic grammar to update.
+			 * @param text Input character sequence.
+			 * @param callback_for_added_signature Callback invoked for each added signature.
+			 * @param message_paragraph Indentation level for progress messages.
+			 * @return Root signature of the compressed document.
+			 */
 			template <typename C, typename CALLBACK = decltype(no_callback)>
 			static SignatureWithRelativeLevel compress(DynamicGrammarForLayeredRLSLP &dic, const std::vector<C> &text, CALLBACK &callback_for_added_signature = no_callback, int message_paragraph = stool::Message::SHOW_MESSAGE)
 			{
@@ -92,6 +108,10 @@ namespace dynRLSLP
 				return signature_vec[0];
 				*/
 			}
+			/**
+			 * @brief Prints text length and signature count for the grammar root.
+			 * @param dic Dynamic grammar whose static grammar is summarized.
+			 */
 			static void print_performance(DynamicGrammarForLayeredRLSLP &dic)
 			{
 

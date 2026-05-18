@@ -39,6 +39,9 @@ namespace dynRLSLP
 
             uint64_t check_sum = 0;
 
+            /**
+             * @brief Constructs an empty query-results container.
+             */
             QueryResults()
             {
                 this->query_types.clear();
@@ -53,6 +56,10 @@ namespace dynRLSLP
                 this->check_sum = 0;
             }
 
+            /**
+             * @brief Swaps all stored vectors and the checksum with another instance.
+             * @param item Other query-results object to swap with.
+             */
             void swap(QueryResults &item)
             {
                 this->query_types.swap(item.query_types);
@@ -68,6 +75,10 @@ namespace dynRLSLP
                 std::swap(this->check_sum, item.check_sum);
             }
 
+            /**
+             * @brief Returns occurrence counts for each query type.
+             * @return Vector indexed by QueryType with per-type counts.
+             */
             std::vector<uint64_t> get_query_count_vector() const
             {
                 std::vector<uint64_t> r;
@@ -78,6 +89,12 @@ namespace dynRLSLP
                 }
                 return r;
             }
+            /**
+             * @brief Extracts one metric vector filtered by query type.
+             * @param type1 Query type to filter on.
+             * @param type2 Which stored metric vector to return.
+             * @return Values of @p type2 for all queries of type @p type1.
+             */
             std::vector<uint64_t> get_vector(dynRLSLP::QueryType type1, VecType type2) const
             {
                 const std::vector<uint64_t> *vec;
@@ -125,6 +142,12 @@ namespace dynRLSLP
                 }
                 return r;
             }
+            /**
+             * @brief Records timing for an INSERT or DELETE query.
+             * @param type Query type (INSERT or DELETE).
+             * @param pattern_length Length of the inserted or deleted substring.
+             * @param elapsed_time Elapsed time in microseconds.
+             */
             void push_back_for_update(dynRLSLP::QueryType type, uint64_t pattern_length, uint64_t elapsed_time)
             {
                 this->query_types.push_back(type);
@@ -138,6 +161,10 @@ namespace dynRLSLP
                 this->occurrence_count_vector.push_back(0);
                 this->primary_occurrence_count_vector.push_back(0);
             }
+            /**
+             * @brief Appends a query entry with zeroed timing and occurrence fields.
+             * @param type Query type to record.
+             */
             void push_back_for_query(dynRLSLP::QueryType type)
             {
                 this->query_types.push_back(type);
@@ -152,6 +179,18 @@ namespace dynRLSLP
                 this->primary_occurrence_count_vector.push_back(0);
             }
 
+            /**
+             * @brief Records timing and occurrence data for a locate-style query.
+             * @param type Query type (COUNT, LOCATE, LOCATE_DETAIL, or LOCATE_SUM).
+             * @param pattern_length Length of the search pattern.
+             * @param elapsed_time Total elapsed time in microseconds.
+             * @param phase1_time Phase 1 time in microseconds.
+             * @param phase2_time Phase 2 time in microseconds.
+             * @param phase3_time Phase 3 time in microseconds.
+             * @param phase4_time Phase 4 time in microseconds.
+             * @param primary_occurrence_count Number of primary occurrences.
+             * @param occurrence_count Total number of occurrences reported.
+             */
             void push_back_for_locate(dynRLSLP::QueryType type, uint64_t pattern_length, uint64_t elapsed_time, uint64_t phase1_time, uint64_t phase2_time, uint64_t phase3_time, uint64_t phase4_time, uint64_t primary_occurrence_count, uint64_t occurrence_count)
             {
                 this->query_types.push_back(type);
@@ -166,6 +205,17 @@ namespace dynRLSLP
             }
         };
 
+        /**
+         * @brief Reads and executes queries from a file against a dynamic index.
+         * @tparam DYNINDEX Dynamic string index type supporting insert, delete, and locate.
+         * @param dyn_index Dynamic index to query.
+         * @param query_ifs Input stream of TSV query lines.
+         * @param log_os Output stream for per-query log lines.
+         * @param alternative_tab_key Escape sequence representing a tab character.
+         * @param alternative_line_break_key Escape sequence representing a newline character.
+         * @param replace_mode If true, LOCATE queries are executed as LOCATE_SUM.
+         * @return Aggregated timing and occurrence results for all queries.
+         */
         template <typename DYNINDEX>
         QueryResults process_query_file(DYNINDEX &dyn_index, std::ifstream &query_ifs, std::ostream &log_os, std::string alternative_tab_key, std::string alternative_line_break_key, bool replace_mode)
         {
@@ -375,6 +425,15 @@ namespace dynRLSLP
 
             return query_results;
         }
+        /**
+         * @brief Prints total, average, min, and max for one metric vector.
+         * @param result Query results to summarize.
+         * @param type1 Query type to filter on.
+         * @param type2 Which stored metric vector to summarize.
+         * @param message_name Label printed before the statistics.
+         * @param unit_name Unit suffix appended to numeric values.
+         * @param message_paragraph Indentation level for output messages.
+         */
         void print_sub(const QueryResults &result, dynRLSLP::QueryType type1, VecType type2, std::string message_name, std::string unit_name, int message_paragraph = stool::Message::SHOW_MESSAGE)
         {
             std::vector<uint64_t> vec = result.get_vector(type1, type2);
@@ -388,6 +447,12 @@ namespace dynRLSLP
             std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "Max: \t\t\t\t\t" << _max << " " << unit_name << std::endl;
         }
 
+        /**
+         * @brief Prints a summary of results for one query type.
+         * @param result Query results to summarize.
+         * @param type Query type whose statistics are printed.
+         * @param message_paragraph Indentation level for output messages.
+         */
         void print_query_result(const QueryResults &result, dynRLSLP::QueryType type, int message_paragraph = stool::Message::SHOW_MESSAGE)
         {
             std::vector<uint64_t> query_count_vector = result.get_query_count_vector();

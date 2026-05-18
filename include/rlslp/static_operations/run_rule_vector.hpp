@@ -13,7 +13,7 @@ namespace dynRLSLP
 
 
         /**
-         * @brief A list of RLSLP nonterminals to represent a substring.
+         * @brief Level-partitioned list of runs representing a substring.
          * @ingroup RLSLPClasses
          */
         class RunRuleVector
@@ -34,10 +34,19 @@ namespace dynRLSLP
             ///   @name Constructors and Destructor
             ////////////////////////////////////////////////////////////////////////////////
             //@{
+            /**
+             * @brief Construct an empty run-rule vector bound to a dictionary.
+             * @param dic Layered RLSLP dictionary.
+             */
             RunRuleVector(const DictionaryForLayeredRLSLP &dic) : left_lines(), right_lines(), dic(dic)
             {
                 this->update_front_and_back_level();
             }
+            /**
+             * @brief Construct from a flat common sequence partitioned by level.
+             * @param commonSequence Flat sequence of runs.
+             * @param dic Layered RLSLP dictionary.
+             */
             RunRuleVector(const std::vector<RunRuleBody> &commonSequence, const DictionaryForLayeredRLSLP &dic) : left_lines(), right_lines(), dic(dic)
             {
                 if(commonSequence.size() == 0){
@@ -66,6 +75,11 @@ namespace dynRLSLP
 
             }
 
+            /**
+             * @brief Construct a vector containing a single signature run.
+             * @param number Encoded signature identifier.
+             * @param dic Layered RLSLP dictionary.
+             */
             RunRuleVector(int64_t number, const DictionaryForLayeredRLSLP &dic)
                 : left_lines(), right_lines(), dic(dic)
             {
@@ -76,8 +90,16 @@ namespace dynRLSLP
                 this->left_lines[level].push_back(item);
                 this->update_front_and_back_level();
 
+            /**
+             * @brief Return the total derived string length.
+             * @return int64_t
+             */
                 assert(this->get_string_length() == (int64_t)dic.get_length(number));
             }
+            /**
+             * @brief Copy-construct from another run-rule vector.
+             * @param source Source vector to copy.
+             */
             RunRuleVector(const RunRuleVector &source) : left_lines(), right_lines(), dic(source.dic)
             {
                 this->left_lines.resize(source.left_lines.size());
@@ -98,6 +120,10 @@ namespace dynRLSLP
             ///   @name Lightweight functions for accessing to properties of this class
             ////////////////////////////////////////////////////////////////////////////////
             //@{
+            /**
+             * @brief Return the highest level index (or -1 if empty).
+             * @return int64_t
+             */
             int64_t get_max_level() const
             {
                 return this->left_lines.size() - 1;
@@ -115,14 +141,27 @@ namespace dynRLSLP
                 return size;
             }
             */
+            /**
+             * @brief Return whether the vector has no level lines.
+             * @return bool
+             */
             bool is_empty() const {
                 return this->get_max_level() == -1;
             }
+            /**
+             * @brief Return the number of runs on the ceiling level.
+             * @return uint64_t
+             */
             uint64_t ceil_size() const
             {
                 int64_t max_level = this->get_max_level();
                 return this->left_lines[max_level].size() + this->right_lines[max_level].size();
             }
+            /**
+             * @brief Compare level-wise run sequences with another vector.
+             * ('@param other', 'Vector to compare with.')
+             * @return bool
+             */
             bool check_equal_sequence(const RunRuleVector &other) const{
                 if(this->get_max_level() != other.get_max_level()){
                     std::cout << "E1: this->get_max_level(): " << this->get_max_level() << ", other.get_max_level(): " << other.get_max_level() << std::endl;
@@ -197,6 +236,10 @@ namespace dynRLSLP
 
                 return true;
             }
+            /**
+             * @brief Return the text position where the ceiling substring starts.
+             * @return uint64_t
+             */
             uint64_t compute_ceil_string_starting_position() const
             {
                 int64_t max_level = this->get_max_level();
@@ -211,10 +254,19 @@ namespace dynRLSLP
                 return size;
             }
 
+            /**
+             * @brief Return a new empty vector sharing the same dictionary.
+             * @return RunRuleVector
+             */
             RunRuleVector create_empty_link() const
             {
                 return RunRuleVector(this->dic);
             }
+            /**
+             * @brief Return whether the left line at level h is empty.
+             * ('@param h', 'Level index.')
+             * @return bool
+             */
             bool check_empty_left_line(int64_t h) const
             {
                 return this->left_lines[h].size() == 0;
@@ -227,6 +279,12 @@ namespace dynRLSLP
             ////////////////////////////////////////////////////////////////////////////////
             //@{
 
+            /**
+             * @brief Extract a prefix vector with optional run-count and length limits.
+             * ('@param max_item_count', 'Maximum number of runs to include.')
+             * ('@param max_string_length', 'Maximum derived string length to include.')
+             * @return RunRuleVector
+             */
             RunRuleVector get_front_items_with_level(int64_t max_item_count = INT64_MAX, int64_t max_string_length = INT64_MAX) const
             {
                 // std::vector<RunRuleBodyWidthLevel> r;
@@ -287,6 +345,11 @@ namespace dynRLSLP
                 return tmp;
             }
 
+            /**
+             * @brief Extract a suffix vector with an optional run-count limit.
+             * ('@param max_item_count', 'Maximum number of runs to include.')
+             * @return RunRuleVector
+             */
             RunRuleVector get_back_items_with_level(int64_t max_item_count = INT64_MAX) const
             {
                 RunRuleVector tmp = RunRuleVector(this->dic);
@@ -325,15 +388,27 @@ namespace dynRLSLP
                 return tmp;
             }
 
+            /**
+             * @brief Return the level of the frontmost run.
+             * @return int64_t
+             */
             int64_t front_level() const
             {
                 return this->_front_level;
             }
+            /**
+             * @brief Return the level of the backmost run.
+             * @return int64_t
+             */
             int64_t back_level() const
             {
                 return this->_back_level;
             }
 
+            /**
+             * @brief Return the frontmost run without removing it.
+             * @return RunRuleBody
+             */
             RunRuleBody peek_front() const
             {
                 int64_t level = this->front_level();
@@ -347,10 +422,18 @@ namespace dynRLSLP
                 }
                 else
                 {
+            /**
+             * @brief Return the highest level index (or -1 if empty).
+             * @return int64_t
+             */
                     assert(level == this->get_max_level());
                     return this->right_lines[level][0];
                 }
             }
+            /**
+             * @brief Return the backmost run without removing it.
+             * @return RunRuleBody
+             */
             RunRuleBody peek_back() const
             {
                 int64_t level = this->back_level();
@@ -367,32 +450,66 @@ namespace dynRLSLP
                 }
                 else
                 {
+            /**
+             * @brief Return the highest level index (or -1 if empty).
+             * @return int64_t
+             */
                     assert(level == this->get_max_level());
                     uint64_t size = this->left_lines[level].size();
 
                     return this->left_lines[level][size - 1];
                 }
             }
+            /**
+             * @brief Return the size of the left line at level h.
+             * ('@param h', 'Level index.')
+             * @return int64_t
+             */
             int64_t left_line_size(int64_t h)
             {
                 return this->left_lines[h].size();
             }
+            /**
+             * @brief Return the size of the right line at level h.
+             * ('@param h', 'Level index.')
+             * @return int64_t
+             */
             int64_t right_line_size(int64_t h)
             {
                 return this->right_lines[h].size();
             }
 
+            /**
+             * @brief Return the derived length of the frontmost run.
+             * @return int64_t
+             */
             int64_t front_length() const
             {
+            /**
+             * @brief Return whether the vector has no level lines.
+             * @return bool
+             */
                 assert(!this->is_empty());
                 return this->peek_front().get_length(this->dic.get_base_signature_length_list());
             }
+            /**
+             * @brief Return the derived length of the backmost run.
+             * @return int64_t
+             */
             int64_t back_length() const
             {
+            /**
+             * @brief Return whether the vector has no level lines.
+             * @return bool
+             */
                 assert(!this->is_empty());
                 return this->peek_back().get_length(this->dic.get_base_signature_length_list());
             }
 
+            /**
+             * @brief Return the total derived string length.
+             * @return int64_t
+             */
             int64_t get_string_length() const
             {
                 uint64_t length = 0;
@@ -410,24 +527,46 @@ namespace dynRLSLP
                 }
                 return length;
             }
+            /**
+             * @brief Return rule info for the frontmost run.
+             * @return RLSLPRuleInfo
+             */
             RLSLPRuleInfo get_front_info() const
             {
                 assert(this->verify());
+            /**
+             * @brief Return the level of the frontmost run.
+             * @return int64_t
+             */
                 assert(this->front_level() != -1);
                 RunRuleBody p = this->peek_front();
                 uint64_t length = SignatureFunctions::get_length(p.number, this->dic.get_base_signature_length_list()) * p.power;
                 uint64_t level = SignatureFunctions::get_level(p.number, this->dic.get_base_signature_level_list());
                 return RLSLPRuleInfo(RLSLPRuleBody::create_run_rule_body(p.number, p.power), length, level);
             }
+            /**
+             * @brief Return rule info for the backmost run.
+             * @return RLSLPRuleInfo
+             */
             RLSLPRuleInfo get_back_info() const
             {
                 assert(this->verify());
+            /**
+             * @brief Return the level of the backmost run.
+             * @return int64_t
+             */
                 assert(this->back_level() != -1);
                 RunRuleBody p = this->peek_back();
                 uint64_t length = SignatureFunctions::get_length(p.number, this->dic.get_base_signature_length_list()) * p.power;
                 uint64_t level = SignatureFunctions::get_level(p.number, this->dic.get_base_signature_level_list());
                 return RLSLPRuleInfo(RLSLPRuleBody::create_run_rule_body(p.number, p.power), length, level);
             }
+            /**
+             * @brief Collect up to length front runs at a fixed level.
+             * ('@param length', 'Number of runs to collect.')
+             * ('@param level', 'Target derivation level.')
+             * @return std::vector<RunRuleBody>
+             */
             std::vector<RunRuleBody> get_front_sequence(int64_t length, int64_t level) const
             {
                 auto tmp = this->get_front_items_with_level(length);
@@ -451,6 +590,12 @@ namespace dynRLSLP
                 }
                 return r;
             }
+            /**
+             * @brief Collect up to length back runs at a fixed level.
+             * ('@param length', 'Number of runs to collect.')
+             * ('@param level', 'Target derivation level.')
+             * @return std::vector<RunRuleBody>
+             */
             std::vector<RunRuleBody> get_back_sequence(int64_t length, int64_t level) const
             {
                 auto tmp = this->get_back_items_with_level(length);
@@ -475,6 +620,12 @@ namespace dynRLSLP
                 }
                 return r;
             }
+            /**
+             * @brief Return a vector for the substring [pos, pos+len).
+             * ('@param pos', 'Start position in the derived string.')
+             * ('@param len', 'Substring length.')
+             * @return RunRuleVector
+             */
             RunRuleVector create_substring_link(int64_t pos, int64_t len) const
             {
                 if (pos < 0)
@@ -487,10 +638,19 @@ namespace dynRLSLP
                 RunRuleVector item = this->copy();
                 item.cut_front_string(pos);
                 auto r = item.copy_front(len);
+            /**
+             * @brief Return the total derived string length.
+             * @return int64_t
+             */
                 assert(r.get_string_length() == len);
                 return r;
             }
 
+            /**
+             * @brief Return whether any run decodes to a null rule.
+             * ('@param base_signature_rule_list', 'Base-signature rule list.')
+             * @return bool
+             */
             bool has_null_item([[maybe_unused]] const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
             {
                 int64_t max_level = this->get_max_level();
@@ -520,6 +680,10 @@ namespace dynRLSLP
             ///   @name Update operations
             ////////////////////////////////////////////////////////////////////////////////
             //@{
+            /**
+             * @brief Swap level-line storage with another vector.
+             * ('@param other', 'Other vector.')
+             */
             void swap_list(RunRuleVector &other)
             {
                 std::swap(this->left_lines, other.left_lines);
@@ -529,6 +693,10 @@ namespace dynRLSLP
                 assert(this->verify());
             }
 
+            /**
+             * @brief Replace this vector with a copy of other.
+             * ('@param other', 'Source vector.')
+             */
             void copy_from(const RunRuleVector &other)
             {
                 this->left_lines.clear();
@@ -554,6 +722,10 @@ namespace dynRLSLP
                 assert(this->verify());
             }
 
+            /**
+             * @brief Remove and return the frontmost run.
+             * @return RunRuleBody
+             */
             RunRuleBody pop_front()
             {
                 assert(this->verify());
@@ -588,6 +760,10 @@ namespace dynRLSLP
                     }
                     else
                     {
+            /**
+             * @brief Return the highest level index (or -1 if empty).
+             * @return int64_t
+             */
                         assert(level == this->get_max_level());
                         top = this->right_lines[level][0];
                         this->right_lines[level].erase(this->right_lines[level].begin());
@@ -600,6 +776,10 @@ namespace dynRLSLP
 
                 return top;
             }
+            /**
+             * @brief Remove and return the backmost run.
+             * @return RunRuleBody
+             */
             RunRuleBody pop_back()
             {
                 int64_t level = this->back_level();
@@ -632,6 +812,10 @@ namespace dynRLSLP
                     }
                     else
                     {
+            /**
+             * @brief Return the highest level index (or -1 if empty).
+             * @return int64_t
+             */
                         assert(level == this->get_max_level());
                         top = this->left_lines[level][this->left_lines[level].size() - 1];
                         this->left_lines[level].pop_back();
@@ -644,6 +828,10 @@ namespace dynRLSLP
                 return top;
             }
 
+            /**
+             * @brief Remove and return all runs on the current front level.
+             * @return std::vector<RunRuleBody>
+             */
             std::vector<RunRuleBody> pop_front_sequence()
             {
                 std::vector<RunRuleBody> r;
@@ -678,6 +866,10 @@ namespace dynRLSLP
                 assert(this->verify());
                 return r;
             }
+            /**
+             * @brief Remove and return all runs on the current back level.
+             * @return std::vector<RunRuleBody>
+             */
             std::vector<RunRuleBody> pop_back_sequence()
             {
                 std::vector<RunRuleBody> r;
@@ -714,6 +906,12 @@ namespace dynRLSLP
                 return r;
             }
 
+            /**
+             * @brief Install new ceiling-level left and right lines.
+             * ('@param new_left_line', 'Runs for the left ceiling line.')
+             * ('@param new_right_line', 'Runs for the right ceiling line.')
+             * ('@param level', 'Ceiling level index.')
+             */
             void push_new_ceil(std::vector<RunRuleBody> &new_left_line, std::vector<RunRuleBody> &new_right_line, int64_t level)
             {
 
@@ -733,8 +931,17 @@ namespace dynRLSLP
                 assert(this->verify());
             }
 
+            /**
+             * @brief Insert a run at the front of a level line.
+             * ('@param item', 'Run to insert.')
+             * ('@param level', 'Target level.')
+             */
             void push_front(RunRuleBody item, uint16_t level)
             {
+            /**
+             * @brief Return the highest level index (or -1 if empty).
+             * @return int64_t
+             */
                 assert(this->get_max_level() >= level);
                 this->left_lines[level].insert(this->left_lines[level].begin(), item);
                 if (level < this->_front_level)
@@ -743,8 +950,17 @@ namespace dynRLSLP
                 }
                 assert(this->verify());
             }
+            /**
+             * @brief Append a run at the back of a level line.
+             * ('@param item', 'Run to append.')
+             * ('@param level', 'Target level.')
+             */
             void push_back(RunRuleBody item, uint16_t level)
             {
+            /**
+             * @brief Return the highest level index (or -1 if empty).
+             * @return int64_t
+             */
                 assert(this->get_max_level() >= level);
                 this->right_lines[level].push_back(item);
 
@@ -754,9 +970,16 @@ namespace dynRLSLP
                 }
                 assert(this->verify());
             }
+            /**
+             * @brief Expand the frontmost run into lower-level runs.
+             */
             void break_front()
             {
 
+            /**
+             * @brief Return the level of the frontmost run.
+             * @return int64_t
+             */
                 assert(this->front_level() > 0);
                 int64_t level = this->front_level();
                 RunRuleBody pop = this->pop_front();
@@ -809,8 +1032,15 @@ namespace dynRLSLP
                     assert(this->verify());
                 }
             }
+            /**
+             * @brief Expand the backmost run into lower-level runs.
+             */
             void break_back()
             {
+            /**
+             * @brief Return the level of the backmost run.
+             * @return int64_t
+             */
                 assert(this->back_level() > 0);
                 int64_t level = this->back_level();
                 RunRuleBody pop = this->pop_back();
@@ -860,6 +1090,10 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Decrease or remove power from the frontmost run.
+             * ('@param removePower', 'Power units to remove.')
+             */
             void pop_front_power(uint64_t removePower)
             {
                 int64_t level = this->front_level();
@@ -888,6 +1122,10 @@ namespace dynRLSLP
                 }
                 assert(this->verify());
             }
+            /**
+             * @brief Decrease or remove power from the backmost run.
+             * ('@param removePower', 'Power units to remove.')
+             */
             void pop_back_power(uint64_t removePower)
             {
                 int64_t level = this->back_level();
@@ -917,6 +1155,10 @@ namespace dynRLSLP
                 }
                 assert(this->verify());
             }
+            /**
+             * @brief Remove the first len characters from the derived string.
+             * ('@param len', 'Number of characters to remove.')
+             */
             void cut_front_string(int64_t len)
             {
                 assert(this->verify());
@@ -930,7 +1172,15 @@ namespace dynRLSLP
                 assert(this->verify());
                 while (len > 0)
                 {
+            /**
+             * @brief Return the total derived string length.
+             * @return int64_t
+             */
                     assert(len <= this->get_string_length());
+            /**
+             * @brief Return the level of the frontmost run.
+             * @return int64_t
+             */
                     assert(this->front_level() != -1);
                     RLSLPRuleInfo frontItemInfo = this->get_front_info();
                     int64_t basicLength = frontItemInfo.length / frontItemInfo.body.B;
@@ -947,6 +1197,10 @@ namespace dynRLSLP
                     }
                     else
                     {
+            /**
+             * @brief Return the level of the frontmost run.
+             * @return int64_t
+             */
                         assert(this->front_level() > 0);
                         this->break_front();
                     }
@@ -954,6 +1208,10 @@ namespace dynRLSLP
                 assert(this->verify());
                 // assert(this->getLength() == len);
             }
+            /**
+             * @brief Remove the last len characters from the derived string.
+             * ('@param len', 'Number of characters to remove.')
+             */
             void cut_back_string(int64_t len)
             {
                 assert(this->verify());
@@ -967,6 +1225,10 @@ namespace dynRLSLP
                 while (len > 0)
                 {
                     assert(this->verify());
+            /**
+             * @brief Return the total derived string length.
+             * @return int64_t
+             */
                     assert(len <= this->get_string_length());
                     RLSLPRuleInfo backItemInfo = this->get_back_info();
                     int64_t basicLength = backItemInfo.length / backItemInfo.body.B;
@@ -983,6 +1245,10 @@ namespace dynRLSLP
                     }
                     else
                     {
+            /**
+             * @brief Return the level of the backmost run.
+             * @return int64_t
+             */
                         assert(this->back_level() > 0);
                         this->break_back();
                     }
@@ -995,15 +1261,27 @@ namespace dynRLSLP
             ///   @name Convert functions
             ////////////////////////////////////////////////////////////////////////////////
             //@{
+            /**
+             * @brief Return a deep copy of this vector.
+             * @return RunRuleVector
+             */
             RunRuleVector copy() const
             {
                 RunRuleVector r(*this);
                 return r;
             }
+            /**
+             * @brief Build a power-aware derivation-tree representation (unimplemented).
+             * @return std::vector<std::string>
+             */
             std::vector<std::string> to_power_derivation_tree() const
             {
                 throw std::runtime_error("ERROR in to_power_derivation_tree");
             }
+            /**
+             * @brief Return a string of run labels in left-to-right order.
+             * @return std::string
+             */
             std::string to_string() const
             {
                 auto items = this->to_vector();
@@ -1014,6 +1292,10 @@ namespace dynRLSLP
                 }
                 return r;
             }
+            /**
+             * @brief Return run labels concatenated with their derived lengths.
+             * @return std::string
+             */
             std::string to_string_with_length() const
             {
                 auto items = this->to_vector();
@@ -1025,6 +1307,10 @@ namespace dynRLSLP
                 }
                 return r;
             }
+            /**
+             * @brief Flatten level lines into a left-to-right run sequence.
+             * @return std::vector<RunRuleBody>
+             */
             std::vector<RunRuleBody> to_vector() const
             {
                 std::vector<RunRuleBody> r;
@@ -1047,6 +1333,10 @@ namespace dynRLSLP
                 }
                 return r;
             }
+            /**
+             * @brief Flatten level lines into a right-to-left run sequence.
+             * @return std::vector<RunRuleBody>
+             */
             std::vector<RunRuleBody> to_backward_vector() const
             {
                 std::vector<RunRuleBody> r;
@@ -1075,6 +1365,11 @@ namespace dynRLSLP
 
             //}@
 
+            /**
+             * @brief Build a multi-line derivation-tree visualization.
+             * @param padding Padding width for visualization.
+             * @return Computed integer value.
+             */
             std::vector<std::string> compute_derivation_tree(uint64_t padding = 3) const
             {
                 std::vector<std::string> output_strings;
@@ -1092,6 +1387,11 @@ namespace dynRLSLP
                     return output_strings;
                 }
             }
+            /**
+             * @brief Print the derivation-tree visualization.
+             * @param padding Padding width for visualization.
+             * @param message_paragraph Indentation level for formatted output.
+             */
             void print_derivation_tree(uint64_t padding = 3, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
             {
                 auto r = this->compute_derivation_tree(padding);
@@ -1102,6 +1402,10 @@ namespace dynRLSLP
                 }
                 std::cout << stool::Message::get_paragraph_string(message_paragraph) << "==== Derivation Tree[END] ====" << std::endl;
             }
+            /**
+             * @brief Print level-line contents to standard output.
+             * ('@param message_paragraph', 'Indentation level for formatted output.')
+             */
             void print_info(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
             {
                 std::cout << stool::Message::get_paragraph_string(message_paragraph) << "==== RunRuleVector Info ====" << std::endl;
@@ -1129,6 +1433,10 @@ namespace dynRLSLP
                 }
                 std::cout << stool::Message::get_paragraph_string(message_paragraph) << "==== RunRuleVector Info[END] ====" << std::endl;
             }
+            /**
+             * @brief Verify internal level-line invariants.
+             * @return True if the check succeeds.
+             */
             bool verify() const
             {
                 int64_t max_level = this->get_max_level();
@@ -1203,6 +1511,12 @@ namespace dynRLSLP
 
                 return true;
             }
+            /**
+             * @brief Verify minimum run counts per level for context lengths.
+             * @param left_length Required left context length.
+             * @param right_length Required right context length.
+             * @return True if the check succeeds.
+             */
             bool verify_sequence_length(uint64_t left_length, uint64_t right_length)
             {
                 int64_t max_level = this->get_max_level();
@@ -1229,6 +1543,10 @@ namespace dynRLSLP
             }
 
             template <typename OUTPUT_VEC_TYPE = std::vector<uint8_t>>
+            /**
+             * @brief Append the expanded string of this rule to an output container.
+             * @param output Output container for decompressed data.
+             */
             void decompress(OUTPUT_VEC_TYPE &output) const
             {
                 std::vector<RunRuleBody> items = this->to_vector();
@@ -1238,6 +1556,10 @@ namespace dynRLSLP
                     //body.decompress(this->base_signature_rule_list, output);
                 }
             }
+            /**
+             * @brief Decompress and return the original text as a string.
+             * @return std::string
+             */
             std::string to_original_text_str() const
             {
                 std::string r;
@@ -1245,6 +1567,10 @@ namespace dynRLSLP
                 return r;
             }
 
+            /**
+             * @brief Return cumulative end positions of each run.
+             * @return Computed integer value.
+             */
             std::vector<uint64_t> to_starting_position_vector() const
             {
                 std::vector<uint64_t> r;
@@ -1266,6 +1592,11 @@ namespace dynRLSLP
             }
 
         private:
+            /**
+             * @brief Grow level lines up to a target level with empty slots.
+             * @param level Derivation-tree level.
+             * @param insertionFlag Whether dummy lines are grown by insertion.
+             */
             void set_dummy_lines(int64_t level, bool insertionFlag)
             {
                 if (level <= this->get_max_level())
@@ -1307,11 +1638,24 @@ namespace dynRLSLP
             ////////////////////////////////////////////////////////////////////////////////
             //@{
         public:
+            /**
+             * @brief Create an empty vector bound to dic.
+             * ('@param dic', 'Layered RLSLP dictionary.')
+             * @return static RunRuleVector
+             */
             static RunRuleVector create_empty_vector(const DictionaryForLayeredRLSLP &dic)
             {
                 return RunRuleVector(dic);
             }
 
+            /**
+             * @brief Create a substring vector for signature item over [pos, pos+len).
+             * ('@param item', 'Encoded signature.')
+             * ('@param pos', 'Start offset.')
+             * ('@param len', 'Length.')
+             * ('@param dic', 'Dictionary.')
+             * @return Substring run-rule vector.
+             */
             static RunRuleVector create(int64_t item, int64_t pos, int64_t len, const DictionaryForLayeredRLSLP &dic)
             {
                 assert(len >= 0);
@@ -1329,6 +1673,13 @@ namespace dynRLSLP
 
                 return r.create_substring_link(pos, len);
             }
+            /**
+             * @brief Create a suffix vector for signature item starting at pos.
+             * ('@param item', 'Encoded signature.')
+             * ('@param pos', 'Start offset.')
+             * ('@param dic', 'Dictionary.')
+             * @return Suffix run-rule vector.
+             */
             static RunRuleVector create(int64_t item, int64_t pos, const DictionaryForLayeredRLSLP &dic)
             {
                 int64_t len = SignatureFunctions::get_length(item, dic.get_base_signature_length_list());
@@ -1343,6 +1694,9 @@ namespace dynRLSLP
             //}@
 
         private:
+            /**
+             * @brief Break the ceiling level into the level below.
+             */
             void break_ceil()
             {
                 int32_t max_level = this->get_max_level();
@@ -1379,7 +1733,11 @@ namespace dynRLSLP
                 }
             }
 
-            /*
+            /**
+             * @brief Replace the left line at a level and update the front level.
+             * @param line New left-line content.
+             * @param level Derivation-tree level.
+             */
             void swap_left_line(LINE &line, uint16_t level)
             {
                 #ifdef DEBUG
@@ -1401,6 +1759,11 @@ namespace dynRLSLP
                 this->left_lines[level].swap(line);
             }
 
+            /**
+             * @brief swap_right_line operation.
+             * @param line line.
+             * @param level Derivation-tree level.
+             */
             void swap_right_line(LINE &line, uint16_t level)
             {
                 #ifdef DEBUG
@@ -1419,7 +1782,11 @@ namespace dynRLSLP
 
                 this->right_lines[level].swap(line);
             }
-                */
+            /**
+             * @brief Adjust front level after inserting runs.
+             * @param insertion_level Level at which insertion occurred.
+             * @param is_front_insertion Whether the insertion is at the front.
+             */
             void update_front_level_by_insertion(int64_t insertion_level, bool is_front_insertion)
             {
                 if (is_front_insertion)
@@ -1446,6 +1813,11 @@ namespace dynRLSLP
                 }
                 */
             }
+            /**
+             * @brief Adjust back level after inserting runs.
+             * @param insertion_level Level at which insertion occurred.
+             * @param is_back_insertion Whether the insertion is at the back.
+             */
             void update_back_level_by_insertion(int64_t insertion_level, bool is_back_insertion)
             {
                 if (is_back_insertion)
@@ -1464,6 +1836,10 @@ namespace dynRLSLP
                     }
                 }
             }
+            /**
+             * @brief Recompute the front level from a minimum level.
+             * @param min_level Minimum level to consider when updating.
+             */
             void update_front_level(int64_t min_level)
             {
                 int64_t max_level = this->get_max_level();
@@ -1484,6 +1860,10 @@ namespace dynRLSLP
                     this->_front_level = -1;
                 }
             }
+            /**
+             * @brief Recompute the back level from a minimum level.
+             * @param min_level Minimum level to consider when updating.
+             */
             void update_back_level(int64_t min_level)
             {
                 int64_t max_level = this->get_max_level();
@@ -1505,6 +1885,9 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Recompute both front and back levels.
+             */
             void update_front_and_back_level()
             {
                 int64_t max_level = this->get_max_level();
@@ -1545,6 +1928,11 @@ namespace dynRLSLP
                     this->_back_level = -1;
                 }
             }
+            /**
+             * @brief Shrink level lines after removing ceiling runs.
+             * @param left_empty Whether the left ceiling line became empty.
+             * @param right_empty Whether the right ceiling line became empty.
+             */
             void update_max_level(bool left_empty, bool right_empty)
             {
 
@@ -1598,6 +1986,11 @@ namespace dynRLSLP
                     throw std::runtime_error("Error in update_max_level: left_empty && right_empty");
                 }
             }
+            /**
+             * @brief Return a copy containing only the first len characters.
+             * @param len Length of the substring or prefix/suffix.
+             * @return Computed integer value.
+             */
             RunRuleVector copy_front(int64_t len) const
             {
                 if (len < 0)
@@ -1617,10 +2010,22 @@ namespace dynRLSLP
                 }
                 int64_t remainCutLength = tmpLen - len;
                 tmp.cut_back_string(remainCutLength);
+            /**
+             * @brief Return the total derived string length.
+             * @return int64_t
+             */
                 assert(tmp.get_string_length() == len);
                 return tmp;
             }
 
+            /**
+             * @brief Decompose a run at a given level into lower-level runs.
+             * @param item Rule body item.
+             * @param level Derivation-tree level.
+             * @param base_signature_rule_list Base-signature rule list (D).
+             * @param base_signature_level_list Base-signature level list (H).
+             * @param output Output container for decompressed data.
+             */
             static void break_item(const RunRuleBody &item, uint64_t level, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint16_t> &base_signature_level_list, std::vector<RunRuleBody> &output)
             {
                 uint16_t child_level = SignatureFunctions::get_level(item.number, base_signature_level_list);
@@ -1644,6 +2049,13 @@ namespace dynRLSLP
                     output.push_back(item);
                 }
             }
+            /**
+             * @brief Recursively build derivation-tree visualization lines.
+             * @param vec RunRuleVector to visualize.
+             * @param current_level Current level in the derivation tree.
+             * @param padding Padding width for visualization.
+             * @param output_strings Output lines for the visualization.
+             */
             static void compute_derivation_tree_sub(const RunRuleVector &vec, uint16_t current_level, uint64_t padding, std::vector<std::string> &output_strings)
             {
                 int64_t max_level = vec.get_max_level();

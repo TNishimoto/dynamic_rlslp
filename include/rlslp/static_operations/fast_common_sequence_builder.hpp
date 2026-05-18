@@ -8,7 +8,11 @@ namespace dynRLSLP
 {
 
         /**
-         * @brief A class for building common sequences.
+         * @brief Builds common run sequences for locally consistent parsing.
+         * @ingroup StaticOperationsClasses
+         */
+        /**
+         * @brief Builds common run sequences for locally consistent parsing.
          * @ingroup StaticOperationsClasses
          */
         class FastCommonSequenceBuilder
@@ -32,6 +36,14 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Build a RunRuleVector for a signature substring.
+             * @param item Rule body item.
+             * @param pos Start position in the represented string.
+             * @param len Length of the substring or prefix/suffix.
+             * @param dic Layered RLSLP dictionary.
+             * @return Computed integer value.
+             */
             static RunRuleVector build(SignatureWithRelativeLevel item, int64_t pos, int64_t len, const DictionaryForLayeredRLSLP &dic)
             {
                 int64_t item_len = SignatureFunctions::get_length(item, dic.get_base_signature_length_list());
@@ -50,6 +62,12 @@ namespace dynRLSLP
 
                 return RunRuleVector(seq2, dic);
             }
+            /**
+             * @brief Build a RunRuleVector for a signature substring.
+             * @param item Rule body item.
+             * @param dic Layered RLSLP dictionary.
+             * @return Run-rule vector.
+             */
             static RunRuleVector build(SignatureWithRelativeLevel item, const DictionaryForLayeredRLSLP &dic)
             {
                 uint64_t len = SignatureFunctions::get_length(item, dic.get_base_signature_length_list());
@@ -62,6 +80,13 @@ namespace dynRLSLP
             }
 
         private:
+            /**
+             * @brief Refine a run sequence using consistent parsing context lengths.
+             * @param seq Input run sequence.
+             * @param base_signature_rule_list Base-signature rule list (D).
+             * @param base_signature_level_list Base-signature level list (H).
+             * @return Level or height value.
+             */
             static std::vector<RunRuleBody> break_loop(const std::vector<RunRuleBody> &seq, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint16_t> &base_signature_level_list)
             {
                 std::deque<RunRuleBody> deq;

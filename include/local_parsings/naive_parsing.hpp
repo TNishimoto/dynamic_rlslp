@@ -15,6 +15,11 @@ namespace dynRLSLP
 		class NaiveParsing
 		{
 		public:
+			/**
+			 * @brief Computes factor bits using a naive popcount-based rule.
+			 * @param items Input signature sequence.
+			 * @param output Output vector of factor bits (true marks a block boundary).
+			 */
 			static void compute_factor_bits(const std::vector<int64_t> &items, std::vector<bool> &output)
 			{
 				output.clear();

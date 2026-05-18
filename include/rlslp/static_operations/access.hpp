@@ -11,33 +11,24 @@
 #include <random>
 namespace dynRLSLP
 {
-	/**
-	  * @page terminology Terminology
-	  *
-	  * @section term_val val(X)
-	  * val(X) is the string represented by a given RLSLP Rule $X$.
-	  * 
-	  * @section left_string Left string of RLSLPRuleBody
-	  * The left string of a RLSLPRuleBody refers to the substring represented by its first (A) child:
-	  * - For a Pair rule, it is the expansion (val(A)) of the left (first) child.
-	  * - For a Power rule, it is also the expansion of its (single) child (the repeated substring).
-	  * - For other rule types (such as Character or Signature), the left string is typically defined as the string itself or may be empty depending on context.
-	  *
-	  * @section right_string Right string of RLSLPRuleBody
-	  * The right string of a RLSLPRuleBody refers to the substring represented by its second (B) child or the repeated part excluding the first occurrence:
-	  * - For a Pair rule, it is the expansion (val(B)) of the right (second) child.
-	  * - For a Power rule, it consists of all repetitions of the child except the first (i.e., *val(A)* repeated *B-1* times).
-	  * - For other rule types (such as Character or Signature), the right string is typically defined as an empty string or the string itself, depending on context.
-	  *
-	  */
 
 	/**
-	 * @brief A class for accessing the string represented by RLSLP.
+	 * @brief Static string access (random access, prefix, suffix) on RLSLP rule bodies.
 	 * @ingroup StaticOperationsClasses
 	 */
 	class Access
 	{
 		private:
+		/**
+		 * @brief Fill the first @p len characters of a rule body into an output array (recursive helper).
+		 * @tparam ARRAY Output container type supporting indexed assignment.
+		 * @param item Rule body whose string is read left-to-right.
+		 * @param current_pos Next write index in @p output.
+		 * @param len Number of characters to collect.
+		 * @param base_signature_rule_list Base-signature rule list (D).
+		 * @param output Output array; prefix is written starting at index 0.
+		 * @return Index after the last written character, or @p len when complete.
+		 */
 		template <typename ARRAY>
 		static int64_t get_prefix(RLSLPRuleBody item, int64_t current_pos, uint64_t len, const std::vector<RLSLPRuleBody> &base_signature_rule_list, ARRAY &output)
 		{
@@ -85,6 +76,16 @@ namespace dynRLSLP
 		}
 
 		template <typename ARRAY>
+		/**
+		 * @brief Fill the last @p len characters of a rule body into an output array (recursive helper).
+		 * @tparam ARRAY Output container type supporting indexed assignment.
+		 * @param item Rule body whose string is read right-to-left.
+		 * @param current_pos Next write index in @p output (counts down from len-1).
+		 * @param len Number of characters to collect.
+		 * @param base_signature_rule_list Base-signature rule list (D).
+		 * @param output Output array; suffix is written ending at index len-1.
+		 * @return Index after the last written character, or -1 when complete.
+		 */
 		static int64_t get_suffix(RLSLPRuleBody item, int64_t current_pos, uint64_t len, const std::vector<RLSLPRuleBody> &base_signature_rule_list, ARRAY &output)
 		{
 			if (item.get_type() == RLSLPRuleType::Character)
@@ -132,10 +133,12 @@ namespace dynRLSLP
 
 	public:
 		/**
-		 * @brief Return @ref term_val "val(X)"[pos].
-		 * @param base_signature_rule_list The rule list of DictionaryForLayeredRLSLP.
-		 * @param base_signature_length_list The length list of DictionaryForLayeredRLSLP.
-		 * @return *val(X)[pos]*.
+		 * @brief Return the character at a position in a rule body string.
+		 * @param X RLSLP rule body.
+		 * @param pos Start position in the represented string.
+		 * @param base_signature_rule_list Base-signature rule list (D).
+		 * @param base_signature_length_list Base-signature length list (L).
+		 * @return Character code at zero-based position @p pos in the expanded string.
 		 */
 		static uint64_t random_access(RLSLPRuleBody X, int64_t pos, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list)
 		{
@@ -194,9 +197,10 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return @ref term_val "val"(X_{1}, X_{2}, ..., X_{k}), where *X_{1}, X_{2}, ..., X_{k}* are the sequence of nonterminals repersented by *items*..
-		 * @param base_signature_rule_list The rule list of DictionaryForLayeredRLSLP.
-		 * @return val(X_{1}, X_{2}, ..., X_{k}).
+		 * @brief Return the string value of a rule body or run sequence.
+		 * @param items Sequence of run rules or integers.
+		 * @param base_signature_rule_list Base-signature rule list (D).
+		 * @return Concatenated expanded string of all run rules in @p items.
 		 */
 		static std::string get_string(const std::vector<RunRuleBody> &items, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
 		{
@@ -213,9 +217,10 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return @ref term_val "val(X)".
-		 * @param base_signature_rule_list The rule list of DictionaryForLayeredRLSLP.
-		 * @return *val(X)*.
+		 * @brief Return the string value of a rule body or run sequence.
+		 * @param X RLSLP rule body.
+		 * @param base_signature_rule_list Base-signature rule list (D).
+		 * @return Full expanded string represented by rule body @p X.
 		 */
 		static std::string get_string(RLSLPRuleBody X, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
 		{
@@ -253,9 +258,11 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return @ref term_val "val(X)[0..len-1]".
-		 * @param base_signature_rule_list The rule list of DictionaryForLayeredRLSLP.
-		 * @return *val(X)[0..len-1]*.
+		 * @brief Return the length-prefix of a rule body string.
+		 * @param X RLSLP rule body.
+		 * @param len Length of the substring or prefix/suffix.
+		 * @param base_signature_rule_list Base-signature rule list (D).
+		 * @return Prefix string of length @p len from the expanded string of @p X.
 		 */
 		static std::string get_prefix(RLSLPRuleBody X, uint64_t len, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
 		{
@@ -274,9 +281,11 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return @ref term_val "val(X)[|X|-len..|X|-1]", where |X| is the length of *val(X)*.
-		 * @param base_signature_rule_list The rule list of DictionaryForLayeredRLSLP.
-		 * @return *val(X)[|X|-len..|X|-1]*.
+		 * @brief Return the length-suffix of a rule body string.
+		 * @param X RLSLP rule body.
+		 * @param len Length of the substring or prefix/suffix.
+		 * @param base_signature_rule_list Base-signature rule list (D).
+		 * @return Suffix string of length @p len from the expanded string of @p X.
 		 */
 		static std::string get_suffix(RLSLPRuleBody X, uint64_t len, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
 		{
@@ -295,9 +304,10 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return the @ref left_string "left string" of a given RLSLPRuleBody *X*.
-		 * @param base_signature_rule_list The rule list of DictionaryForLayeredRLSLP.
-		 * @return The left string of *X*.
+		 * @brief Return the left substring of a rule body.
+		 * @param X RLSLP rule body.
+		 * @param base_signature_rule_list Base-signature rule list (D).
+		 * @return Left factor string (first child for Pair, single block for Power).
 		 */
 		static std::string get_left_string(RLSLPRuleBody X, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
 		{
@@ -319,9 +329,10 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return the @ref right_string "right string" of a given RLSLPRuleBody *X*.
-		 * @param base_signature_rule_list The rule list of DictionaryForLayeredRLSLP.
-		 * @return The right string of *X*.
+		 * @brief Return the right substring of a rule body.
+		 * @param X RLSLP rule body.
+		 * @param base_signature_rule_list Base-signature rule list (D).
+		 * @return Right factor string (second child for Pair, tail repeats for Power).
 		 */
 		static std::string get_right_string(RLSLPRuleBody X, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
 		{
@@ -347,9 +358,10 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return @ref term_val "val(X)".
-		 * @param base_signature_rule_list The rule list of DictionaryForLayeredRLSLP.
-		 * @return *val(X)*.
+		 * @brief Return the string as a vector of characters.
+		 * @param item Rule body item.
+		 * @param base_signature_rule_list Base-signature rule list (D).
+		 * @return Expanded string as a vector of character codes.
 		 */
 		static std::vector<sig_char_type> get_string_as_vector(RLSLPRuleBody item, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
 		{

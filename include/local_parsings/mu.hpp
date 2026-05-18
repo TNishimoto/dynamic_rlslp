@@ -7,9 +7,14 @@
 #include <iostream>
 namespace dynRLSLP
 {
+    /**
+     * @brief Provides the mu-floor lookup table used in restricted block compression.
+     * @ingroup LocalParsingClasses
+     */
     class Mu
     {
     public:
+        /** @brief Precomputed mu-floor values indexed by string length. */
         inline static const uint64_t MU_FLOOR[] = {
             0ULL, 1ULL, 1ULL, 1ULL, 1ULL, 1ULL, 1ULL, 1ULL, 1ULL, 1ULL, 1ULL, 1ULL, 1ULL, 2ULL, 2ULL, 2ULL, 2ULL, 2ULL, 2ULL, 3ULL, 3ULL, 3ULL, 3ULL,
             4ULL, 4ULL, 4ULL, 4ULL, 5ULL, 5ULL, 6ULL, 6ULL, 7ULL, 7ULL, 8ULL, 8ULL, 9ULL, 9ULL, 11ULL, 11ULL, 12ULL, 12ULL, 14ULL, 14ULL, 16ULL, 16ULL, 18ULL, 18ULL, 21ULL, 21ULL, 24ULL, 24ULL,
@@ -58,6 +63,12 @@ namespace dynRLSLP
             50313059768570400ULL, 50313059768570400ULL, 57500639735509030ULL, 57500639735509030ULL, 65715016840581750ULL, 65715016840581750ULL, 75102876389236290ULL, 75102876389236290ULL,
             85831858730555760ULL, 85831858730555760ULL, 98093552834920860ULL, 98093552834920860ULL, 112106917525623840ULL, 112106917525623840ULL, 128122191457855820ULL, 128122191457855820ULL,
             146425361666120960ULL, 146425361666120960ULL, 167343270475566800ULL, 167343270475566800ULL, 191249451972076320ULL, 191249451972076320ULL, 218570802253801540ULL};
+        /**
+         * @brief Returns the mu-floor value for a given string length.
+         * @param x String length (must be positive).
+         * @return Mu-floor value from the lookup table, or UINT64_MAX if @p x exceeds the table.
+         * @throws std::range_error if @p x is zero.
+         */
         static uint64_t mu_floor(const uint64_t x)
         {
             if (x > 0)

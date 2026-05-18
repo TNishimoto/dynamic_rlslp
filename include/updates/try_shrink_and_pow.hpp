@@ -10,6 +10,16 @@ namespace dynRLSLP
         class TryShrinkAndPow
         {
         public:
+            /**
+             * @brief Attempts to build the level-0 run-rule sequence without adding signatures.
+             * @tparam C Character type of the input text.
+             * @tparam CALLBACK Unused callback type parameter for API symmetry.
+             * @param text Input character sequence.
+             * @param dic Dynamic grammar used for lookup only.
+             * @param output Level-0 deque filled on success.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return True if all character signatures already exist.
+             */
             template <typename C, typename CALLBACK = decltype(no_callback)>
             static bool try_shrink_char(const std::vector<C> &text, const DynamicGrammarForLayeredRLSLP &dic, std::deque<RunRuleBody> &output, int message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -71,6 +81,14 @@ namespace dynRLSLP
             }
 
 
+            /**
+             * @brief Attempts restricted-block pow without adding signatures.
+             * @param items Input run-rule bodies.
+             * @param current_level Current hierarchy level.
+             * @param dic Dynamic grammar used for lookup only.
+             * @param output Lifted run-rule deque filled on success.
+             * @return True if all required signatures exist.
+             */
             static bool try_restricted_pow(const std::deque<RunRuleBody> &items, uint16_t current_level, const DynamicGrammarForLayeredRLSLP &dic, std::deque<RunRuleBody> &output)
             {
                 assert(current_level < LEVEL_LIMIT);
@@ -99,6 +117,17 @@ namespace dynRLSLP
                 }
                 return true;
             }
+            /**
+             * @brief Attempts one center-line shrink or pow step without adding signatures.
+             * @param left_context Left context run-rule bodies.
+             * @param center Center run-rule deque to compile.
+             * @param right_context Right context run-rule bodies.
+             * @param current_level Current hierarchy level.
+             * @param dic Dynamic grammar used for lookup only.
+             * @param output Compiled center sequence filled on success.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return True if all required signatures exist.
+             */
             static bool try_center_line_compile(const std::vector<RunRuleBody> &left_context, const std::deque<RunRuleBody> &center, const std::vector<RunRuleBody> &right_context,
                                                 uint64_t current_level, const DynamicGrammarForLayeredRLSLP &dic, std::deque<RunRuleBody> &output, [[maybe_unused]] int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -158,6 +187,13 @@ namespace dynRLSLP
                 return true;
             }
 
+            /**
+             * @brief Attempts signature-encoding pow without adding signatures.
+             * @param items Input run-rule bodies.
+             * @param dic Dynamic grammar used for lookup only.
+             * @param output Lifted run-rule deque filled on success.
+             * @return True if all required signatures exist.
+             */
             static bool try_pow(const std::deque<RunRuleBody> &items, const DynamicGrammarForLayeredRLSLP &dic, std::deque<RunRuleBody> &output)
             {
                 for (uint64_t i = 0; i < items.size(); i++)
@@ -187,6 +223,15 @@ namespace dynRLSLP
                 }
                 return true;
             }
+            /**
+             * @brief Attempts shrink with context without adding signatures.
+             * @param left_context Left context run-rule bodies.
+             * @param center Center run-rule deque to shrink.
+             * @param right_context Right context run-rule bodies.
+             * @param dic Dynamic grammar used for lookup only.
+             * @param output Shrunk center sequence filled on success.
+             * @return True if all required signatures exist.
+             */
             static bool try_shrink_with_context(const std::vector<RunRuleBody> &left_context, const std::deque<RunRuleBody> &center, const std::vector<RunRuleBody> &right_context,
                                                 const DynamicGrammarForLayeredRLSLP &dic, std::deque<RunRuleBody> &output)
             {
@@ -224,6 +269,14 @@ namespace dynRLSLP
                 return true;
             }
 
+            /**
+             * @brief Attempts shrink according to factor bits without adding signatures.
+             * @param items Input run-rule bodies.
+             * @param bools Factor bits marking block boundaries.
+             * @param dic Dynamic grammar used for lookup only.
+             * @param output Shrunk run-rule deque filled on success.
+             * @return True if all required signatures exist.
+             */
             static bool try_shrink(const std::deque<RunRuleBody> &items, const std::vector<bool> &bools, const DynamicGrammarForLayeredRLSLP &dic, std::deque<RunRuleBody> &output)
             {
                 if (items.size() == 0)
@@ -266,6 +319,15 @@ namespace dynRLSLP
 
             }
 
+            /**
+             * @brief Attempts restricted-block shrink without adding signatures.
+             * @param items Input run-rule bodies.
+             * @param current_level Current hierarchy level.
+             * @param dic Dynamic grammar used for lookup only.
+             * @param output Shrunk run-rule deque filled on success.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return True if all required signatures exist.
+             */
             static bool try_restricted_shrink(const std::deque<RunRuleBody> &items, uint16_t current_level, const DynamicGrammarForLayeredRLSLP &dic, std::deque<RunRuleBody> &output, [[maybe_unused]] int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 if (items.size() == 0)

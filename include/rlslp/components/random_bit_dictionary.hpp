@@ -10,6 +10,10 @@
 
 namespace dynRLSLP
 {
+    /**
+     * @brief Random-bit storage for restricted block compression.
+     * @ingroup RLSLPClasses
+     */
     class RandomBitDictionary
     {
     private:
@@ -22,8 +26,11 @@ namespace dynRLSLP
         std::unordered_map<SignatureWithRelativeLevel, std::vector<uint64_t>> longRandomBits;
 
     public:
+        /** @brief Deleted copy constructor. */
         RandomBitDictionary(const RandomBitDictionary &) = delete;
+        /** @brief Deleted copy assignment operator. */
         RandomBitDictionary &operator=(const RandomBitDictionary &) = delete;
+        /** @brief Move constructor. */
         RandomBitDictionary(RandomBitDictionary &&other) noexcept
             : seed(other.seed),
               mt(other.mt),
@@ -34,6 +41,11 @@ namespace dynRLSLP
         {
             other.mt = nullptr;
         }
+        /**
+         * @brief Move assignment operator.
+         * @param other Source dictionary.
+         * @return Reference to this dictionary.
+         */
         RandomBitDictionary &operator=(RandomBitDictionary &&other) noexcept
         {
             if (this != &other)
@@ -59,9 +71,15 @@ namespace dynRLSLP
             return *this;
         }
 
+        /**
+         * @brief Construct an empty random-bit dictionary.
+         */
         RandomBitDictionary() {
 
         };
+        /**
+         * @brief Destructor; releases resources.
+         */
         ~RandomBitDictionary()
         {
             this->clear();
@@ -76,6 +94,11 @@ namespace dynRLSLP
         ////////////////////////////////////////////////////////////////////////////////
         //@{
 
+        /**
+         * @brief Return the random bit associated with a signature.
+         * @param signature Encoded signature with relative level.
+         * @return Random bit value at the signature's level.
+         */
         bool get_random_bit(SignatureWithRelativeLevel signature) const
         {
             int64_t base_sig = SignatureFunctions::get_base_signature(signature);
@@ -121,6 +144,10 @@ namespace dynRLSLP
         ////////////////////////////////////////////////////////////////////////////////
         //@{
 
+        /**
+         * @brief Initialize the random-bit generator with a seed.
+         * @param seed Random seed value.
+         */
         void initialize(uint64_t seed)
         {
             this->clear();
@@ -133,6 +160,10 @@ namespace dynRLSLP
             this->dist = std::uniform_int_distribution<uint64_t>(0, std::numeric_limits<uint64_t>::max());
         }
 
+        /**
+         * @brief Swap contents with another instance.
+         * @param other Other random-bit dictionary.
+         */
         void swap(RandomBitDictionary &other)
         {
             this->shortRandomBits.swap(other.shortRandomBits);
@@ -143,22 +174,32 @@ namespace dynRLSLP
             std::swap(this->dist, other.dist);
             std::swap(this->seed, other.seed);
         }
+        /** @brief Clear all random-bit storage. */
         void clear()
         {
             this->shortRandomBits.clear();
             this->middleRandomBits.clear();
             this->longRandomBits.clear();
         }
+        /**
+         * @brief Clear random bits for one base signature.
+         * @param base_signature Base signature index.
+         */
         void clear(SignatureWithRelativeLevel base_signature)
         {
             this->shortRandomBits[base_signature] = 0;
             this->middleRandomBits.erase(base_signature);
             this->longRandomBits.erase(base_signature);
         }
+        /** @brief Append a new short random-bit slot. */
         void add_new_element()
         {
             this->shortRandomBits.push_back(0);
         }
+        /**
+         * @brief Remove random bits for a signature.
+         * @param signature Encoded signature with relative level.
+         */
         void erase_random_bit(SignatureWithRelativeLevel signature)
         {
             uint64_t base_signature = SignatureFunctions::get_base_signature(signature);
@@ -192,6 +233,11 @@ namespace dynRLSLP
                 }
             }
         }
+        /**
+         * @brief Create random bits for a base signature at a given single count.
+         * @param base_signature Base signature index.
+         * @param single_count Relative maximum level (single-signature count).
+         */
         void create_random_bit(BaseSignature base_signature, uint64_t single_count)
         {
             assert(this->mt != nullptr);
@@ -238,6 +284,11 @@ namespace dynRLSLP
         ////////////////////////////////////////////////////////////////////////////////
         //@{
 
+        /**
+         * @brief Verify bitwise equality with another instance.
+         * @param other Other random-bit dictionary.
+         * @return True if equal; otherwise throws.
+         */
         bool verify_equal(const RandomBitDictionary &other) const
         {
             if (this->shortRandomBits.size() != other.shortRandomBits.size())
@@ -288,6 +339,10 @@ namespace dynRLSLP
 
             return true;
         }
+        /**
+         * @brief Print summary statistics to standard output.
+         * @param message_paragraph Indentation level for formatted output.
+         */
         void print_statistics(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
         {
             uint64_t long_value_count = 0;
@@ -308,6 +363,12 @@ namespace dynRLSLP
         ////////////////////////////////////////////////////////////////////////////////
         //@{
 
+        /**
+         * @brief Deserialize from a binary input stream.
+         * @param seed Random seed used to initialize the generator after load.
+         * @param ifs Input file stream.
+         * @return Loaded random-bit dictionary.
+         */
         static RandomBitDictionary load_from_file(uint64_t seed, std::ifstream &ifs)
         {
             RandomBitDictionary r;
@@ -346,6 +407,11 @@ namespace dynRLSLP
             }
             return r;
         }
+        /**
+         * @brief Serialize to a binary output stream.
+         * @param item Random-bit dictionary to store.
+         * @param os Output file stream.
+         */
         static void store_to_file(const RandomBitDictionary &item, std::ofstream &os)
         {
             uint64_t _shortRandomBits_count = item.shortRandomBits.size();

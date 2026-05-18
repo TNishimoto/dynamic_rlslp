@@ -11,7 +11,7 @@
 namespace dynRLSLP
 {
     /**
-     * @brief XXXXXXXXXXXXX
+     * @brief Utility for visualizing RLSLP derivation trees.
      * @ingroup RLSLPClasses
      */
     class DerivationTreeVisualizer
@@ -32,6 +32,15 @@ namespace dynRLSLP
         */
 
     public:
+        /**
+         * @brief Recursively expand signatures down to a target level.
+         * @param items Sequence of run rules or integers.
+         * @param target_level Target derivation level.
+         * @param base_signature_rule_list Base-signature rule list (D).
+         * @param base_signature_level_list Base-signature level list (H).
+         * @param base_signature_length_list Base-signature length list (L).
+         * @return Resulting vector.
+         */
         static std::vector<SignatureWithRelativeLevel> compute_level_sequence(const std::vector<SignatureWithRelativeLevel> &items,
                                                                               uint64_t target_level, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint16_t> &base_signature_level_list, const std::vector<uint64_t> &base_signature_length_list)
         {
@@ -90,6 +99,16 @@ namespace dynRLSLP
                 return compute_level_sequence(tmp, target_level, base_signature_rule_list, base_signature_level_list, base_signature_length_list);
             }
         }
+        /**
+         * @brief Recursively build derivation-tree visualization lines.
+         * @param items Sequence of run rules or integers.
+         * @param target_level Target derivation level.
+         * @param base_signature_rule_list Base-signature rule list (D).
+         * @param base_signature_level_list Base-signature level list (H).
+         * @param base_signature_length_list Base-signature length list (L).
+         * @param padding Padding width for visualization.
+         * @param output_strings Output lines for the visualization.
+         */
         static void compute_derivation_tree_sub(const std::vector<SignatureWithRelativeLevel> &items, uint64_t target_level, const std::vector<RLSLPRuleBody> &base_signature_rule_list,
                                                 const std::vector<uint16_t> &base_signature_level_list, const std::vector<uint64_t> &base_signature_length_list, uint64_t padding, std::vector<std::string> &output_strings)
         {
@@ -171,6 +190,15 @@ namespace dynRLSLP
             }
         }
 
+        /**
+         * @brief Build a multi-line derivation-tree visualization.
+         * @param items Sequence of run rules or integers.
+         * @param base_signature_rule_list Base-signature rule list (D).
+         * @param base_signature_level_list Base-signature level list (H).
+         * @param base_signature_length_list Base-signature length list (L).
+         * @param padding Padding width for visualization.
+         * @return Resulting string.
+         */
         static std::vector<std::string> compute_derivation_tree(const std::vector<SignatureWithRelativeLevel> &items, const std::vector<RLSLPRuleBody> &base_signature_rule_list,
                                                                 const std::vector<uint16_t> &base_signature_level_list, const std::vector<uint64_t> &base_signature_length_list, uint64_t padding = 3)
         {

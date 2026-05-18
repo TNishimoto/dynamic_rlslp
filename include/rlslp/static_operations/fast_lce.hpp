@@ -12,10 +12,10 @@
 
 namespace dynRLSLP
 {
-		/**
-		 * @brief XXXXXXXX
-		 * @ingroup StaticOperationsClasses
-		 */
+        /**
+         * @brief Longest common extension on run-encoded strings.
+         * @ingroup StaticOperationsClasses
+         */
         class FastLCE
         {
 
@@ -50,6 +50,12 @@ namespace dynRLSLP
                 }
                 return matchedLen;
             }
+            /**
+             * @brief Expand the front run on a stack by one derivation step.
+             * @param item Rule body item.
+             * @param is_reverse Whether expansion proceeds from the string end.
+             * @param base_signature_rule_list Base-signature rule list (D).
+             */
             static void break_front(VStack<RunRuleBody> &item, bool is_reverse, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
             {
                 RunRuleBody top = item.top();
@@ -99,6 +105,15 @@ namespace dynRLSLP
             static inline int64_t lce_7_count = 0;
             static inline int64_t lce_15_count = 0;
 
+            /**
+             * @brief Compute longest common extension between two run representations.
+             * @param body1 First run rule body.
+             * @param body2 Second run rule body or run sequence.
+             * @param alphabet_bit_size Number of bits per alphabet symbol in short strings.
+             * @param small_dic Layered RLSLP dictionary.
+             * @param leftShortStringList Precomputed left short-string table.
+             * @return Computed integer value.
+             */
             static std::pair<uint64_t, int8_t> lce(const RunRuleBody &body1, const RunRuleBody &body2, uint8_t alphabet_bit_size, const DictionaryForLayeredRLSLP &small_dic,
                                                    const std::vector<uint64_t> &leftShortStringList)
             {
@@ -154,6 +169,16 @@ namespace dynRLSLP
                 #endif
                 return result;
             }
+            /**
+             * @brief Compute longest common extension between two run representations.
+             * @param body1 First run rule body.
+             * @param body2 Second run rule body or run sequence.
+             * @param short_string2 short string2.
+             * @param alphabet_bit_size Number of bits per alphabet symbol in short strings.
+             * @param small_dic Layered RLSLP dictionary.
+             * @param leftShortStringList Precomputed left short-string table.
+             * @return Computed integer value.
+             */
             static std::pair<uint64_t, int8_t> lce(const RunRuleBody &body1, const std::vector<RunRuleBody> &body2, const ShortStringInfo &short_string2, uint8_t alphabet_bit_size, const DictionaryForLayeredRLSLP &small_dic,
                                                        const std::vector<uint64_t> &leftShortStringList)
             {
@@ -199,6 +224,13 @@ namespace dynRLSLP
                 #endif
                 return result;
             }
+            /**
+             * @brief Compute longest common extension between two run representations.
+             * @param body1 First run rule body.
+             * @param body2 Second run rule body or run sequence.
+             * @param small_dic Layered RLSLP dictionary.
+             * @return Computed integer value.
+             */
             static std::pair<uint64_t, int8_t> lce(const RunRuleBody &body1, const std::vector<RunRuleBody> &body2, const DictionaryForLayeredRLSLP &small_dic)
             {
                 VStack<RunRuleBody> item1;
@@ -207,6 +239,13 @@ namespace dynRLSLP
                 return lce(item1, item2, small_dic);
             }
 
+            /**
+             * @brief Compute longest common extension between two single runs.
+             * @param body1 First run rule body.
+             * @param body2 Second run rule body.
+             * @param small_dic Layered RLSLP dictionary.
+             * @return Pair of LCE length and comparison flag.
+             */
             static std::pair<uint64_t, int8_t> lce(const RunRuleBody &body1, const RunRuleBody &body2, const DictionaryForLayeredRLSLP &small_dic)
             {
 
@@ -219,6 +258,15 @@ namespace dynRLSLP
                 return lce(item1, item2, small_dic);
             }
 
+            /**
+             * @brief Compute longest common extension between two run representations.
+             * @param item1 First run stack or short-string pair.
+             * @param item2 Second run to add or compare.
+             * @param alphabet_bit_size Number of bits per alphabet symbol in short strings.
+             * @param small_dic Layered RLSLP dictionary.
+             * @param leftShortStringList Precomputed left short-string table.
+             * @return Computed integer value.
+             */
             static std::pair<uint64_t, int8_t> lce(VStack<RunRuleBody> &item1, VStack<RunRuleBody> &item2, uint8_t alphabet_bit_size, const DictionaryForLayeredRLSLP &small_dic,
                                                    const std::vector<uint64_t> &leftShortStringList)
             {
@@ -255,6 +303,16 @@ namespace dynRLSLP
                 }
                 return result;
             }
+            /**
+             * @brief Compute reverse longest common extension.
+             * @param body1 First run rule body.
+             * @param body2 Second run rule body or run sequence.
+             * @param short_string2 short string2.
+             * @param alphabet_bit_size Number of bits per alphabet symbol in short strings.
+             * @param small_dic Layered RLSLP dictionary.
+             * @param rightShortStringList Precomputed right short-string table.
+             * @return Computed integer value.
+             */
             static std::pair<uint64_t, int8_t> reverse_lce(const RunRuleBody &body1, const std::vector<RunRuleBody> &body2, ShortStringInfo short_string2, uint8_t alphabet_bit_size, const DictionaryForLayeredRLSLP &small_dic,
                                                            const std::vector<uint64_t> &rightShortStringList)
             {
@@ -319,6 +377,13 @@ namespace dynRLSLP
 
                 return result;
             }
+            /**
+             * @brief Compute reverse longest common extension.
+             * @param body1 First run rule body.
+             * @param body2 Second run rule body or run sequence.
+             * @param small_dic Layered RLSLP dictionary.
+             * @return Computed integer value.
+             */
             static std::pair<uint64_t, int8_t> reverse_lce(const RunRuleBody &body1, const std::vector<RunRuleBody> &body2, const DictionaryForLayeredRLSLP &small_dic)
             {
                 VStack<RunRuleBody> item1;
@@ -383,6 +448,13 @@ namespace dynRLSLP
                 return result;
             }
 
+            /**
+             * @brief Compute reverse longest common extension.
+             * @param body1 First run rule body.
+             * @param body2 Second run rule body or run sequence.
+             * @param small_dic Layered RLSLP dictionary.
+             * @return Computed integer value.
+             */
             static std::pair<uint64_t, int8_t> reverse_lce(const RunRuleBody &body1, const RunRuleBody &body2, const DictionaryForLayeredRLSLP &small_dic)
             {
                 VStack<RunRuleBody> item1;
@@ -431,6 +503,13 @@ namespace dynRLSLP
                 return result;
             }
 
+            /**
+             * @brief Compute longest common extension between two run representations.
+             * @param item1 First run stack or short-string pair.
+             * @param item2 Second run to add or compare.
+             * @param small_dic Layered RLSLP dictionary.
+             * @return Computed integer value.
+             */
             static std::pair<uint64_t, int8_t> lce(VStack<RunRuleBody> &item1, VStack<RunRuleBody> &item2, const DictionaryForLayeredRLSLP &small_dic)
             {
                 bool is_reverse = false;
@@ -537,6 +616,13 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Compute reverse longest common extension.
+             * @param item1 First run stack or short-string pair.
+             * @param item2 Second run to add or compare.
+             * @param small_dic Layered RLSLP dictionary.
+             * @return Computed integer value.
+             */
             static std::pair<uint64_t, int8_t> reverse_lce(VStack<RunRuleBody> &item1, VStack<RunRuleBody> &item2, const DictionaryForLayeredRLSLP &small_dic)
             {
                 total_lce_count++;

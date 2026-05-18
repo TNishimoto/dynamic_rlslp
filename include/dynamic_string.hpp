@@ -37,11 +37,19 @@ namespace dynRLSLP
 
         /**
          * @brief Default constructor with an empty dictionary.
+         * @param use_restricted_block_compression If true, use restricted block compression during grammar updates.
+         * @param seed Random seed for compression and hashing.
          */
         DynamicString(bool use_restricted_block_compression = false, int64_t seed = 0) : dynamic_grammar()
         {
             dynamic_grammar.initialize(use_restricted_block_compression, seed);
         }
+        /**
+         * @brief Construct an empty dynamic string with an explicit alphabet.
+         * @param use_restricted_block_compression If true, use restricted block compression during grammar updates.
+         * @param alphabet Explicit alphabet as byte values.
+         * @param seed Random seed for compression and hashing.
+         */
         DynamicString(bool use_restricted_block_compression, const std::vector<uint8_t> &alphabet, int64_t seed) : dynamic_grammar()
         {
             dynamic_grammar.initialize(use_restricted_block_compression, alphabet, seed);
@@ -52,9 +60,9 @@ namespace dynRLSLP
          */
         DynamicString(const DynamicString &) = delete;
         /**
-         * @brief Default move constructor.
+         * @brief Move constructor; transfers grammar and auxiliary caches from \p other.
+         * @param other Source instance to move from.
          */
-
         DynamicString(DynamicString &&other) noexcept
             : dictionaryMode(std::move(other.dictionaryMode)),
               dynamic_grammar(std::move(other.dynamic_grammar)),
@@ -76,7 +84,9 @@ namespace dynRLSLP
         DynamicString &operator=(const DynamicString &) = delete;
 
         /**
-         * @brief Default move assignment operator.
+         * @brief Move assignment operator; transfers grammar and auxiliary caches from \p other.
+         * @param other Source instance to move from.
+         * @return Reference to this instance after the move.
          */
         DynamicString &operator=(DynamicString &&other) noexcept
         {
@@ -92,7 +102,9 @@ namespace dynRLSLP
         }
 
         /**
-         * @brief The alias for access query
+         * @brief Random access to character \p T[pos]; alias for access().
+         * @param pos Position in the string (0-based).
+         * @return Character at position \p pos.
          */
         uint8_t operator[](size_t pos) const
         {
@@ -120,28 +132,42 @@ namespace dynRLSLP
         ///   @name Lightweight functions for accessing to properties of this class
         ////////////////////////////////////////////////////////////////////////////////
         //@{
+        /**
+         * @brief Return the right short-string cache used in Fast dictionary mode.
+         * @return Const reference to the right short-string list.
+         */
         const std::vector<uint64_t> &get_right_short_string_list() const
         {
             return this->rightShortStringList;
         }
+        /**
+         * @brief Return the left short-string cache used in Fast dictionary mode.
+         * @return Const reference to the left short-string list.
+         */
         const std::vector<uint64_t> &get_left_short_string_list() const
         {
             return this->leftShortStringList;
         }
 
+        /**
+         * @brief Return the current dictionary operating mode.
+         * @return Active \p DictionaryMode (Standard or Fast).
+         */
         DictionaryMode get_dictionary_mode() const
         {
             return this->dictionaryMode;
         }
         /**
-         * @brief Return a reference to the dictionary for the grammar \p G.
+         * @brief Return a mutable reference to the layered RLSLP grammar dictionary \p G.
+         * @return Reference to the internal \p DynamicGrammarForLayeredRLSLP.
          */
         DynamicGrammarForLayeredRLSLP &get_dictionary()
         {
             return this->dynamic_grammar;
         }
         /**
-         * @brief Return a const reference to the dictionary for the grammar \p G.
+         * @brief Return a const reference to the layered RLSLP grammar dictionary \p G.
+         * @return Const reference to the internal \p DynamicGrammarForLayeredRLSLP.
          */
         const DynamicGrammarForLayeredRLSLP &get_dictionary() const
         {
@@ -149,6 +175,7 @@ namespace dynRLSLP
         }
         /**
          * @brief Return \p true if \p |T| = 0. Otherwise, return \p false.
+         * @return Whether the compressed string is empty.
          */
         bool is_empty() const
         {
@@ -156,6 +183,7 @@ namespace dynRLSLP
         }
         /**
          * @brief Return \p |T|.
+         * @return Length of the represented string in characters.
          */
         uint64_t size() const
         {
@@ -173,13 +201,15 @@ namespace dynRLSLP
         }
         /**
          * @brief Return the alphabet of \p T as a vector of characters.
+         * @return Sorted distinct byte values occurring in the string.
          */
         std::vector<uint8_t> get_alphabet() const
         {
             return this->dynamic_grammar.get_alphabet();
         }
         /**
-         * @brief Get the number of base_signature_rule_list in \p G.
+         * @brief Get the number of non-null rules in the base signature rule list of \p G.
+         * @return Count of grammar rules excluding null signatures.
          */
         uint64_t get_grammar_size() const
         {
@@ -187,8 +217,9 @@ namespace dynRLSLP
         }
 
         /**
-         * @brief Returns the total memory usage in bytes
-         * @param only_dynamic_memory If true, only the size of the dynamic memory is returned
+         * @brief Returns the total memory usage in bytes.
+         * @param only_dynamic_memory If true, only the size of dynamically allocated memory is returned.
+         * @return Total memory footprint in bytes.
          */
         uint64_t size_in_bytes(bool only_dynamic_memory = false) const
         {
@@ -197,6 +228,8 @@ namespace dynRLSLP
 
         /**
          * @brief Return the length of the string derived by the first variable v_{1} in the body of the rule \p D[i] -> v_{1}, v_{2}, ..., v_{k}, which is stored in \p G.
+         * @param i Signature (with relative level) of the rule.
+         * @return Length of the left-derived substring for a Pair or Power rule.
          */
         uint64_t get_left_string_length(SignatureWithRelativeLevel i) const
         {
@@ -224,13 +257,21 @@ namespace dynRLSLP
         ////////////////////////////////////////////////////////////////////////////////
         //@{
         /**
-         * @brief Return T[i]
-         * @note O(log n) time
+         * @brief Return T[i].
+         * @param i Position in the string (0-based).
+         * @return Character at position \p i.
+         * @note O(log n) time.
          */
         uint8_t access(uint64_t i) const
         {
             return this->operator[](i);
         }
+        /**
+         * @brief Compute the longest common prefix length of suffixes starting at \p i and \p j.
+         * @param i Starting position of the first suffix.
+         * @param j Starting position of the second suffix.
+         * @return Length of the longest common prefix of \p T[i..] and \p T[j..].
+         */
         uint64_t lce(uint64_t i, uint64_t j) const
         {
             const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
@@ -253,6 +294,11 @@ namespace dynRLSLP
             std::pair<uint64_t, int8_t> result = FastLCE::lce(st1, st2, small_dic);
             return result.first;
         }
+        /**
+         * @brief Resolve temporary occurrences to absolute text positions.
+         * @param input List of temporary occurrence descriptors to expand.
+         * @return All occurrence positions in the current string.
+         */
         std::vector<uint64_t> get_all_occurrences(const std::vector<TemporaryOccurrence> &input) const
         {
             if (this->dictionaryMode == DictionaryMode::Fast)
@@ -273,6 +319,7 @@ namespace dynRLSLP
         //@{
         /**
          * @brief Return \p T as a string.
+         * @return Decompressed text as a \p std::string.
          */
         std::string to_string() const
         {
@@ -291,12 +338,17 @@ namespace dynRLSLP
         }
         /**
          * @brief Alias of to_string().
+         * @return Decompressed text as a \p std::string.
          */
         std::string get_text_str() const
         {
             return this->to_string();
         }
 
+        /**
+         * @brief Return \p T as a byte vector by decompressing the grammar root.
+         * @return Decompressed text as \p std::vector<uint8_t>.
+         */
         std::vector<uint8_t> to_vector() const
         {
             if (this->is_empty())
@@ -322,7 +374,8 @@ namespace dynRLSLP
         ////////////////////////////////////////////////////////////////////////////////
         //@{
         /**
-         * @brief Swap operation
+         * @brief Swap the contents of this instance with \p other.
+         * @param other Instance to exchange data with.
          */
         void swap(DynamicString &other)
         {
@@ -332,6 +385,10 @@ namespace dynRLSLP
             std::swap(this->leftShortStringList, other.leftShortStringList);
             std::swap(this->rightShortStringList, other.rightShortStringList);
         }
+        /**
+         * @brief Set the dictionary operating mode and rebuild Fast-mode auxiliary structures when needed.
+         * @param mode Target \p DictionaryMode (Standard or Fast).
+         */
         void set_mode(DictionaryMode mode)
         {
             if (this->dictionaryMode != mode)
@@ -368,12 +425,22 @@ namespace dynRLSLP
             this->rightShortStringList.clear();
         }
         /**
-         * @brief Set the alphabet of \p T to the given alphabet \p alphabet, but this function is not implemented yet.
+         * @brief Set the alphabet of \p T to the given alphabet \p alphabet (not implemented yet).
+         * @param alphabet New alphabet as byte values.
          */
         void set_alphabet([[maybe_unused]] const std::vector<uint8_t> &alphabet)
         {
         }
 
+        /**
+         * @brief Insert a byte pattern into \p T at position \p i, invoking callbacks on grammar changes.
+         * @tparam CALLBACK1 Callable invoked before a signature is removed (\p SignatureWithRelativeLevel).
+         * @tparam CALLBACK2 Callable invoked after a signature is inserted (\p SignatureWithRelativeLevel).
+         * @param i Insert position (0 .. |T|).
+         * @param pattern Byte sequence to insert.
+         * @param preprocessor_for_removed_signature Callback run before signature removal.
+         * @param postprocessor_for_inserted_signature Callback run after signature insertion.
+         */
         template <typename CALLBACK1 = decltype(no_callback), typename CALLBACK2 = decltype(no_callback)>
         void insert_string_with_callback(int64_t i, const std::vector<uint8_t> &pattern, const CALLBACK1 &preprocessor_for_removed_signature = no_callback, const CALLBACK2 &postprocessor_for_inserted_signature = no_callback)
         {
@@ -456,12 +523,19 @@ namespace dynRLSLP
 
         /**
          * @brief Insert a character \p c at the position \p i in \p T.
+         * @param i Insert position (0 .. |T|).
+         * @param c Character to insert.
          */
         void insert_string(int64_t i, uint8_t c)
         {
             this->insert_string_with_callback(i, std::vector<uint8_t>(1, c), dynRLSLP::no_callback, dynRLSLP::no_callback);
         }
 
+        /**
+         * @brief Insert a byte pattern into \p T at position \p i.
+         * @param i Insert position (0 .. |T|).
+         * @param pattern Byte sequence to insert.
+         */
         void insert_string(int64_t i, const std::vector<uint8_t> &pattern)
         {
             this->insert_string_with_callback(i, pattern, dynRLSLP::no_callback, dynRLSLP::no_callback);
@@ -469,6 +543,7 @@ namespace dynRLSLP
 
         /**
          * @brief Delete \p T[i] from \p T.
+         * @param i Position of the character to delete.
          */
         void delete_substring(uint64_t i)
         {
@@ -477,12 +552,23 @@ namespace dynRLSLP
 
         /**
          * @brief Delete \p T[i..i+len-1] from \p T.
+         * @param i Starting position of the range to delete.
+         * @param len Number of characters to delete.
          */
         void delete_substring(uint64_t i, uint64_t len)
         {
             this->delete_substring_with_callback(i, len, dynRLSLP::no_callback, dynRLSLP::no_callback);
         }
 
+        /**
+         * @brief Delete a substring from \p T, invoking callbacks on grammar changes.
+         * @tparam CALLBACK1 Callable invoked before a signature is removed (\p SignatureWithRelativeLevel).
+         * @tparam CALLBACK2 Callable invoked after a signature is inserted (\p SignatureWithRelativeLevel).
+         * @param i Starting position of the range to delete.
+         * @param len Number of characters to delete.
+         * @param preprocessor_for_removed_signature Callback run before signature removal.
+         * @param postprocessor_for_inserted_signature Callback run after signature insertion.
+         */
         template <typename CALLBACK1 = decltype(no_callback), typename CALLBACK2 = decltype(no_callback)>
         void delete_substring_with_callback(uint64_t i, uint64_t len, const CALLBACK1 &preprocessor_for_removed_signature = no_callback, const CALLBACK2 &postprocessor_for_inserted_signature = no_callback)
         {
@@ -550,6 +636,9 @@ namespace dynRLSLP
             }
         }
 
+        /**
+         * @brief Rebuild the ancestor occurrence cache for all base signatures (Fast dictionary mode).
+         */
         void rebuild_ancestor_cache_list()
         {
             this->ancestorCacheList.clear();
@@ -576,11 +665,19 @@ namespace dynRLSLP
         ////////////////////////////////////////////////////////////////////////////////
         //@{
 
+        /**
+         * @brief Verify internal consistency of the layered RLSLP grammar.
+         * @return \p true if the grammar structure is valid.
+         */
         bool verify() const
         {
             return this->dynamic_grammar.verify();
         }
 
+        /**
+         * @brief Verify that the grammar derives the same text as a full decompression.
+         * @return \p true if decompressed text matches a recompilation of the grammar root.
+         */
         bool verify_string() const
         {
             const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
@@ -613,6 +710,8 @@ namespace dynRLSLP
 
         /**
          * @brief Verify if the grammar in this instance is nearly equal to the grammar in the other instance.
+         * @param other Instance to compare against.
+         * @return \p true if grammars and Fast-mode caches are structurally equivalent.
          */
         bool verify_nearly_equal(const DynamicString &other) const
         {
@@ -656,8 +755,9 @@ namespace dynRLSLP
             return true;
         }
         /**
-         * @brief Return the memory usage information of this instance as a vector of strings
-         * @param message_paragraph The paragraph depth of message logs
+         * @brief Return the memory usage information of this instance as a vector of strings.
+         * @param message_paragraph The paragraph depth of message logs.
+         * @return Human-readable memory breakdown lines.
          */
         std::vector<std::string> get_memory_usage_info(int message_paragraph = stool::Message::SHOW_MESSAGE) const
         {
@@ -676,6 +776,9 @@ namespace dynRLSLP
             return r;
         }
 
+        /**
+         * @brief Print the derivation tree of the grammar root to standard output.
+         */
         void print_derivation_tree() const
         {
             const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
@@ -693,6 +796,10 @@ namespace dynRLSLP
             }
         }
 
+        /**
+         * @brief Print statistics about this instance and its grammar to standard output.
+         * @param message_paragraph The paragraph depth of message logs.
+         */
         void print_statistics(int message_paragraph = stool::Message::SHOW_MESSAGE) const
         {
             std::string mode = this->dictionaryMode == DictionaryMode::Fast ? "Fast" : "Standard";
@@ -724,7 +831,8 @@ namespace dynRLSLP
         }
 
         /**
-         * @brief Print the information about the locate query for the pattern \p pattern.
+         * @brief Print debug information about locate queries for the pattern \p pattern.
+         * @param pattern Pattern bytes used for the locate query analysis.
          */
         void print_infomation_about_locate_query2(const std::vector<uint8_t> &pattern)
         {
@@ -773,8 +881,13 @@ namespace dynRLSLP
         //@{
 
         /**
-         * @brief Return a new DynamicString built from a given text \p text.
-         * @param message_paragraph The paragraph depth of message logs
+         * @brief Return a new DynamicString built from a given text \p text (alphabet inferred from \p text).
+         * @param text Input byte sequence to compress.
+         * @param use_restricted_block_compression If true, use restricted block compression.
+         * @param mode Dictionary operating mode after build.
+         * @param seed Random seed for compression.
+         * @param message_paragraph The paragraph depth of message logs.
+         * @return Compressed \p DynamicString representing \p text.
          */
         static DynamicString offline_build_from_text(const std::vector<uint8_t> &text, bool use_restricted_block_compression, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
         {
@@ -782,6 +895,16 @@ namespace dynRLSLP
 
             return DynamicString::offline_build_from_text(text, use_restricted_block_compression, alphabet, mode, seed, message_paragraph);
         }
+        /**
+         * @brief Return a new DynamicString built from a given text \p text with an explicit alphabet.
+         * @param text Input byte sequence to compress.
+         * @param use_restricted_block_compression If true, use restricted block compression.
+         * @param alphabet Explicit alphabet as byte values.
+         * @param mode Dictionary operating mode after build.
+         * @param seed Random seed for compression.
+         * @param message_paragraph The paragraph depth of message logs.
+         * @return Compressed \p DynamicString representing \p text.
+         */
         static DynamicString offline_build_from_text(const std::vector<uint8_t> &text, bool use_restricted_block_compression, const std::vector<uint8_t> &alphabet, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
         {
             if (message_paragraph != stool::Message::NO_MESSAGE)
@@ -796,8 +919,13 @@ namespace dynRLSLP
             return r;
         }
         /**
-         * @brief Return a new DynamicString built from a given text \p text.
-         * @param message_paragraph The paragraph depth of message logs
+         * @brief Return a new DynamicString built from a given text \p text (debug helper using \p std::string).
+         * @param text Input string to compress.
+         * @param use_restricted_block_compression If true, use restricted block compression.
+         * @param mode Dictionary operating mode after build.
+         * @param seed Random seed for compression.
+         * @param message_paragraph The paragraph depth of message logs.
+         * @return Compressed \p DynamicString representing \p text.
          */
         static DynamicString build_from_text_for_debug(const std::string &text, bool use_restricted_block_compression, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
         {
@@ -811,7 +939,13 @@ namespace dynRLSLP
 
         /**
          * @brief Return a new DynamicString built from a given file \p file_path using a buffer of size \p buffer_size.
-         * @param message_paragraph The paragraph depth of message logs
+         * @param file_path Path to the input text file.
+         * @param use_restricted_block_compression If true, use restricted block compression.
+         * @param mode Dictionary operating mode after build.
+         * @param seed Random seed for compression.
+         * @param buffer_size Read buffer size in bytes for streaming compression.
+         * @param message_paragraph The paragraph depth of message logs.
+         * @return Compressed \p DynamicString built incrementally from the file.
          */
         static DynamicString online_build_from_text_file(std::string file_path, bool use_restricted_block_compression = false, DictionaryMode mode = DictionaryMode::Standard, int64_t seed = 0, uint64_t buffer_size = 100000, int message_paragraph = stool::Message::SHOW_MESSAGE)
         {
@@ -898,7 +1032,9 @@ namespace dynRLSLP
             return r;
         }
         /**
-         * @brief Returns the DynamicString instance loaded from a file stream \p os
+         * @brief Load a DynamicString instance from a binary file stream.
+         * @param os Input stream positioned at a serialized \p DynamicString.
+         * @return Deserialized \p DynamicString instance.
          */
         static DynamicString load_from_file(std::ifstream &os)
         {
@@ -939,6 +1075,11 @@ namespace dynRLSLP
 
             return r;
         }
+        /**
+         * @brief Build a DynamicString from a serialized leveled RLSLP grammar stream.
+         * @param os Input stream containing leveled RLSLP data.
+         * @return \p DynamicString wrapping the loaded grammar.
+         */
         static DynamicString build_from_leveled_rlslp(std::ifstream &os)
         {
             DynamicString r;
@@ -948,7 +1089,9 @@ namespace dynRLSLP
             return r;
         }
         /**
-         * @brief Save the given instance \p item to a file stream \p os
+         * @brief Serialize the given instance \p item to a binary file stream.
+         * @param item Instance to write.
+         * @param os Output stream for binary serialization.
          */
         static void store_to_file(const DynamicString &item, std::ofstream &os)
         {
@@ -976,6 +1119,11 @@ namespace dynRLSLP
         //}@
 
     private:
+        /**
+         * @brief Fast-mode callback when a signature is removed during an update.
+         * @param sig Signature that was removed.
+         * @param changed_signatures Set collecting base signatures whose caches must be refreshed.
+         */
         void callback_for_removed_signature(SignatureWithRelativeLevel sig, std::unordered_set<SignatureWithRelativeLevel> &changed_signatures)
         {
 
@@ -992,6 +1140,11 @@ namespace dynRLSLP
             }
         }
 
+        /**
+         * @brief Fast-mode callback when a signature is added during an update.
+         * @param sig Signature that was added.
+         * @param changed_signatures Set collecting base signatures whose caches must be refreshed.
+         */
         void callback_for_added_signature(SignatureWithRelativeLevel sig, std::unordered_set<SignatureWithRelativeLevel> &changed_signatures)
         {
             if (this->dictionaryMode == DictionaryMode::Fast)
@@ -1039,6 +1192,10 @@ namespace dynRLSLP
                 }
             }
         }
+        /**
+         * @brief Refresh ancestor caches for all signatures changed during an update (Fast mode).
+         * @param changed_signatures Base signatures whose ancestor occurrences were invalidated.
+         */
         void callback_for_finished_update(const std::unordered_set<SignatureWithRelativeLevel> &changed_signatures)
         {
             if (this->dictionaryMode == DictionaryMode::Fast)
@@ -1083,6 +1240,13 @@ namespace dynRLSLP
             }
         }
 
+        /**
+         * @brief Recursively mark descendant base signatures up to \p max_depth for cache invalidation.
+         * @param sig Root signature whose descendants are collected.
+         * @param changed_signatures Output set of affected base signatures.
+         * @param max_depth Maximum recursion depth.
+         * @param current_depth Current recursion depth.
+         */
         void add_descendants(SignatureWithRelativeLevel sig, std::unordered_set<SignatureWithRelativeLevel> &changed_signatures, uint64_t max_depth, uint64_t current_depth) const
         {
             BaseSignature base_signature = SignatureFunctions::get_base_signature(sig);
@@ -1113,6 +1277,9 @@ namespace dynRLSLP
                 }
             }
         }
+        /**
+         * @brief Rebuild left and right short-string caches for all rules reachable from the grammar root (Fast mode).
+         */
         void rebuild_short_string_list()
         {
             const std::vector<uint64_t> &base_signature_length_list = this->dynamic_grammar.get_base_signature_length_list();

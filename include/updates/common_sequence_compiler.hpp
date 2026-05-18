@@ -16,6 +16,15 @@ namespace dynRLSLP
         {
 
         public:
+            /**
+             * @brief Compiles a run-rule vector into a single root signature.
+             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @param seq Input run-rule vector to compile.
+             * @param dic Dynamic grammar updated during compilation.
+             * @param callback_for_added_signatures Callback invoked for each added signature.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return Root signature of the compiled derivation.
+             */
             template <typename CALLBACK = decltype(no_callback)>
             static SignatureWithRelativeLevel single_compile(RunRuleVector &seq, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signatures, int message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -52,6 +61,16 @@ namespace dynRLSLP
 
             }
 
+            /**
+             * @brief Compiles the concatenation of left and right run-rule vectors.
+             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @param left Left run-rule vector.
+             * @param right Right run-rule vector.
+             * @param dic Dynamic grammar updated during compilation.
+             * @param callback_for_added_signature Callback invoked for each added signature.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return Root signature of the concatenated derivation.
+             */
             template <typename CALLBACK = decltype(no_callback)>
             static SignatureWithRelativeLevel LR_compile(RunRuleVector &left, RunRuleVector &right, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signature, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -86,6 +105,16 @@ namespace dynRLSLP
 
                 return r;
             }
+            /**
+             * @brief Builds a common sequence from text and compiles it to one signature.
+             * @tparam C Character type of the input text.
+             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @param text Input character sequence.
+             * @param dic Dynamic grammar updated during compilation.
+             * @param callback_for_added_signatures Callback invoked for each added signature.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return Root signature of the compiled text.
+             */
             template <typename C, typename CALLBACK = decltype(no_callback)>
             static SignatureWithRelativeLevel direct_compile_from_text(const std::vector<C> &text, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signatures, int message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -99,6 +128,16 @@ namespace dynRLSLP
 
 
 
+            /**
+             * @brief Constructs a layered run-rule vector from plain text.
+             * @tparam C Character type of the input text.
+             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @param dic Dynamic grammar used to allocate signatures.
+             * @param text Input character sequence.
+             * @param callback_for_added_signature Callback invoked for each added signature.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return Run-rule vector representing the derivation tree of the text.
+             */
             template <typename C, typename CALLBACK = decltype(no_callback)>
             static RunRuleVector build_common_sequence_from_text(DynamicGrammarForLayeredRLSLP &dic, const std::vector<C> &text, CALLBACK &callback_for_added_signature = no_callback, int message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -164,6 +203,13 @@ namespace dynRLSLP
             }
 
         private:
+            /**
+             * @brief Verifies that a signature matches recompilation from its decompressed text.
+             * @param sig Signature to verify.
+             * @param dic Dynamic grammar used for recompilation.
+             * @param message_paragraph Indentation level for debug output.
+             * @return True if the signature is consistent with recompilation.
+             */
             static bool verify(SignatureWithRelativeLevel sig, DynamicGrammarForLayeredRLSLP &dic, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 
@@ -203,6 +249,18 @@ namespace dynRLSLP
 
             
 
+            /**
+             * @brief Semi-compiles the center line using left and right run-rule vectors at level @p h.
+             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @param left Left run-rule vector.
+             * @param center Center deque updated in place and then compiled.
+             * @param right Right run-rule vector.
+             * @param h Current hierarchy level.
+             * @param dic Dynamic grammar updated during compilation.
+             * @param callback_for_added_signature Callback invoked for each added signature.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return Compiled center sequence at the next level.
+             */
             template <typename CALLBACK = decltype(no_callback)>
             static std::deque<RunRuleBody> LCR_semi_compile(RunRuleVector &left, std::deque<RunRuleBody> &center, RunRuleVector &right, int64_t h, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signature, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -307,6 +365,14 @@ namespace dynRLSLP
 
                 return r;
             }
+            /**
+             * @brief Semi-compiles the left side of a run-rule vector level by level.
+             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @param item Run-rule vector whose left side is semi-compiled in place.
+             * @param dic Dynamic grammar updated during compilation.
+             * @param callback_for_added_signatures Callback invoked for each added signature.
+             * @param message_paragraph Indentation level for progress messages.
+             */
             template <typename CALLBACK = decltype(no_callback)>
             static void left_side_semi_compile(RunRuleVector &item, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signatures, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -367,6 +433,14 @@ namespace dynRLSLP
                 }
 #endif
             }
+            /**
+             * @brief Semi-compiles the right side of a run-rule vector level by level.
+             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @param item Run-rule vector whose right side is semi-compiled in place.
+             * @param dic Dynamic grammar updated during compilation.
+             * @param callback_for_added_signature Callback invoked for each added signature.
+             * @param message_paragraph Indentation level for progress messages.
+             */
             template <typename CALLBACK = decltype(no_callback)>
             static void right_side_semi_compile(RunRuleVector &item, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signature, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -389,6 +463,16 @@ namespace dynRLSLP
                     center.pop_front();
                 }
             }
+            /**
+             * @brief Compiles the center region after left and right semi-compilation.
+             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @param left Left run-rule vector consumed during compilation.
+             * @param right Right run-rule vector consumed during compilation.
+             * @param dic Dynamic grammar updated during compilation.
+             * @param callback_for_added_signature Callback invoked for each added signature.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return Root signature of the merged center derivation.
+             */
             template <typename CALLBACK = decltype(no_callback)>
             static SignatureWithRelativeLevel center_compile(RunRuleVector &left, RunRuleVector &right, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signature, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {

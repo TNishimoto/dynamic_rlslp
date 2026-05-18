@@ -8,7 +8,7 @@
 namespace dynRLSLP
 {
         /**
-         * @brief XXXXXXXX
+         * @brief Compact parent dictionary for layered RLSLP grammars with tiered parent storage.
          * @ingroup ParentClasses
          */
         class FastParentDictionary
@@ -40,6 +40,11 @@ namespace dynRLSLP
             ////////////////////////////////////////////////////////////////////////////////
             //@{
 
+            /**
+             * @brief Counts all registered parents of a base signature across storage tiers.
+             * @param base_signature Base signature whose parents are counted.
+             * @return Total number of registered parents.
+             */
             uint64_t count_registed_parents(uint64_t base_signature) const
             {
                 if (base_signature >= this->primaryParents.size())
@@ -68,6 +73,15 @@ namespace dynRLSLP
                 return parent_count;
             }
 
+            /**
+             * @brief Pushes type-1 primary occurrences of a signature onto the stack.
+             * @param sig Base signature to enumerate.
+             * @param position_offset Position offset of the occurrence within its parent.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @param output Stack receiving temporary occurrences to expand further.
+             * @return True if at least one parent occurrence was pushed.
+             */
             bool get_all_type_1_primary_occurrences_of_signature(BaseSignature sig, int64_t position_offset, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list, VStack<TemporaryOccurrence> &output) const
             {
                 bool b = false;
@@ -101,6 +115,12 @@ namespace dynRLSLP
                 return b;
             }
 
+            /**
+             * @brief Returns the primary parent of a base signature.
+             * @param descendant Base signature whose primary parent is requested.
+             * @return Primary parent signature.
+             * @throws std::runtime_error if no primary parent is registered.
+             */
             SignatureWithRelativeLevel take_any_important_ancestor(BaseSignature descendant) const
             {
                 if(this->primaryParents[descendant] != EMPTY_FLAG){
@@ -109,6 +129,11 @@ namespace dynRLSLP
                     throw std::runtime_error("take_any_ancestor: the descendant is not registered");
                 }
             }
+            /**
+             * @brief Appends all important ancestors of a base signature to the output vector.
+             * @param descendant Base signature whose ancestors are collected.
+             * @param output Vector receiving ancestor signatures.
+             */
             void get_all_important_ancestors(BaseSignature descendant, std::vector<SignatureWithRelativeLevel> &output) const{
 
                 if(this->primaryParents[descendant] != EMPTY_FLAG){
@@ -131,6 +156,12 @@ namespace dynRLSLP
 
             }
 
+            /**
+             * @brief Tests whether a base signature has exactly one pair parent and no secondary parents.
+             * @param descendant Base signature to test.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @return True if the signature has a unique pair parent chain head.
+             */
             bool has_single_ancestor(BaseSignature descendant, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const {
                 if(this->primaryParents[descendant] != EMPTY_FLAG){
                     SignatureWithRelativeLevel parent = this->primaryParents[descendant];
@@ -149,12 +180,22 @@ namespace dynRLSLP
                     return false;
                 }
             }
+            /**
+             * @brief Tests whether a base signature has no registered primary parent.
+             * @param descendant Base signature to test.
+             * @return True if no primary parent is stored.
+             */
             bool is_empty(BaseSignature descendant) const {
                 return this->primaryParents[descendant] == EMPTY_FLAG;
             }
  
 
 
+            /**
+             * @brief Counts all important ancestors of a base signature across storage tiers.
+             * @param sig Base signature whose ancestors are counted.
+             * @return Total number of important ancestors.
+             */
             uint64_t count_important_ancestors(BaseSignature sig) const
             {
                 uint64_t occ = 0;
@@ -180,6 +221,11 @@ namespace dynRLSLP
                 return occ;
             }
 
+            /**
+             * @brief Tests whether a signature has any registered or implicit parent.
+             * @param child Child signature to test.
+             * @return True if a parent exists in the dictionary or at a higher relative level.
+             */
             bool has_parent(SignatureWithRelativeLevel child) const{
                 BaseSignature base_signature = SignatureFunctions::get_base_signature(child);
                 if(this->primaryParents[base_signature] != EMPTY_FLAG){
@@ -190,6 +236,13 @@ namespace dynRLSLP
                 }
             }
             
+            /**
+             * @brief Looks up the signature of a pair rule with the given children.
+             * @param left_sig Left child signature.
+             * @param right_sig Right child signature.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @return Parent signature if found, otherwise -1.
+             */
             int64_t get_pair_signature(SignatureWithRelativeLevel left_sig, SignatureWithRelativeLevel right_sig, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
             {
 
@@ -243,6 +296,13 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Looks up the signature of a power rule with the given child and exponent.
+             * @param child_sig Child signature.
+             * @param power Exponent of the power rule.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @return Parent signature if found, otherwise -1.
+             */
             int64_t get_power_signature(SignatureWithRelativeLevel child_sig, uint64_t power, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
             {
                 uint64_t base_child_sig = SignatureFunctions::get_base_signature(child_sig);
@@ -307,6 +367,11 @@ namespace dynRLSLP
             ///   @name Print and verification functions
             ////////////////////////////////////////////////////////////////////////////////
             //@{
+            /**
+             * @brief Prints parent information for one base signature.
+             * @param base_signature Base signature to print.
+             * @param message_paragraph Indentation depth for log output.
+             */
             void print_tree2(uint64_t base_signature, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
             {
                 uint64_t h = (*this->relative_max_level_list_)[base_signature];
@@ -337,6 +402,10 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Prints the full parent tree for all base signatures.
+             * @param message_paragraph Indentation depth for log output.
+             */
             void print_tree(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
             {
                 std::cout << stool::Message::get_paragraph_string(message_paragraph) << "==== FastParentDictionary Info ====" << std::endl;
@@ -346,6 +415,10 @@ namespace dynRLSLP
                 }
                 std::cout << stool::Message::get_paragraph_string(message_paragraph) << "==== FastParentDictionary Info[END] ====" << std::endl;
             }
+            /**
+             * @brief Prints storage statistics for all parent tiers.
+             * @param message_paragraph Indentation depth for log output.
+             */
             void print_statistics(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
             {
                 uint64_t primary_null_count = 0;
@@ -503,6 +576,12 @@ namespace dynRLSLP
                 std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
             }
 
+            /**
+             * @brief Returns human-readable memory usage lines for this dictionary.
+             * @param signature_count Number of signatures in the owning grammar (for per-signature averages).
+             * @param message_paragraph Indentation depth for log output.
+             * @return Lines describing memory usage (may be empty when detailed accounting is disabled).
+             */
             std::vector<std::string> get_memory_usage_info([[maybe_unused]] uint64_t signature_count, [[maybe_unused]] int message_paragraph = stool::Message::SHOW_MESSAGE) const
             {
                 std::vector<std::string> r;
@@ -537,6 +616,11 @@ namespace dynRLSLP
                 return r;
             }
 
+            /**
+             * @brief Verifies internal consistency of all parent managers.
+             * @return True if verification succeeds.
+             * @throws std::runtime_error on validation failure.
+             */
             bool verify() const
             {
 
@@ -556,6 +640,12 @@ namespace dynRLSLP
 
                 return true;
             }
+            /**
+             * @brief Verifies that this dictionary is equal to another instance.
+             * @param other Dictionary to compare against.
+             * @return True if all fields and sub-managers match.
+             * @throws std::runtime_error on mismatch.
+             */
             bool verify_equal(const FastParentDictionary &other) const
             {
                 if (this->is_restricted_recompression_mode != other.is_restricted_recompression_mode)
@@ -627,11 +717,19 @@ namespace dynRLSLP
             ///   @name Update operations
             ////////////////////////////////////////////////////////////////////////////////
             //@{
+            /**
+             * @brief Attaches the relative max-level table and recompression mode flag.
+             * @param relative_max_level_list_ Pointer to per-base-signature max relative levels.
+             * @param is_restricted_recompression_mode True when restricted block compression is active.
+             */
             void set_pointer(const std::vector<uint16_t> *relative_max_level_list_, bool is_restricted_recompression_mode)
             {
                 this->relative_max_level_list_ = relative_max_level_list_;
                 this->is_restricted_recompression_mode = is_restricted_recompression_mode;
             }
+            /**
+             * @brief Clears all parent entries and releases dynamically allocated sub-managers.
+             */
             void clear()
             {
                 this->primaryParents.clear();
@@ -656,6 +754,10 @@ namespace dynRLSLP
                 this->sub_pointer_status_.clear();
                 this->sub_pointer.clear();
             }
+            /**
+             * @brief Swaps contents with another dictionary instance.
+             * @param other Dictionary to swap with.
+             */
             void swap(FastParentDictionary &other)
             {
                 this->primaryParents.swap(other.primaryParents);
@@ -664,6 +766,9 @@ namespace dynRLSLP
                 std::swap(this->relative_max_level_list_, other.relative_max_level_list_);
                 std::swap(this->is_restricted_recompression_mode, other.is_restricted_recompression_mode);
             }
+            /**
+             * @brief Appends an empty parent slot for a new base signature.
+             */
             void add_new_element()
             {
                 this->primaryParents.push_back(EMPTY_FLAG);
@@ -671,6 +776,11 @@ namespace dynRLSLP
                 this->sub_pointer.push_back(nullptr);
             }
 
+            /**
+             * @brief Promotes the current primary parent when a signature rule gains a new relative level.
+             * @param base_signature Base signature whose level is increasing.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             */
             void insert_single_signature(BaseSignature base_signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
             {
 
@@ -692,6 +802,13 @@ namespace dynRLSLP
                 }
                 */
             }
+            /**
+             * @brief Registers a parent for a child signature, upgrading storage tier when needed.
+             * @param child Child signature receiving the parent link.
+             * @param parent Parent signature to register.
+             * @param topLevelChild True if the child is at its current max relative level.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             */
             void insert(SignatureWithRelativeLevel child, uint64_t parent, bool topLevelChild, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
             {
 
@@ -750,6 +867,12 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Removes one parent link for a child signature, downgrading storage tier when needed.
+             * @param child Child signature whose parent is removed.
+             * @param parent Parent signature to erase.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             */
             void erase_signature(SignatureWithRelativeLevel child, SignatureWithRelativeLevel parent, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
             {
 
@@ -828,6 +951,11 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Restores the primary parent after a signature rule loses its top relative level.
+             * @param base_signature Base signature whose level is decreasing.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             */
             void erase_signature(BaseSignature base_signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
             {
                 
@@ -836,6 +964,10 @@ namespace dynRLSLP
                 this->primaryParents[base_signature] = last_parent_quaternary;
             }
 
+            /**
+             * @brief Returns the total memory usage of this dictionary in bytes.
+             * @return Memory footprint including dynamically allocated sub-managers.
+             */
             uint64_t size_in_bytes() const
             {
                 uint64_t total = 0;
@@ -880,6 +1012,12 @@ namespace dynRLSLP
             //@{
 
         public:
+            /**
+             * @brief Loads a parent dictionary from a binary input stream.
+             * @param relative_max_level_list_ Pointer to per-base-signature max relative levels.
+             * @param ifs Input stream positioned at the dictionary data.
+             * @return Restored FastParentDictionary instance.
+             */
             static FastParentDictionary load_from_file(const std::vector<uint16_t> *relative_max_level_list_, std::ifstream &ifs)
             {
                 FastParentDictionary r;
@@ -935,6 +1073,11 @@ namespace dynRLSLP
                 r.set_pointer(relative_max_level_list_, is_restricted_recompression_mode);
                 return r;
             }
+            /**
+             * @brief Writes a parent dictionary to a binary output stream.
+             * @param item Dictionary to serialize.
+             * @param os Output stream to write to.
+             */
             static void store_to_file(const FastParentDictionary &item, std::ofstream &os)
             {
 
@@ -973,6 +1116,12 @@ namespace dynRLSLP
             //}@
 
         private:
+            /**
+             * @brief Removes and returns one secondary parent, downgrading storage tier when the list shrinks.
+             * @param child Child signature whose secondary parent is taken.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @return Removed parent signature, or EMPTY_FLAG if none remains.
+             */
             SignatureWithRelativeLevel take_any_parent_from_few_parents_manager(SignatureWithRelativeLevel child, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
             {
                 uint64_t base_signature = SignatureFunctions::get_base_signature(child);
@@ -1046,6 +1195,11 @@ namespace dynRLSLP
                     return EMPTY_FLAG;
                 }
             }
+            /**
+             * @brief Decodes the single secondary parent stored with an embedded right-child flag.
+             * @param base_signature Base signature whose secondary parent is decoded.
+             * @return Pair of parent signature and whether the child is the right child of a pair rule.
+             */
             std::pair<SignatureWithRelativeLevel, bool> get_special_secondary_parent(uint64_t base_signature) const
             {
                 uint64_t parent_with_flag = (uint64_t)this->sub_pointer[base_signature];
@@ -1053,6 +1207,13 @@ namespace dynRLSLP
                 SignatureWithRelativeLevel parent = (parent_with_flag << 1) >> 1;
                 return {parent, is_special_pair};
             }
+            /**
+             * @brief Encodes a parent signature with a high bit marking a right-child pair parent.
+             * @param child Child signature used to determine which side of a pair rule is stored.
+             * @param parent Parent signature to encode.
+             * @param parent_item Decoded rule body of the parent.
+             * @return Parent signature optionally OR-ed with the right-child flag bit.
+             */
             uint64_t get_signature_with_flag(SignatureWithRelativeLevel child, SignatureWithRelativeLevel parent, const RLSLPRuleBody &parent_item) const
             {
                 if (parent_item.get_type() == RLSLPRuleType::Pair && parent_item.B == child)

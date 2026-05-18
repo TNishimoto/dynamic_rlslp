@@ -30,6 +30,11 @@ namespace dynRLSLP
         uint64_t length = UINT64_MAX;
         std::vector<uint8_t> pattern;
 
+        /**
+         * @brief Converts escaped tab and newline codes in a string to real characters.
+         * @param text Input string with escape codes (0 for newline, 1 for tab).
+         * @return Sanitized byte vector suitable for pattern matching.
+         */
         static std::vector<uint8_t> sanityze(const std::string &text)
         {
             std::vector<uint8_t> r;
@@ -51,12 +56,20 @@ namespace dynRLSLP
             return r;
         }
 
+        /**
+         * @brief Creates a no-op query.
+         * @return LineQuery with type NONE.
+         */
         static LineQuery create_NONE_query()
         {
             LineQuery r;
             r.type = QueryType::NONE;
             return r;
         }
+        /**
+         * @brief Creates a PRINT query.
+         * @return LineQuery with type PRINT.
+         */
         static LineQuery create_PRINT_query()
         {
             LineQuery r;
@@ -64,6 +77,12 @@ namespace dynRLSLP
             return r;
         }
 
+        /**
+         * @brief Creates an INSERT query.
+         * @param insertion_position Position at which to insert.
+         * @param text Text to insert (escape codes are sanitized).
+         * @return LineQuery with type INSERT.
+         */
         static LineQuery create_INSERT_query(uint64_t insertion_position, const std::string &text)
         {
             LineQuery r;
@@ -76,6 +95,12 @@ namespace dynRLSLP
 
             return r;
         }
+        /**
+         * @brief Creates a DELETE query.
+         * @param deletion_position Start position of the deletion range.
+         * @param length Number of characters to delete.
+         * @return LineQuery with type DELETE.
+         */
         static LineQuery create_DELETE_query(uint64_t deletion_position, uint64_t length)
         {
             LineQuery r;
@@ -85,6 +110,11 @@ namespace dynRLSLP
             r.pattern.clear();
             return r;
         }
+        /**
+         * @brief Creates a COUNT query.
+         * @param text Pattern to count (escape codes are sanitized).
+         * @return LineQuery with type COUNT.
+         */
         static LineQuery create_COUNT_query(const std::string &text)
         {
             LineQuery r;
@@ -96,6 +126,11 @@ namespace dynRLSLP
 
             return r;
         }
+        /**
+         * @brief Creates a LOCATE query.
+         * @param text Pattern to locate (escape codes are sanitized).
+         * @return LineQuery with type LOCATE.
+         */
         static LineQuery create_LOCATE_query(const std::string &text)
         {
             LineQuery r;
@@ -107,6 +142,11 @@ namespace dynRLSLP
 
             return r;
         }
+        /**
+         * @brief Creates a LOCATE_SUM query.
+         * @param text Pattern to locate (escape codes are sanitized).
+         * @return LineQuery with type LOCATE_SUM.
+         */
         static LineQuery create_LOCATE_SUM_query(const std::string &text)
         {
             LineQuery r;
@@ -119,6 +159,10 @@ namespace dynRLSLP
             return r;
         }
         /*
+         * @brief Split a string into fields separated by tab characters.
+         * @param input Input string.
+         * @return Vector of tab-separated fields.
+         */
         static std::vector<std::string> split_by_tab(const std::string &input)
         {
             std::vector<std::string> result;
@@ -133,6 +177,12 @@ namespace dynRLSLP
             return result;
         }
         */
+        /**
+         * @brief Parses a string as an unsigned 64-bit integer.
+         * @param str Decimal string to parse.
+         * @return Parsed value.
+         * @throws std::invalid_argument if parsing fails.
+         */
         static uint64_t string_to_uint64(const std::string &str)
         {
             try
@@ -152,6 +202,13 @@ namespace dynRLSLP
                 throw std::invalid_argument("Conversion to uint64_t failed: " + std::string(e.what()));
             }
         }
+        /**
+         * @brief Parses one TSV query line into a LineQuery.
+         * @param line Raw query line from the input file.
+         * @param alternative_tab_key Escape sequence representing a tab character.
+         * @param alternative_line_break_key Escape sequence representing a newline character.
+         * @return Parsed query, or NONE if the line is unrecognized.
+         */
         static LineQuery load_line(const std::string &line, std::string alternative_tab_key, std::string alternative_line_break_key)
         {
             std::vector<std::string> result = dynRLSLP::TSVParser::line_parse(line, alternative_tab_key, alternative_line_break_key);

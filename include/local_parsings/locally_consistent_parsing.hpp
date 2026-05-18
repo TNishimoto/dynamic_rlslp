@@ -37,24 +37,45 @@ namespace dynRLSLP
             const static int LogIterateN = 6;
 
         public:
+            /**
+             * @brief Returns the left delta parameter for locally consistent parsing.
+             * @return Left delta value.
+             */
             static int get_delta_L()
             {
                 return LogIterateN + 6;
             }
+            /**
+             * @brief Returns the right delta parameter for locally consistent parsing.
+             * @return Right delta value.
+             */
             static int get_delta_R()
             {
                 return 5;
             }
+            /**
+             * @brief Returns the left consistent-context length.
+             * @return Left consistent-context length.
+             */
             static int get_consistent_L()
             {
                 return get_delta_L() + 3;
             }
+            /**
+             * @brief Returns the right consistent-context length.
+             * @return Right consistent-context length.
+             */
             static int get_consistent_R()
             {
                 return get_delta_R() + 3;
             }
 
 
+            /**
+             * @brief Computes locally consistent factor bits for a signature sequence.
+             * @param items Input sequence of distinct signatures.
+             * @param output Output vector of factor bits (true marks a block boundary).
+             */
             static void compute_factor_bits(const std::vector<int64_t> &items, std::vector<bool> &output)
             {
                 assert(items.size() > 1);
@@ -80,6 +101,12 @@ namespace dynRLSLP
                 }
                 verify(output);
             }
+            /**
+             * @brief Verifies that no two consecutive signatures are equal.
+             * @param items Input signature sequence.
+             * @return True if the sequence is valid.
+             * @throws std::runtime_error if adjacent signatures are equal.
+             */
             static bool verify_input(const std::vector<int64_t> &items){
                 for(int64_t i = 1; i < (int64_t)items.size(); i++){
                     if(items[i] == items[i - 1]){
@@ -92,6 +119,12 @@ namespace dynRLSLP
         private:
             
 
+            /**
+             * @brief Returns the index of the least significant differing bit between two values.
+             * @param a First value.
+             * @param b Second value.
+             * @return Bit position of the first difference.
+             */
             static int64_t get_first_different_position(int64_t a, int64_t b)
             {
 
@@ -99,6 +132,12 @@ namespace dynRLSLP
                 int64_t s4 = stool::Byte::count_trailing_zeros(p2);
                 return s4;
             }
+            /**
+             * @brief Computes the three-color label at position @p i from a six-color sequence.
+             * @param seq Six-color sequence.
+             * @param i Index of the position to label.
+             * @return Three-color label in {0, 1, 2}.
+             */
             static int compute_three_color_sub(std::vector<int64_t> &seq, int i)
             {
                 int64_t left = i == 0 ? std::numeric_limits<int64_t>::max() : seq[i - 1];
@@ -151,6 +190,10 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Verifies and repairs factor bits at both ends of the sequence.
+             * @param bools Factor-bit vector to verify and adjust in place.
+             */
             static void verify(std::vector<bool> &bools)
             {
                 verify_prefix(bools);
@@ -158,6 +201,10 @@ namespace dynRLSLP
                 if (!bools[0] || bools[bools.size() - 1])
                     throw std::logic_error("LocallyConsistentParsing::verify: !bools[0] || bools[bools.size() - 1]");
             }
+            /**
+             * @brief Verifies and repairs factor bits at the prefix of the sequence.
+             * @param bools Factor-bit vector to verify and adjust in place.
+             */
             static void verify_prefix(std::vector<bool> &bools)
             {
 
@@ -192,6 +239,10 @@ namespace dynRLSLP
                     }
                 }
             }
+            /**
+             * @brief Verifies and repairs factor bits at the suffix of the sequence.
+             * @param bools Factor-bit vector to verify and adjust in place.
+             */
             static void verify_suffix(std::vector<bool> &bools)
             {
                 int end = (int)bools.size() - 1;
@@ -208,6 +259,11 @@ namespace dynRLSLP
                     }
                 }
             }
+            /**
+             * @brief Reduces a six-color sequence to a three-color sequence.
+             * @param seq Input six-color sequence.
+             * @return Three-color sequence of the same length.
+             */
             static std::vector<int64_t> compute_three_colors(const std::vector<int64_t> &seq)
             {
                 int n = (int)seq.size();
@@ -224,10 +280,19 @@ namespace dynRLSLP
                 }
                 return cSequence;
             }
+            /**
+             * @brief Returns the number of six-color refinement iterations.
+             * @return Iteration count derived from the delta-L parameter.
+             */
             static int six_colors_loop_in_delta_L()
             {
                 return LocallyConsistentParsing::LogIterateN + 2;
             }
+            /**
+             * @brief Computes a six-color labeling of the input sequence.
+             * @param seq Input signature sequence.
+             * @return Six-color sequence of the same length.
+             */
             static std::vector<int64_t> compute_six_colors(const std::vector<int64_t> &seq)
             {
                 int64_t N = *std::max_element(seq.begin(), seq.end());
@@ -252,6 +317,11 @@ namespace dynRLSLP
                     throw std::logic_error("LocallyConsistentParsing::verify: N > 6");
                 return cSequence;
             }
+            /**
+             * @brief Performs one six-color refinement step on the sequence.
+             * @param seq Input sequence for this refinement step.
+             * @return Refined six-color sequence.
+             */
             static std::vector<int64_t> six_colors_sub(const std::vector<int64_t> &seq)
             {
                 auto r = std::vector<int64_t>(seq.size());

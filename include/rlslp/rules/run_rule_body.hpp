@@ -5,38 +5,48 @@
 namespace dynRLSLP
 {
         /**
-         * @brief A representation of a run *X^k* of RLSLP nonterminals
+         * @brief A run *X^k* of RLSLP nonterminals.
          * @ingroup RLSLPClasses
          */
         struct RunRuleBody
         {
         public:
-            /**
-            * X.
-            */
+            /** Nonterminal signature *X*. */
             uint64_t number;
 
-            /**
-            * k.
-            */
+            /** Repetition count *k*. */
             uint64_t power;
 
+            /**
+             * @brief Construct a run from a nonterminal and repetition count.
+             * @param number Nonterminal signature (X).
+             * @param power Repetition count (k).
+             */
             RunRuleBody(uint64_t number, uint64_t power)
                 : number(number), power(power)
             {
             }
+            /**
+             * @brief Default constructor; constructs a zero-initialized run.
+             */
             RunRuleBody()
                 : number(0), power(0)
             {
             }
 
+            /** @brief Copy constructor. */
             RunRuleBody(const RunRuleBody &) = default;
+            /** @brief Copy assignment operator. */
             RunRuleBody &operator=(const RunRuleBody &) = default;
+            /** @brief Move constructor. */
             RunRuleBody(RunRuleBody &&) = default;
+            /** @brief Move assignment operator. */
             RunRuleBody &operator=(RunRuleBody &&) = default;
 
             /**
-             * @brief Return *X^{k+k'}* for a given run *X^{k'}*.
+             * @brief Concatenate two runs with the same nonterminal.
+             * @param item2 Second run to add.
+             * @return Run *X^{k+k'}* when both runs share the same \p number.
              */
             RunRuleBody operator+(RunRuleBody item2) const
             {
@@ -51,10 +61,9 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Return @ref term_val "|\val(X^{k})|".
-             * 
-             * @param base_signature_length_list The length list of DictionaryForLayeredRLSLP.
-             * @return |\val(X^{k})|
+             * @brief Return the string length of a signature using the base length list.
+             * @param base_signature_length_list Base-signature length list (L).
+             * @return Computed integer value.
              */
             uint64_t get_length(const std::vector<uint64_t>& base_signature_length_list) const
             {
@@ -62,7 +71,8 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Return the string representation of this run rule body.
+             * @brief Return a human-readable string representation of this run.
+             * @return String of the form R(sig) or R(sig^k).
              */
             std::string to_string() const
             {
@@ -77,7 +87,8 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Return the RLSLP rule body corresponding to this run rule body.
+             * @brief Convert this run to an RLSLPRuleBody power rule.
+             * @return Rule body.
              */
             RLSLPRuleBody to_rlslp_rule_body()
             {
@@ -85,10 +96,10 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Return the string derived by this run rule body.
-             * 
-             * @param base_signature_rule_list The rule list of DictionaryForLayeredRLSLP.
-             * @param output The outputted string is stored in this vector.
+             * @brief Append the expanded string of this run to an output container.
+             * @param OUTPUT_VEC_TYPE Output container type.
+             * @param base_signature_rule_list Base-signature rule list (D).
+             * @param output Output container for decompressed bytes.
              */
             template <typename OUTPUT_VEC_TYPE = std::vector<uint8_t>>
             void decompress(const std::vector<RLSLPRuleBody> &base_signature_rule_list, OUTPUT_VEC_TYPE &output) const {
@@ -99,12 +110,10 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Converts a vector of integers into a vector of RunRuleBody by counting consecutive equal values.
-             *        Each run of the same number will become a RunRuleBody(number, count).
-             * 
-             * @tparam OUTPUT_VEC_TYPE The type of the output vector, defaults to std::vector<RunRuleBody>
-             * @param items Input vector of integers
-             * @param output Output vector of RunRuleBody objects (cleared on entry)
+             * @brief Group consecutive equal integers into RunRuleBody runs.
+             * @tparam OUTPUT_VEC_TYPE Output vector type.
+             * @param items Input integer sequence.
+             * @param output Output vector of runs (cleared on entry).
              */
             template <typename OUTPUT_VEC_TYPE = std::vector<RunRuleBody>>
             static void pow(const std::vector<int64_t> &items, OUTPUT_VEC_TYPE &output)
@@ -133,14 +142,12 @@ namespace dynRLSLP
                 k = 0;
             }
 
-            /**
-             * @brief Checks if the given sequence contains exactly one RunRuleBody and its power is 1.
-             * 
-             * @tparam SEQ_TYPE The type of the vector, defaults to std::vector<RunRuleBody>
-             * @param seq Sequence to check
-             * @return true if the sequence has one element and its power is 1, false otherwise
-             */
             template <typename SEQ_TYPE = std::vector<RunRuleBody>>
+            /**
+             * @brief Return whether a sequence is a single run of power one.
+             * @param seq Input run sequence.
+             * @return True if the check succeeds.
+             */
             static bool is_single_signature(SEQ_TYPE &seq)
             {
                 if (seq.size() != 1)
@@ -153,15 +160,13 @@ namespace dynRLSLP
                 }
             }
 
-            /**
-             * @brief Prints the content of a vector of RunRuleBody as a string to standard output.
-             * 
-             * @tparam VEC_TYPE The type of the vector, defaults to std::vector<RunRuleBody>
-             * @param items Vector of RunRuleBody to print
-             * @param name Name to appear before the contents
-             * @param message_paragraph Paragraph style for the output (default: stool::Message::SHOW_MESSAGE)
-             */
             template <typename VEC_TYPE = std::vector<RunRuleBody>>
+            /**
+             * @brief Print a vector of runs to standard output.
+             * @param items Sequence of run rules or integers.
+             * @param name Label for printed output.
+             * @param message_paragraph Indentation level for formatted output.
+             */
             static void print_vector(const VEC_TYPE &items, const std::string name, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 std::cout << stool::Message::get_paragraph_string(message_paragraph) << name << ": " << std::flush;
@@ -172,15 +177,12 @@ namespace dynRLSLP
                 std::cout << std::endl;
             }
 
-            /**
-             * @brief Verifies that no two consecutive elements in the vector have the same 'number'.
-             *        Throws an exception if duplicate consecutive numbers are found.
-             * 
-             * @tparam VEC_TYPE The type of the vector, defaults to std::vector<RunRuleBody>
-             * @param items Vector of RunRuleBody to verify
-             * @return true if verification passes, otherwise throws an exception
-             */
             template <typename VEC_TYPE = std::vector<RunRuleBody>>
+            /**
+             * @brief Verify no adjacent runs share the same nonterminal.
+             * @param items Sequence of run rules or integers.
+             * @return True if the check succeeds.
+             */
             static bool verify_vector(const VEC_TYPE &items)
             {
                 for (int64_t i = 1; i < (int64_t)items.size(); i++)
@@ -193,13 +195,11 @@ namespace dynRLSLP
                 return true;
             }
 
-            /**
-             * @brief Merges adjacent RunRuleBody elements in the vector that have the same 'number' by combining their 'power'.
-             * 
-             * @tparam VEC_TYPE The type of the vector, defaults to std::vector<RunRuleBody>
-             * @param items Vector of RunRuleBody to merge (modified in place)
-             */
             template <typename VEC_TYPE = std::vector<RunRuleBody>>
+            /**
+             * @brief Merge adjacent runs with the same nonterminal.
+             * @param items Sequence of run rules or integers.
+             */
             static void merge_same_signatures(VEC_TYPE &items)
             {
                 VEC_TYPE tmp;
@@ -223,15 +223,13 @@ namespace dynRLSLP
                 }
             }
 
-            /**
-             * @brief Computes the total length of the string represented by a vector of RunRuleBody, using the base signature length list.
-             * 
-             * @tparam VEC_TYPE The type of the vector, defaults to std::vector<RunRuleBody>
-             * @param items Vector of RunRuleBody
-             * @param base_signature_length_list The length vector for base signatures
-             * @return The total length represented by the combination of items
-             */
             template <typename VEC_TYPE = std::vector<RunRuleBody>>
+            /**
+             * @brief Return total string length of a run vector.
+             * @param items Sequence of run rules or integers.
+             * @param base_signature_length_list Base-signature length list (L).
+             * @return Computed integer value.
+             */
             static int64_t compute_string_length(const VEC_TYPE &items, const std::vector<uint64_t>& base_signature_length_list)
             {
                 uint64_t length = 0;
@@ -243,17 +241,11 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Recursively decomposes a signature into a sequence of RunRuleBody objects, depending on the signature structure.
-             * 
-             * Power: Pushes RunRuleBody(child.A, child.B) to output.
-             * Pair: Decomposes child.A if its level is not smaller than the current level, otherwise pushes both children as RunRuleBody(..., 1).
-             * Signature: Handles indirection via the level and decomposes if appropriate.
-             * Other types throw an exception.
-             * 
-             * @param signature The signature to decompose
-             * @param base_signature_rule_list The rule list for decoding signatures
-             * @param base_signature_level_list List of levels for signatures
-             * @param output The output vector to which RunRuleBody objects will be appended
+             * @brief Recursively decompose a signature into a sequence of RunRuleBody objects.
+             * @param signature Signature to decompose.
+             * @param base_signature_rule_list Base-signature rule list (D).
+             * @param base_signature_level_list Base-signature level list (H).
+             * @param output Output vector of runs.
              */
             static void y_break(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint16_t> &base_signature_level_list, std::vector<RunRuleBody> &output)
             {

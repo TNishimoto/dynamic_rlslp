@@ -13,6 +13,10 @@
 
 namespace dynRLSLP
 {
+	/**
+	 * @brief Core dictionary (D, H, L) for a layered RLSLP.
+	 * @ingroup RLSLPClasses
+	 */
 	class DictionaryForLayeredRLSLP
 	{
 	private:
@@ -22,43 +26,87 @@ namespace dynRLSLP
 		std::vector<uint16_t> relative_max_level_list_;
 
 	public:
+		/**
+		 * @brief Construct an empty layered dictionary.
+		 */
 		DictionaryForLayeredRLSLP()
 		{
 		}
 
+		/**
+		 * @brief Return the base-signature rule list (D).
+		 * @return Const reference to stored rule bodies.
+		 */
 		const std::vector<RLSLPRuleBody> &get_base_signature_rule_list() const
 		{
 			return this->base_signature_rule_list_;
 		}
+		/**
+		 * @brief Return the base-signature level list (H).
+		 * @return Const reference to absolute derivation levels per base signature.
+		 */
 		const std::vector<uint16_t> &get_base_signature_level_list() const
 		{
 			return this->base_signature_level_list_;
 		}
+		/**
+		 * @brief Return the base-signature length list (L).
+		 * @return Const reference to expanded string lengths per base signature.
+		 */
 		const std::vector<uint64_t> &get_base_signature_length_list() const
 		{
 			return this->base_signature_length_list_;
 		}
+		/**
+		 * @brief Return the per-base-signature relative maximum level list.
+		 * @return Const reference to highest relative level index per base signature.
+		 */
 		const std::vector<uint16_t> &get_relative_max_level_list() const
 		{
 			return this->relative_max_level_list_;
 		}
+		/**
+		 * @brief Return the string length of a signature using the base length list.
+		 * @param sig Encoded signature with relative level.
+		 * @return Expanded string length of @p sig.
+		 */
 		uint64_t get_length(SignatureWithRelativeLevel sig) const
 		{
 			return SignatureFunctions::get_length(sig, this->base_signature_length_list_);
 		}
+		/**
+		 * @brief Return the absolute derivation level of a signature.
+		 * @param sig Encoded signature with relative level.
+		 * @return Absolute level from the base level list (H).
+		 */
 		uint64_t get_level(SignatureWithRelativeLevel sig) const
 		{
 			return SignatureFunctions::get_level(sig, this->base_signature_level_list_);
 		}
+		/**
+		 * @brief Return the decoded rule body for a signature.
+		 * @param sig Encoded signature with relative level.
+		 * @return Rule body obtained by decoding @p sig against D.
+		 */
 		RLSLPRuleBody get_rule_body(SignatureWithRelativeLevel sig) const
 		{
 			return RLSLPRuleBody::decodeRule(sig, this->base_signature_rule_list_);
 		}
 
+		/**
+		 * @brief Return the number of base signatures.
+		 * @return Size of the base-signature rule list D.
+		 */
 		uint64_t base_signature_count() const
 		{
 			return this->base_signature_rule_list_.size();
 		}
+		/**
+		 * @brief Return the number of single (non-base) signatures for a base signature.
+		 * @param grammar_parsing_type Grammar parsing algorithm type.
+		 * @param base_signature Base signature index.
+		 * @return Count of relative-level signatures excluding the base slot; 0 if base is null.
+		 */
 		uint64_t get_single_signature_count(GrammarParsingType grammar_parsing_type, BaseSignature base_signature) const
 		{
 			RLSLPRuleBody rule_body = RLSLPRuleBody::decodeRule(base_signature, this->base_signature_rule_list_);
@@ -79,6 +127,11 @@ namespace dynRLSLP
 				return 0;
 			}
 		}
+		/**
+		 * @brief Return the total count of single signatures.
+		 * @param grammar_parsing_type Grammar parsing algorithm type.
+		 * @return Sum of single-signature counts over all base signatures.
+		 */
 		int64_t count_single_signatures(GrammarParsingType grammar_parsing_type) const
 		{
 			uint64_t sz = 0;
@@ -89,7 +142,9 @@ namespace dynRLSLP
 			return sz;
 		}
 		/**
-		 * @brief Return the size of the vector \p D
+		 * @brief Return the total number of signatures (base plus single).
+		 * @param grammar_parsing_type Grammar parsing algorithm type.
+		 * @return Total signature count across all base signatures.
 		 */
 		uint64_t signature_count(GrammarParsingType grammar_parsing_type) const
 		{
@@ -100,6 +155,10 @@ namespace dynRLSLP
 			}
 			return sz;
 		}
+		/**
+		 * @brief Return the number of null base signatures.
+		 * @return Count of base signatures whose rule type is Null.
+		 */
 		uint64_t count_null_signatures() const
 		{
 			uint64_t counter = 0;
@@ -113,14 +172,18 @@ namespace dynRLSLP
 			return counter;
 		}
 		/**
-		 * @brief Return \p true if \p G contains the nonterminal \p v_{i}. Otherwise, return \p false.
+		 * @brief Return whether the signature denotes a null rule.
+		 * @param i Signature or base-signature index.
+		 * @return True if the decoded rule at @p i is of type Null.
 		 */
 		bool check_empty_item(SignatureWithRelativeLevel i) const
 		{
 			return RLSLPRuleBody::decodeRule(i, this->base_signature_rule_list_).get_type() == RLSLPRuleType::Null;
 		}
 		/**
-		 * @brief Return the RLSLPRuleInfo of the nonterminal \p v_{i}
+		 * @brief Return rule body, length, and level for a signature index.
+		 * @param i Encoded signature or base-signature index.
+		 * @return Aggregated RLSLPRuleInfo for @p i.
 		 */
 		RLSLPRuleInfo get_signature_info(int64_t i) const
 		{
@@ -129,6 +192,12 @@ namespace dynRLSLP
 			return RLSLPRuleInfo(RLSLPRuleBody::decodeRule(i, this->base_signature_rule_list_), length, level);
 		}
 
+		/**
+		 * @brief Verify structural near-equality with another dictionary.
+		 * @param other Dictionary to compare against.
+		 * @return True if rule lists, levels, lengths, and relative max levels match.
+		 * @throws std::runtime_error on mismatch.
+		 */
 		bool verify_nearly_equal(const DictionaryForLayeredRLSLP &other) const
 		{
 			// Code 1
@@ -186,13 +255,20 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return \p D[i]
+		 * @brief Return the decoded rule body for a signature index.
+		 * @param i Signature or base-signature index.
+		 * @return Decoded rule body at index @p i (alias for decodeRule).
 		 */
 		RLSLPRuleBody get_item(int64_t i) const
 		{
 			return RLSLPRuleBody::decodeRule(i, this->base_signature_rule_list_);
 		}
 
+		/**
+		 * @brief Print summary dictionary statistics to standard output.
+		 * @param grammar_parsing_type Grammar parsing algorithm type.
+		 * @param message_paragraph Indentation level for formatted output.
+		 */
 		void print_statistics(GrammarParsingType grammar_parsing_type, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
 		{
 			uint64_t signature_count = this->signature_count(grammar_parsing_type);
@@ -208,6 +284,11 @@ namespace dynRLSLP
 			std::cout << stool::Message::get_paragraph_string(message_paragraph + 3) << "Single Signatures:    \t" << single_signature_count << std::endl;
 			std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "Null Signatures:      \t" << null_signature_count << std::endl;
 		}
+		/**
+		 * @brief Print detailed dictionary statistics.
+		 * @param grammar_parsing_type Grammar parsing algorithm type.
+		 * @param message_paragraph Indentation level for formatted output.
+		 */
 		void print_detailed_statistics(GrammarParsingType grammar_parsing_type, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
 		{
 
@@ -254,7 +335,9 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Print the information of the grammar \p G
+		 * @brief Print detailed information to standard output.
+		 * @param grammar_parsing_type Grammar parsing algorithm type.
+		 * @param message_paragraph Indentation level for formatted output.
 		 */
 		void print_info(GrammarParsingType grammar_parsing_type, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
 		{
@@ -291,17 +374,29 @@ namespace dynRLSLP
 			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "==== Rules[END] ====" << std::endl;
 		}
 
+		/**
+		 * @brief Decrement the relative maximum level of a base signature.
+		 * @param base_signature Base signature index.
+		 */
 		void decrease_relative_max_level(BaseSignature base_signature)
 		{
 			assert(this->relative_max_level_list_[base_signature] > 0);
 			this->relative_max_level_list_[base_signature]--;
 		}
+		/**
+		 * @brief Increment the relative maximum level of a base signature.
+		 * @param base_signature Base signature index.
+		 */
 		void increase_relative_max_level(BaseSignature base_signature)
 		{
 			assert(this->relative_max_level_list_[base_signature] < UINT16_MAX);
 			this->relative_max_level_list_[base_signature]++;
 		}
 
+		/**
+		 * @brief Allocate a new base signature slot initialized to null.
+		 * @return Index of the newly added base signature.
+		 */
 		BaseSignature add_new_base_signature()
 		{
 			uint64_t new_number = this->base_signature_count();
@@ -311,6 +406,10 @@ namespace dynRLSLP
 			this->relative_max_level_list_.push_back(UINT16_MAX);
 			return new_number;
 		}
+		/**
+		 * @brief Reset a base signature slot to null.
+		 * @param base_signature Base signature index.
+		 */
 		void clear_element(BaseSignature base_signature)
 		{
 			assert(this->base_signature_rule_list_[base_signature].get_type() != RLSLPRuleType::Null);
@@ -319,6 +418,14 @@ namespace dynRLSLP
 			this->base_signature_level_list_[base_signature] = UINT16_MAX;
 			this->relative_max_level_list_[base_signature] = UINT16_MAX;
 		}
+		/**
+		 * @brief Write rule body and metadata into a previously null base signature slot.
+		 * @param base_signature Base signature index (must currently be null).
+		 * @param rule_body RLSLP rule body to store.
+		 * @param new_level Absolute level of the base signature.
+		 * @param relative_max_level Maximum relative level for the base signature.
+		 * @param base_signature_length_list Length list used to compute stored length.
+		 */
 		void write_element(BaseSignature base_signature, const RLSLPRuleBody &rule_body, uint16_t new_level, uint16_t relative_max_level, const std::vector<uint64_t> &base_signature_length_list)
 		{
 			assert(this->base_signature_rule_list_[base_signature].get_type() == RLSLPRuleType::Null);
@@ -348,6 +455,9 @@ namespace dynRLSLP
 #endif
 		}
 
+		/**
+		 * @brief Clear all stored data.
+		 */
 		void clear()
 		{
 			this->base_signature_rule_list_.clear();
@@ -356,6 +466,10 @@ namespace dynRLSLP
 			this->relative_max_level_list_.clear();
 		}
 
+		/**
+		 * @brief Swap contents with another dictionary.
+		 * @param other Dictionary to swap with.
+		 */
 		void swap(DictionaryForLayeredRLSLP &other)
 		{
 			this->base_signature_rule_list_.swap(other.base_signature_rule_list_);
@@ -364,6 +478,11 @@ namespace dynRLSLP
 			this->relative_max_level_list_.swap(other.relative_max_level_list_);
 		}
 
+		/**
+		 * @brief Deserialize from a binary input stream.
+		 * @param ifs Input file stream.
+		 * @return Dictionary loaded from the binary stream.
+		 */
 		static DictionaryForLayeredRLSLP load_from_file(std::ifstream &ifs)
 		{
 			/*
@@ -387,6 +506,11 @@ namespace dynRLSLP
 			return r;
 		}
 
+		/**
+		 * @brief Serialize to a binary output stream.
+		 * @param item Dictionary to write.
+		 * @param os Output file stream.
+		 */
 		static void store_to_file(const DictionaryForLayeredRLSLP &item, std::ofstream &os)
 		{
 			// Code 1

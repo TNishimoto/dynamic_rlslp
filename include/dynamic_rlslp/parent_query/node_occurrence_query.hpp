@@ -7,12 +7,20 @@
 namespace dynRLSLP
 {
         /**
-         * @brief XXXXXXXX
+         * @brief Static queries for enumerating node occurrences in a layered RLSLP grammar.
          * @ingroup ParentClasses
          */
         class NodeOccurrenceQuery
         {
         private:
+            /**
+             * @brief Finds a type-2 primary occurrence by walking up a single-ancestor chain.
+             * @param sig Base signature to locate.
+             * @param fastParentDictionary Parent dictionary of the grammar.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @return Pair of the primary temporary occurrence and the walk depth.
+             */
             static std::pair<TemporaryOccurrence, uint64_t> find_type_2_primary_occurrence_of_signature(BaseSignature sig, const FastParentDictionary &fastParentDictionary, const std::vector<RLSLPRuleBody> &base_signature_rule_list,
                                                                                                         const std::vector<uint64_t> &base_signature_length_list)
             {
@@ -39,6 +47,13 @@ namespace dynRLSLP
                     }
                 }
             }
+            /**
+             * @brief Finds a type-2 primary occurrence using a precomputed occurrence cache.
+             * @param sig Base signature to locate.
+             * @param position_offset Accumulated position offset along the cache chain.
+             * @param occCacheList Per-base-signature cached primary occurrences.
+             * @return Primary temporary occurrence with absolute position offset.
+             */
             static TemporaryOccurrence find_type_2_primary_occurrence_of_signature(BaseSignature sig, int64_t position_offset, const std::vector<TemporaryOccurrence> &occCacheList)
             {
                 TemporaryOccurrence temp_occurrence = occCacheList[sig];
@@ -54,6 +69,16 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Resolves type-2 secondary occurrences, optionally expanding through type-1 parents.
+             * @param sig Base signature to locate.
+             * @param fastParentDictionary Parent dictionary of the grammar.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @param occCacheList Optional per-base-signature occurrence cache; nullptr disables the cache.
+             * @param output Stack receiving expanded temporary occurrences when multiple parents exist.
+             * @return -1 if multiple occurrences were pushed onto output; otherwise the single position offset.
+             */
             static int64_t find_type_2_secondary_occurrences_of_signature(BaseSignature sig, const FastParentDictionary &fastParentDictionary, const std::vector<RLSLPRuleBody> &base_signature_rule_list,
                                                                           const std::vector<uint64_t> &base_signature_length_list, const std::vector<TemporaryOccurrence> *occCacheList, VStack<TemporaryOccurrence> &output)
             {
@@ -85,6 +110,16 @@ namespace dynRLSLP
             }
 
         public:
+            /**
+             * @brief Finds a type-2 primary occurrence with a bounded ancestor-walk depth.
+             * @param sig Base signature to locate.
+             * @param fastParentDictionary Parent dictionary of the grammar.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @param max_depth Maximum number of ancestor hops allowed.
+             * @param current_depth Current depth in the ancestor walk.
+             * @return Primary temporary occurrence, or (sig, 0) if the depth limit is reached.
+             */
             static TemporaryOccurrence find_type_2_primary_occurrence_of_signature_using_limited_depth(BaseSignature sig, const FastParentDictionary &fastParentDictionary, const std::vector<RLSLPRuleBody> &base_signature_rule_list,
                                                                                                        const std::vector<uint64_t> &base_signature_length_list, uint64_t max_depth, uint64_t current_depth)
             {
@@ -114,6 +149,14 @@ namespace dynRLSLP
                     }
                 }
             }
+            /**
+             * @brief Enumerates all leaf occurrence positions by expanding type-1 primary occurrences.
+             * @param input Seed temporary occurrences to start enumeration from.
+             * @param fastParentDictionary Parent dictionary of the grammar.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @return All absolute occurrence positions.
+             */
             static std::vector<uint64_t> faster_get_all_occurrences(const std::vector<TemporaryOccurrence> &input, 
                 const FastParentDictionary &fastParentDictionary, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list)
             {
@@ -151,6 +194,17 @@ namespace dynRLSLP
                 return output;
             }
 
+            /**
+             * @brief Enumerates occurrences level-by-level using extra memory for grouping by signature level.
+             * @param input Seed temporary occurrences to start enumeration from.
+             * @param fastParentDictionary Parent dictionary of the grammar.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @param base_signature_level_list Height levels indexed by base signature.
+             * @param tree_max_level Maximum level in the derivation forest.
+             * @param occCacheList Optional per-base-signature occurrence cache; nullptr disables the cache.
+             * @return All absolute occurrence positions.
+             */
             static std::vector<uint64_t> faster_get_all_occurrences_using_memory(const std::vector<TemporaryOccurrence> &input, const FastParentDictionary &fastParentDictionary, const std::vector<RLSLPRuleBody> &base_signature_rule_list,
                                                                                  const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint16_t> &base_signature_level_list, uint64_t tree_max_level, const std::vector<TemporaryOccurrence> *occCacheList)
             {
@@ -219,6 +273,15 @@ namespace dynRLSLP
                 }
                 return output;
             }
+            /**
+             * @brief Enumerates occurrences level-by-level using an implicit occurrence tree for lower memory use.
+             * @param input Seed temporary occurrences to start enumeration from.
+             * @param fastParentDictionary Parent dictionary of the grammar.
+             * @param rlslp_dictionary Layered RLSLP dictionary providing rule and length tables.
+             * @param tree_max_level Maximum level in the derivation forest.
+             * @param occCacheList Optional per-base-signature occurrence cache; nullptr disables the cache.
+             * @return All absolute occurrence positions.
+             */
             static std::vector<uint64_t> faster_get_all_occurrences_using_low_memory(const std::vector<TemporaryOccurrence> &input, const FastParentDictionary &fastParentDictionary, const DictionaryForLayeredRLSLP &rlslp_dictionary, uint64_t tree_max_level, const std::vector<TemporaryOccurrence> *occCacheList)
             {
                 const std::vector<RLSLPRuleBody> &base_signature_rule_list = rlslp_dictionary.get_base_signature_rule_list();

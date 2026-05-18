@@ -13,6 +13,13 @@ namespace dynRLSLP
         class TryCommonSequenceCompiler
         {
             public:
+            /**
+             * @brief Attempts to compile a run-rule vector without adding new signatures.
+             * @param seq Input run-rule vector to compile.
+             * @param dic Dynamic grammar used for lookup only.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return Root signature on success, or -1 if a required signature is missing.
+             */
             static int64_t try_single_compile(RunRuleVector &seq, const DynamicGrammarForLayeredRLSLP &dic, int message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 if(seq.is_empty()){
@@ -58,6 +65,15 @@ namespace dynRLSLP
 
             }
 
+            /**
+             * @brief Attempts to build a layered run-rule vector from text without adding signatures.
+             * @tparam C Character type of the input text.
+             * @param dic Dynamic grammar used for lookup only.
+             * @param text Input character sequence.
+             * @param output Run-rule vector filled on success.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return True if the sequence was built entirely from existing signatures.
+             */
             template <typename C>
             static bool try_build_common_sequence_from_text(const DynamicGrammarForLayeredRLSLP &dic, const std::vector<C> &text, RunRuleVector &output, int message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -127,6 +143,13 @@ namespace dynRLSLP
             }
 
 
+            /**
+             * @brief Attempts left-side semi-compilation without adding new signatures.
+             * @param item Run-rule vector whose left side is semi-compiled in place.
+             * @param dic Dynamic grammar used for lookup only.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return True if all required signatures exist.
+             */
             static bool try_left_side_semi_compile(RunRuleVector &item, const DynamicGrammarForLayeredRLSLP &dic, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
 
@@ -153,6 +176,13 @@ namespace dynRLSLP
                 return true;
 
             }
+            /**
+             * @brief Attempts right-side semi-compilation without adding new signatures.
+             * @param item Run-rule vector whose right side is semi-compiled in place.
+             * @param dic Dynamic grammar used for lookup only.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return True if all required signatures exist.
+             */
             static bool try_right_side_semi_compile(RunRuleVector &item, const DynamicGrammarForLayeredRLSLP &dic, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 //std::cout << stool::Message::get_paragraph_string(message_paragraph) << "right_side_semi_compile: item.get_max_level() = " << item.get_max_level() << std::endl;
@@ -180,6 +210,17 @@ namespace dynRLSLP
             }
 
 
+            /**
+             * @brief Attempts LCR semi-compilation without adding new signatures.
+             * @param left Left run-rule vector.
+             * @param center Center deque updated in place.
+             * @param right Right run-rule vector.
+             * @param h Current hierarchy level.
+             * @param dic Dynamic grammar used for lookup only.
+             * @param output Compiled center sequence on success.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return True if all required signatures exist.
+             */
             static bool try_LCR_semi_compile(RunRuleVector &left, std::deque<RunRuleBody> &center, RunRuleVector &right, int64_t h, const DynamicGrammarForLayeredRLSLP &dic, std::deque<RunRuleBody> &output, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 assert(left.verify());

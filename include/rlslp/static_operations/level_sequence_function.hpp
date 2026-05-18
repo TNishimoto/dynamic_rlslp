@@ -9,10 +9,10 @@
 
 namespace dynRLSLP
 {
-		/**
-		 * @brief XXXXXXXX
-		 * @ingroup StaticOperationsClasses
-		 */
+        /**
+         * @brief Substring and context extraction on run sequences.
+         * @ingroup StaticOperationsClasses
+         */
         class LevelSequenceFunction
         {
         public:
@@ -35,6 +35,12 @@ namespace dynRLSLP
         }
 
         
+        /**
+         * @brief Build a right-context VStack for a signature.
+         * @param signature Encoded signature with relative level.
+         * @param base_signature_rule_list Base-signature rule list (D).
+         * @return Resulting vector.
+         */
         static VStack<RunRuleBody> create_right_sequence(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
         {
             RLSLPRuleBody item = RLSLPRuleBody::decodeRule(signature, base_signature_rule_list);
@@ -54,6 +60,12 @@ namespace dynRLSLP
             }
             return st;
         }
+        /**
+         * @brief Return the rightmost run rule for a signature.
+         * @param signature Encoded signature with relative level.
+         * @param base_signature_rule_list Base-signature rule list (D).
+         * @return Resulting vector.
+         */
         static RunRuleBody create_right_run_rule(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
         {
             RLSLPRuleBody item = RLSLPRuleBody::decodeRule(signature, base_signature_rule_list);
@@ -73,6 +85,12 @@ namespace dynRLSLP
         }
 
 
+        /**
+         * @brief Build a left-context VStack for a signature.
+         * @param signature Encoded signature with relative level.
+         * @param base_signature_rule_list Base-signature rule list (D).
+         * @return Resulting vector.
+         */
         static VStack<RunRuleBody> create_left_sequence(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
         {
 
@@ -94,6 +112,12 @@ namespace dynRLSLP
             return st;
         }
 
+        /**
+         * @brief Return the leftmost run rule for a signature.
+         * @param signature Encoded signature with relative level.
+         * @param base_signature_rule_list Base-signature rule list (D).
+         * @return Resulting vector.
+         */
         static RunRuleBody create_left_run_rule(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
         {
 
@@ -115,6 +139,14 @@ namespace dynRLSLP
         }
         
 
+        /**
+         * @brief Extract a substring as a vector of run rules.
+         * @param item Rule body item.
+         * @param pos Start position in the represented string.
+         * @param len Length of the substring or prefix/suffix.
+         * @param dic Layered RLSLP dictionary.
+         * @return Computed integer value.
+         */
         static std::vector<RunRuleBody> substring(SignatureWithRelativeLevel item, int64_t pos, int64_t len, const DictionaryForLayeredRLSLP &dic)
             {
                 VStack<RunRuleBody> st;
@@ -208,6 +240,13 @@ namespace dynRLSLP
                 return r;
             }
 
+            /**
+             * @brief Extract a substring as a vector of run rules.
+             * @param item Rule body item.
+             * @param pos Start position in the represented string.
+             * @param dic Layered RLSLP dictionary.
+             * @return Computed integer value.
+             */
             static std::vector<RunRuleBody> substring(int64_t item, int64_t pos, const DictionaryForLayeredRLSLP &dic)
             {
                 int64_t len = SignatureFunctions::get_length(item, dic.get_base_signature_length_list());

@@ -16,6 +16,19 @@ namespace dynRLSLP
         class SplitAndConcatenation
         {
         public:
+            /**
+             * @brief Splits a document signature into left and right parts at a given length.
+             * @tparam CALLBACK1 Callback type invoked when signatures are removed.
+             * @tparam CALLBACK2 Callback type invoked when signatures are added.
+             * @param node Signature of the document to split.
+             * @param leftLength Length of the left part in characters.
+             * @param remove_node If true, remove the original document when @p process_document is set.
+             * @param process_document If true, update the document set in the grammar.
+             * @param dic Dynamic grammar updated during the split.
+             * @param callback_for_removed_signatures Callback invoked for removed signatures.
+             * @param callback_for_added_signatures Callback invoked for added signatures.
+             * @return Pair of signatures for the left and right parts.
+             */
             template <typename CALLBACK1 = decltype(no_callback), typename CALLBACK2 = decltype(no_callback)>
             static std::pair<int64_t, int64_t> split(SignatureWithRelativeLevel node, int64_t leftLength, bool remove_node, bool process_document, DynamicGrammarForLayeredRLSLP &dic, CALLBACK1 &callback_for_removed_signatures, CALLBACK2 &callback_for_added_signatures)
             {
@@ -74,6 +87,19 @@ namespace dynRLSLP
                 return std::pair<int64_t, int64_t>(left1, right1);
             }
 
+            /**
+             * @brief Concatenates two document signatures into one.
+             * @tparam CALLBACK1 Callback type invoked when signatures are removed.
+             * @tparam CALLBACK2 Callback type invoked when signatures are added.
+             * @param left Signature of the left document.
+             * @param right Signature of the right document.
+             * @param process_document If true, update the document set in the grammar.
+             * @param dic Dynamic grammar updated during concatenation.
+             * @param callback_for_removed_signatures Callback invoked for removed signatures.
+             * @param callback_for_added_signatures Callback invoked for added signatures.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return Signature of the concatenated document.
+             */
             template <typename CALLBACK1 = decltype(no_callback), typename CALLBACK2 = decltype(no_callback)>
             static int64_t concatenate(int64_t left, int64_t right, bool process_document, DynamicGrammarForLayeredRLSLP &dic, CALLBACK1 &callback_for_removed_signatures = no_callback, CALLBACK2 &callback_for_added_signatures = no_callback, int message_paragraph = stool::Message::SHOW_MESSAGE)
             {

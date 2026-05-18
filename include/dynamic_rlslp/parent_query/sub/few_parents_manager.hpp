@@ -4,7 +4,7 @@
 namespace dynRLSLP
 {
         /**
-         * @brief XXXXXXXX
+         * @brief Manages a bounded set of secondary parents, delegating overflow to ManyParentsManager.
          * @ingroup ParentClasses
          */
 
@@ -17,9 +17,15 @@ namespace dynRLSLP
             uint64_t count_ = 0;
 
         public:
+            /**
+             * @brief Default constructor creating an empty manager.
+             */
             FewParentsManager()
             {
             }
+            /**
+             * @brief Default destructor releasing any owned ManyParentsManager.
+             */
             ~FewParentsManager()
             {
             }
@@ -28,28 +34,47 @@ namespace dynRLSLP
             ///   @name Lightweight functions for accessing to properties of this class
             ////////////////////////////////////////////////////////////////////////////////
             //@{
+            /**
+             * @brief Returns the number of entries in the secondary parent list.
+             * @return Size of the inline secondary parent list.
+             */
             uint64_t secondary_parent_count() const
             {
                 return this->secondary_parent_list_.size();
             }
 
+            /**
+             * @brief Returns the optional overflow manager for tertiary and quaternary parents.
+             * @return Pointer to ManyParentsManager, or nullptr if not allocated.
+             */
             const ManyParentsManager *get_many_parents_manager() const
             {
                 return this->many_parents_manager_;
             }
 
-
+            /**
+             * @brief Tests whether this manager stores no parents.
+             * @return True if both secondary lists are empty and no overflow manager exists.
+             */
             bool is_empty() const
             {
                 return this->level_diff_list_.size() == 0 && this->secondary_parent_list_.size() == 0;
             }
 
+            /**
+             * @brief Returns the total number of registered parents across all tiers.
+             * @return Total parent count including overflow storage.
+             */
             uint64_t size() const
             {
                 return this->count_;
             }
 
-
+            /**
+             * @brief Tests whether exactly one pair parent is stored with no overflow manager.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @return True if a unique pair parent exists at the secondary tier only.
+             */
             bool has_single_parent(const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
             {
                 if (this->secondary_parent_list_.size() >= 2)
@@ -83,6 +108,15 @@ namespace dynRLSLP
             //@{
 
 
+            /**
+             * @brief Pushes type-1 primary occurrences for all parents onto the stack.
+             * @param sig Base signature of the queried nonterminal.
+             * @param position_offset Position offset of the occurrence within its parent.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @param output Stack receiving temporary occurrences to expand further.
+             * @return True if at least one parent occurrence was pushed.
+             */
             bool get_all_type_1_primary_occurrences_of_signature(BaseSignature sig, int64_t position_offset, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list, VStack<TemporaryOccurrence> &output) const
             {
                 bool b = this->secondary_parent_list_.size() > 0;
@@ -98,6 +132,11 @@ namespace dynRLSLP
                 return b;
             }
 
+            /**
+             * @brief Finds the index of a relative level in the secondary parent list.
+             * @param level_diff Relative level to search for.
+             * @return Index in the secondary list, or -1 if not found.
+             */
             int16_t find_secondary_list_index(uint16_t level_diff) const
             {
                 uint64_t secondary_list_size = this->secondary_parent_list_.size();
@@ -111,6 +150,14 @@ namespace dynRLSLP
                 return -1;
             }
 
+            /**
+             * @brief Looks up a pair parent with the given children at the child's relative level.
+             * @param left_sig Left child signature.
+             * @param right_sig Right child signature.
+             * @param quaternary_key Quaternary lookup key for overflow parents.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @return Parent signature if found, otherwise -1.
+             */
             int64_t get_pair_signature(SignatureWithRelativeLevel left_sig, SignatureWithRelativeLevel right_sig, QuaternaryKey quaternary_key, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
             {
                 uint64_t level_diff = SignatureFunctions::get_relative_level(left_sig);
@@ -130,6 +177,14 @@ namespace dynRLSLP
                 }
                 return -1;
             }
+            /**
+             * @brief Looks up a power parent with the given child and exponent at the child's relative level.
+             * @param child_sig Child signature.
+             * @param power Exponent of the power rule.
+             * @param quaternary_key Quaternary lookup key for overflow parents.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @return Parent signature if found, otherwise -1.
+             */
             int64_t get_power_signature(SignatureWithRelativeLevel child_sig, uint64_t power, QuaternaryKey quaternary_key, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
             {
                 uint64_t level_diff = SignatureFunctions::get_relative_level(child_sig);
@@ -151,6 +206,10 @@ namespace dynRLSLP
             }
 
 
+            /**
+             * @brief Returns all (relative level, parent signature) pairs stored in this manager.
+             * @return Combined list from secondary and overflow tiers.
+             */
             std::vector<std::pair<uint16_t, SignatureWithRelativeLevel>> get_all_elements() const
             {
                 std::vector<std::pair<uint16_t, SignatureWithRelativeLevel>> output;
@@ -166,6 +225,10 @@ namespace dynRLSLP
                 return output;
             }
 
+            /**
+             * @brief Appends all parent signatures stored in this manager to the output vector.
+             * @param output Vector receiving parent signatures.
+             */
             void get_all_important_ancestors(std::vector<SignatureWithRelativeLevel> &output) const{
                 for(auto parent : this->secondary_parent_list_){
                     output.push_back(parent);
@@ -181,6 +244,10 @@ namespace dynRLSLP
             ///   @name Print and verification functions
             ////////////////////////////////////////////////////////////////////////////////
             //@{
+            /**
+             * @brief Returns the memory usage of this manager in bytes.
+             * @return Memory footprint including any owned ManyParentsManager.
+             */
             uint64_t size_in_bytes() const
             {
                 uint64_t total = 0;
@@ -203,6 +270,11 @@ namespace dynRLSLP
                 return total;
             }
 
+            /**
+             * @brief Prints all parents managed for one base signature.
+             * @param base_signature Base signature used to reconstruct child signatures for display.
+             * @param message_paragraph Indentation depth for log output.
+             */
             void print_tree(uint64_t base_signature, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
             {
                 std::vector<std::pair<uint16_t, SignatureWithRelativeLevel>> all_elements;
@@ -221,6 +293,11 @@ namespace dynRLSLP
                     this->many_parents_manager_->print_tree(base_signature, this->secondary_parent_list_.size(), this->level_diff_list_, message_paragraph + 1);
                 }
             }
+            /**
+             * @brief Verifies that relative levels in the secondary list are unique.
+             * @return True if verification succeeds.
+             * @throws std::runtime_error on duplicate relative levels.
+             */
             bool verify() const
             {
                 std::set<SignatureWithRelativeLevel> diff_set;
@@ -237,6 +314,12 @@ namespace dynRLSLP
                 }
                 return true;
             }
+            /**
+             * @brief Verifies that this manager is equal to another instance.
+             * @param other Manager to compare against.
+             * @return True if all fields and sub-managers match.
+             * @throws std::runtime_error on mismatch.
+             */
             bool verify_equal(const FewParentsManager &other) const
             {
                 if (this->level_diff_list_.size() != other.level_diff_list_.size())
@@ -284,6 +367,13 @@ namespace dynRLSLP
             ////////////////////////////////////////////////////////////////////////////////
             //@{
 
+            /**
+             * @brief Populates this manager from a vector of parent signatures.
+             * @param descendant Base signature of the child nonterminal.
+             * @param parents Initial parent signatures to register.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param is_restricted_recompression_mode True when restricted block compression is active.
+             */
             void initialize(BaseSignature descendant, const std::vector<SignatureWithRelativeLevel> &parents, const std::vector<RLSLPRuleBody> &base_signature_rule_list, bool is_restricted_recompression_mode) {
                 for(auto parent : parents){
                     RLSLPRuleBody parent_item = RLSLPRuleBody::decodeRule(parent, base_signature_rule_list);
@@ -304,6 +394,9 @@ namespace dynRLSLP
                 }
 
             }
+            /**
+             * @brief Clears all parent entries and releases the overflow manager.
+             */
             void clear()
             {
                 this->level_diff_list_.clear();
@@ -316,6 +409,10 @@ namespace dynRLSLP
                 }
                 this->count_ = 0;
             }
+            /**
+             * @brief Swaps contents with another manager instance.
+             * @param other Manager to swap with.
+             */
             void swap(FewParentsManager &other)
             {
                 this->level_diff_list_.swap(other.level_diff_list_);
@@ -323,6 +420,11 @@ namespace dynRLSLP
                 std::swap(this->many_parents_manager_, other.many_parents_manager_);
                 std::swap(this->count_, other.count_);
             }
+            /**
+             * @brief Removes and returns one parent at the given relative level.
+             * @param level_diff Relative level of the parent to take.
+             * @return Removed parent signature, or EMPTY_FLAG if none exists at that level.
+             */
             SignatureWithRelativeLevel take_any_parent(uint16_t level_diff)
             {
                 int16_t secondary_index = this->find_secondary_list_index(level_diff);
@@ -347,6 +449,10 @@ namespace dynRLSLP
                     return ManyParentsManager::EMPTY_FLAG;
                 }
             }
+            /**
+             * @brief Removes and returns the parent at the highest stored relative level.
+             * @return Pair of relative level and parent signature, or (0, EMPTY_FLAG) if empty.
+             */
             std::pair<uint16_t, SignatureWithRelativeLevel> take_any_parent_with_diff_level()
             {
                 if (this->is_empty())
@@ -362,6 +468,12 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Removes one parent at the given relative level.
+             * @param level_diff Relative level of the parent to erase.
+             * @param parent Parent signature to remove.
+             * @param quaternary_key Quaternary lookup key for overflow parents.
+             */
             void erase(uint16_t level_diff, SignatureWithRelativeLevel parent, uint64_t quaternary_key)
             {
                 int16_t secondary_index = this->find_secondary_list_index(level_diff);
@@ -401,6 +513,12 @@ namespace dynRLSLP
                     throw std::runtime_error("erase: secondary_index is not found");
                 }
             }
+            /**
+             * @brief Inserts a parent at the given relative level, creating overflow storage when needed.
+             * @param level_diff Relative level of the child within the parent rule.
+             * @param parent Parent signature to register.
+             * @param quaternary_key Quaternary lookup key for overflow parents.
+             */
             void insert(uint16_t level_diff, SignatureWithRelativeLevel parent, QuaternaryKey quaternary_key)
             {
                 int16_t secondary_index = this->find_secondary_list_index(level_diff);
@@ -432,6 +550,11 @@ namespace dynRLSLP
             //@{
 
         public:
+            /**
+             * @brief Loads a manager from a binary input stream.
+             * @param ifs Input stream positioned at the manager data.
+             * @return Restored FewParentsManager instance.
+             */
             static FewParentsManager load_from_file(std::ifstream &ifs)
             {
                 FewParentsManager r;
@@ -467,6 +590,11 @@ namespace dynRLSLP
                 }
                 return r;
             }
+            /**
+             * @brief Writes a manager to a binary output stream.
+             * @param item Manager to serialize.
+             * @param os Output stream to write to.
+             */
             static void store_to_file(const FewParentsManager &item, std::ofstream &os)
             {
                 uint64_t count = item.count_;
@@ -490,6 +618,11 @@ namespace dynRLSLP
             //}@
 
         private:
+            /**
+             * @brief Removes one parent from the overflow manager at the given relative level.
+             * @param level_diff Relative level of the parent to take.
+             * @return Removed parent signature, or EMPTY_FLAG if the overflow manager is absent or empty.
+             */
             SignatureWithRelativeLevel take_any_parent_from_many_parents_manager(uint16_t level_diff)
             {
                 if (this->many_parents_manager_ != nullptr)

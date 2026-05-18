@@ -78,6 +78,7 @@ namespace dynRLSLP
 			DynamicGrammarForLayeredRLSLP(const DynamicGrammarForLayeredRLSLP &) = delete;
 			/**
 			 * @brief Move constructor.
+			 * @param other Source grammar to move from.
 			 */
 			DynamicGrammarForLayeredRLSLP(DynamicGrammarForLayeredRLSLP &&other) noexcept : grammar(std::move(other.grammar)),
 																							fastParentDictionary(std::move(other.fastParentDictionary)),
@@ -102,6 +103,8 @@ namespace dynRLSLP
 			DynamicGrammarForLayeredRLSLP &operator=(const DynamicGrammarForLayeredRLSLP &) = delete;
 			/**
 			 * @brief Move assignment operator.
+			 * @param other Source grammar to move from.
+			 * @return Reference to this grammar after the move.
 			 */
 			DynamicGrammarForLayeredRLSLP &operator=(DynamicGrammarForLayeredRLSLP &&other) noexcept
 			{
@@ -126,52 +129,99 @@ namespace dynRLSLP
 			////////////////////////////////////////////////////////////////////////////////
 			//@{
 		public:
+			/**
+			 * @brief Returns the underlying static layered RLSLP grammar.
+			 * @return Const reference to the grammar object.
+			 */
 			const GrammarForLayeredRLSLP &get_grammar() const
 			{
 				return this->grammar;
 			}
+			/**
+			 * @brief Returns the fast parent dictionary of this dynamic grammar.
+			 * @return Const reference to the parent dictionary.
+			 */
 			const FastParentDictionary &get_parent_dictionary() const
 			{
 				return this->fastParentDictionary;
 			}
+			/**
+			 * @brief Returns the random-bit dictionary used for restricted recompression.
+			 * @return Const reference to the random bit dictionary.
+			 */
 			const RandomBitDictionary &get_random_bit_dictionary() const
 			{
 				return this->grammar.get_random_bit_dictionary();
 			}
+			/**
+			 * @brief Returns the list of rule bodies indexed by base signature.
+			 * @return Const reference to the base signature rule list.
+			 */
 			const std::vector<RLSLPRuleBody> &get_base_signature_rule_list() const
 			{
 				return this->grammar.get_rlslp_dictionary().get_base_signature_rule_list();
 			}
+			/**
+			 * @brief Returns derived string lengths indexed by base signature.
+			 * @return Const reference to the length list.
+			 */
 			const std::vector<uint64_t> &get_base_signature_length_list() const
 			{
 				return this->grammar.get_rlslp_dictionary().get_base_signature_length_list();
 			}
+			/**
+			 * @brief Returns height levels indexed by base signature.
+			 * @return Const reference to the level list.
+			 */
 			const std::vector<uint16_t> &get_base_signature_level_list() const
 			{
 				return this->grammar.get_rlslp_dictionary().get_base_signature_level_list();
 			}
+			/**
+			 * @brief Returns the maximum relative level per base signature.
+			 * @return Const reference to the relative max-level list.
+			 */
 			const std::vector<uint16_t> &get_relative_max_level_list() const
 			{
 				return this->grammar.get_rlslp_dictionary().get_relative_max_level_list();
 			}
+			/**
+			 * @brief Returns the layered RLSLP dictionary embedded in the grammar.
+			 * @return Const reference to the dictionary.
+			 */
 			const DictionaryForLayeredRLSLP &get_dictionary() const
 			{
 				return this->grammar.get_rlslp_dictionary();
 			}
+			/**
+			 * @brief Returns the grammar parsing mode.
+			 * @return Grammar parsing type flag.
+			 */
 			GrammarParsingType get_grammar_parsing_type() const
 			{
 				return this->grammar.get_grammar_parsing_type();
 			}
+			/**
+			 * @brief Returns the number of distinct derivation trees (documents) stored.
+			 * @return Distinct document count.
+			 */
 			uint64_t get_distinct_document_count() const
 			{
 				return this->grammar.get_distinct_document_count();
 			}
+			/**
+			 * @brief Returns the total number of document references including duplicates.
+			 * @return Total document count.
+			 */
 			uint64_t get_document_count() const
 			{
 				return this->grammar.get_document_count();
 			}
 
-
+			/**
+			 * @brief Returns the number of base signature slots allocated in the dictionary.
+			 * @return Base signature count including unused slots.
+			 */
 			uint64_t base_signature_count() const
 			{
 				return this->grammar.get_rlslp_dictionary().base_signature_count();
@@ -185,7 +235,10 @@ namespace dynRLSLP
 				return this->grammar.signature_count() - this->unused_signatures.size();
 			}
 
-			
+			/**
+			 * @brief Returns the number of active base signatures excluding unused null slots.
+			 * @return Base signature count minus unused signatures.
+			 */
 			int64_t base_signature_count_without_null_signatures() const
 			{
 				return this->base_signature_count() - this->unused_signatures.size();
@@ -233,10 +286,21 @@ namespace dynRLSLP
 			////////////////////////////////////////////////////////////////////////////////
 			//@{
 
+			/**
+			 * @brief Enumerates all leaf occurrence positions for the given seed occurrences.
+			 * @param input Seed temporary occurrences to start enumeration from.
+			 * @return All absolute occurrence positions.
+			 */
 			std::vector<uint64_t> faster_get_all_occurrences(const std::vector<TemporaryOccurrence> &input) const
 			{
 				return NodeOccurrenceQuery::faster_get_all_occurrences(input, this->fastParentDictionary, this->grammar.get_rlslp_dictionary().get_base_signature_rule_list(), this->grammar.get_rlslp_dictionary().get_base_signature_length_list());
 			}
+			/**
+			 * @brief Enumerates occurrences using the low-memory implicit-tree algorithm.
+			 * @param input Seed temporary occurrences to start enumeration from.
+			 * @param occCacheList Optional per-base-signature occurrence cache; nullptr disables the cache.
+			 * @return All absolute occurrence positions.
+			 */
 			std::vector<uint64_t> faster_get_all_occurrences_using_memory(const std::vector<TemporaryOccurrence> &input, const std::vector<TemporaryOccurrence> *occCacheList) const
 			{
 				return NodeOccurrenceQuery::faster_get_all_occurrences_using_low_memory(input, this->fastParentDictionary,
@@ -281,10 +345,18 @@ namespace dynRLSLP
 				}
 				return r;
 			}
+			/**
+			 * @brief Tests whether an explicit alphabet with numeric character IDs is configured.
+			 * @return True if character_id_map is non-empty.
+			 */
 			bool has_explicit_alphabet() const
 			{
 				return this->character_id_map.size() > 0;
 			}
+			/**
+			 * @brief Returns the bit width needed to encode alphabet indices.
+			 * @return 1, 2, 4, 8, or 64 depending on alphabet size.
+			 */
 			uint64_t get_alphabet_bit_size() const
 			{
 
@@ -318,6 +390,10 @@ namespace dynRLSLP
 					return 64;
 				}
 			}
+			/**
+			 * @brief Returns the explicit character-to-index map when configured.
+			 * @return Const reference to the character ID map.
+			 */
 			const std::unordered_map<int64_t, uint64_t> &get_character_id_map() const
 			{
 				return this->character_id_map;
@@ -369,12 +445,23 @@ namespace dynRLSLP
 			////////////////////////////////////////////////////////////////////////////////
 			//@{
 		public:
+			/**
+			 * @brief Initializes an empty dynamic grammar with optional restricted recompression.
+			 * @param restricted_recompression True to enable restricted block compression mode.
+			 * @param seed Random seed for internal randomized structures.
+			 */
 			void initialize(bool restricted_recompression = false, uint64_t seed = 0)
 			{
 				this->clear();
 				this->grammar.initialize(restricted_recompression, seed);
 				this->fastParentDictionary.set_pointer(&this->grammar.get_rlslp_dictionary().get_relative_max_level_list(), this->grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression);
 			}
+			/**
+			 * @brief Initializes an empty grammar and registers an explicit alphabet with numeric IDs.
+			 * @param restricted_recompression True to enable restricted block compression mode.
+			 * @param alphabet Sorted list of characters defining the alphabet.
+			 * @param seed Random seed for internal randomized structures.
+			 */
 			void initialize(bool restricted_recompression, const std::vector<uint8_t> &alphabet, uint64_t seed)
 			{
 				this->initialize(restricted_recompression, seed);
@@ -399,6 +486,7 @@ namespace dynRLSLP
 			}
 			/**
 			 * @brief Swap operation
+			 * @param other Grammar to swap contents with.
 			 */
 			void swap(DynamicGrammarForLayeredRLSLP &other)
 			{
@@ -412,6 +500,11 @@ namespace dynRLSLP
 				other.fastParentDictionary.set_pointer(&other.grammar.get_rlslp_dictionary().get_relative_max_level_list(), other.grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression);
 			}
 
+			/**
+			 * @brief Looks up a signature without creating a new nonterminal.
+			 * @param body Rule body to look up.
+			 * @return Existing signature, or -1 if the rule is absent or a new signature level would be required.
+			 */
 			int64_t try_get_signature(RLSLPRuleBody body) const
 			{
 				NonterminalLessComparer::base_signature_rule_list = &this->grammar.get_rlslp_dictionary().get_base_signature_rule_list();
@@ -446,6 +539,11 @@ namespace dynRLSLP
 
 			/**
 			 * @brief Return the signature \p i of the rule v_{i} -> \p body. If such a nonterminal does not exist, add it to the grammar \p G and execute the callback function \p callback_for_added_signature.
+			 * @tparam CALLBACK Callable type invoked with the new signature when a rule is created.
+			 * @param body Rule body to look up or insert.
+			 * @param new_level Height level assigned when a new nonterminal is created.
+			 * @param callback_for_added_signature Callback invoked with the signature of each newly added nonterminal.
+			 * @return Signature of the existing or newly created nonterminal.
 			 */
 			template <typename CALLBACK>
 			SignatureWithRelativeLevel get_or_add_signature(RLSLPRuleBody body, uint16_t new_level, CALLBACK &callback_for_added_signature)
@@ -500,6 +598,10 @@ namespace dynRLSLP
 			}
 			/**
 			 * @brief If \p G contains a document rooted at the nonterminal \p v_{i}, remove it from \p G and execute the callback function \p preprocessor. Otherwise, throw an error.
+			 * @tparam PREPROCESSOR Callable type invoked for each removed nonterminal during cleanup.
+			 * @param i Signature of the document root to remove.
+			 * @param preprocessor Callback executed before each unused nonterminal is erased.
+			 * @return True if the document was found and removed.
 			 */
 			template <typename PREPROCESSOR = decltype(no_callback)>
 			bool remove_document(SignatureWithRelativeLevel i, PREPROCESSOR &preprocessor)
@@ -519,6 +621,10 @@ namespace dynRLSLP
 			////////////////////////////////////////////////////////////////////////////////
 			//@{
 
+			/**
+			 * @brief Prints storage and structure statistics for this grammar.
+			 * @param message_paragraph Indentation depth for log output.
+			 */
 			void print_statistics(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
 			{
 
@@ -545,6 +651,11 @@ namespace dynRLSLP
 					this->fastParentDictionary.print_tree(message_paragraph + 1);
 				}
 			}
+			/**
+			 * @brief Prints the derivation tree rooted at the given signature.
+			 * @param sig Root signature of the derivation tree to print.
+			 * @param message_paragraph Indentation depth for log output.
+			 */
 			void print_derivation_tree(SignatureWithRelativeLevel sig, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
 			{
 				const DictionaryForLayeredRLSLP &rlslp_dictionary = this->grammar.get_rlslp_dictionary();
@@ -595,6 +706,11 @@ namespace dynRLSLP
 
 				return r;
 			}
+			/**
+			 * @brief Verifies internal consistency of the parent dictionary.
+			 * @return True if verification succeeds.
+			 * @throws std::runtime_error on validation failure.
+			 */
 			bool verify() const
 			{
 				if (!this->fastParentDictionary.verify())
@@ -788,6 +904,11 @@ namespace dynRLSLP
 				}
 			}
 
+			/**
+			 * @brief Builds a dynamic grammar from a serialized layered RLSLP grammar stream.
+			 * @param ifs Input stream containing a GrammarForLayeredRLSLP snapshot.
+			 * @return Populated DynamicGrammarForLayeredRLSLP with parent links reconstructed.
+			 */
 			static DynamicGrammarForLayeredRLSLP build_from_leveled_rlslp(std::ifstream &ifs)
 			{
 				DynamicGrammarForLayeredRLSLP r;
@@ -859,6 +980,10 @@ namespace dynRLSLP
 			////////////////////////////////////////////////////////////////////////////////
 			//@{
 
+			/**
+			 * @brief Allocates a new base signature, reusing an unused slot when available.
+			 * @return New base signature identifier.
+			 */
 			int64_t get_new_number()
 			{
 				NonterminalLessComparer::base_signature_rule_list = &this->get_base_signature_rule_list();
@@ -878,6 +1003,12 @@ namespace dynRLSLP
 				}
 				return new_number;
 			}
+			/**
+			 * @brief Registers a new rule body and updates parent links and auxiliary tables.
+			 * @param new_signature Signature assigned to the new or promoted nonterminal.
+			 * @param new_item Rule body being inserted.
+			 * @param new_level Height level of the new nonterminal.
+			 */
 			void insert_new_item_into_list(SignatureWithRelativeLevel new_signature, RLSLPRuleBody new_item, uint16_t new_level)
 			{
 
@@ -944,6 +1075,10 @@ namespace dynRLSLP
 			//}@
 
 		private:
+			/**
+			 * @brief Serializes the character-to-signature map as a vector of pairs.
+			 * @return Vector of (character, signature) pairs for I/O and verification.
+			 */
 			std::vector<std::pair<int64_t, SignatureWithRelativeLevel>> create_character_signatuere_item_vec() const
 			{
 
@@ -960,6 +1095,13 @@ namespace dynRLSLP
 				return character_signatuere_item_vec;
 			}
 
+			/**
+			 * @brief Recursively removes an unused nonterminal and its descendants from the grammar.
+			 * @tparam PREPROCESSOR Callback invoked for each removed signature.
+			 * @param removed_node_signature Signature of the nonterminal being removed.
+			 * @param parent_signature Signature of the parent nonterminal (unused, reserved).
+			 * @param preprocessor Callback executed before each node is erased.
+			 */
 			template <typename PREPROCESSOR = decltype(no_callback)>
 			void __remove_document_sub(SignatureWithRelativeLevel removed_node_signature, [[maybe_unused]] uint64_t parent_signature, PREPROCESSOR &preprocessor = no_callback)
 			{
@@ -1028,6 +1170,11 @@ namespace dynRLSLP
 				}
 			}
 
+			/**
+			 * @brief Looks up the signature of a Signature rule body without creating a new level.
+			 * @param key Rule body of type Signature whose child signature is encoded in A.
+			 * @return Existing promoted signature, or -1 if the next relative level does not yet exist.
+			 */
 			int64_t get_signature_single(RLSLPRuleBody key) const
 			{
 				assert(key.get_type() == RLSLPRuleType::Signature);

@@ -14,6 +14,13 @@ namespace dynRLSLP
         class ShrinkAndPow
         {
         public:
+            /**
+             * @brief Computes restricted-block factor flags for each run-rule body.
+             * @param items Input run-rule bodies at the current level.
+             * @param current_level Current hierarchy level.
+             * @param dic Dynamic grammar providing length and random-bit data.
+             * @return Factor flags: 1 (left factor), 0 (right factor), or -1 (too long to factor).
+             */
             static std::vector<int8_t> compute_restricted_factor_flags(const std::deque<RunRuleBody> &items, uint16_t current_level, const DynamicGrammarForLayeredRLSLP &dic)
             {
                 std::vector<int8_t> factor_flags;
@@ -36,6 +43,16 @@ namespace dynRLSLP
                 }
                 return factor_flags;
             }
+            /**
+             * @brief Builds the level-0 run-rule sequence from plain text.
+             * @tparam C Character type of the input text.
+             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @param text Input character sequence.
+             * @param dic Dynamic grammar used to allocate character signatures.
+             * @param callback_for_added_signature Callback invoked for each added signature.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return Level-0 deque of run-rule bodies.
+             */
             template <typename C, typename CALLBACK = decltype(no_callback)>
             static std::deque<RunRuleBody> shrink_char(const std::vector<C> &text, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signature, int message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -88,6 +105,13 @@ namespace dynRLSLP
                 return r;
             }
 
+            /**
+             * @brief Computes left and right unstable context lengths for center-line compilation.
+             * @param text Current center-line run-rule deque.
+             * @param dic Dynamic grammar defining the parsing scheme.
+             * @param level Current hierarchy level.
+             * @return Pair (L, R) of unstable context lengths on the left and right.
+             */
             static std::pair<uint64_t, uint64_t> compute_unstable_context_lengths(const std::deque<RunRuleBody> &text, const DynamicGrammarForLayeredRLSLP &dic, uint16_t level)
             {
                 if (dic.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression)
@@ -174,6 +198,18 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Applies one shrink or pow step to the center line with optional context.
+             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @param left_context Left context run-rule bodies.
+             * @param center Center run-rule deque to compile.
+             * @param right_context Right context run-rule bodies.
+             * @param current_level Current hierarchy level.
+             * @param dic Dynamic grammar updated during compilation.
+             * @param callback_for_added_signatures Callback invoked for each added signature.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return Compiled center sequence at the next level.
+             */
             template <typename CALLBACK = decltype(no_callback)>
             static std::deque<RunRuleBody> center_line_compile(const std::vector<RunRuleBody> &left_context, const std::deque<RunRuleBody> &center, const std::vector<RunRuleBody> &right_context,
                                                                uint64_t current_level, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signatures, [[maybe_unused]] int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
@@ -225,6 +261,15 @@ namespace dynRLSLP
             }
 
         private:
+            /**
+             * @brief Lifts run-rule bodies to the next level via signature encoding (pow step).
+             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @param items Input run-rule bodies.
+             * @param current_level Current hierarchy level.
+             * @param dic Dynamic grammar updated during compilation.
+             * @param callback_for_added_signature Callback invoked for each added signature.
+             * @return Run-rule bodies at level @p current_level + 1.
+             */
             template <typename CALLBACK = decltype(no_callback)>
             static std::deque<RunRuleBody> pow(const std::deque<RunRuleBody> &items, uint16_t current_level, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signature)
             {
@@ -250,6 +295,15 @@ namespace dynRLSLP
                 return output;
             }
 
+            /**
+             * @brief Lifts run-rule bodies under restricted block compression (pow step).
+             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @param items Input run-rule bodies.
+             * @param current_level Current hierarchy level.
+             * @param dic Dynamic grammar updated during compilation.
+             * @param callback_for_added_signature Callback invoked for each added signature.
+             * @return Run-rule bodies at level @p current_level + 1.
+             */
             template <typename CALLBACK = decltype(no_callback)>
             static std::deque<RunRuleBody> restricted_pow(const std::deque<RunRuleBody> &items, uint16_t current_level, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signature)
             {
@@ -274,6 +328,18 @@ namespace dynRLSLP
                 return output;
             }
 
+            /**
+             * @brief Shrinks the center line using locally consistent factor bits and context.
+             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @param left_context Left context run-rule bodies.
+             * @param center Center run-rule deque to shrink.
+             * @param right_context Right context run-rule bodies.
+             * @param current_level Current hierarchy level.
+             * @param dic Dynamic grammar updated during compilation.
+             * @param callback_for_added_signatures Callback invoked for each added signature.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return Shrunk center sequence at the next level.
+             */
             template <typename CALLBACK = decltype(no_callback)>
             static std::deque<RunRuleBody> shrink_with_context(const std::vector<RunRuleBody> &left_context, const std::deque<RunRuleBody> &center, const std::vector<RunRuleBody> &right_context,
                                                                uint64_t current_level, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signatures, [[maybe_unused]] int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
@@ -326,6 +392,16 @@ const std::vector<uint64_t>& base_signature_length_list = dic.get_base_signature
                 return shrink_seq;
             }
 
+            /**
+             * @brief Shrinks a run-rule sequence according to factor bits.
+             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @param items Input run-rule bodies.
+             * @param bools Factor bits marking block boundaries.
+             * @param current_level Current hierarchy level.
+             * @param dic Dynamic grammar updated during compilation.
+             * @param preprocessor Callback invoked for each added signature.
+             * @return Shrunk run-rule deque at the next level.
+             */
             template <typename CALLBACK = decltype(no_callback)>
             static std::deque<RunRuleBody> shrink(const std::deque<RunRuleBody> &items, const std::vector<bool> &bools, uint16_t current_level, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &preprocessor)
             {
@@ -366,6 +442,16 @@ const std::vector<uint64_t>& base_signature_length_list = dic.get_base_signature
                 return output;
             }
 
+            /**
+             * @brief Shrinks a run-rule sequence under restricted block compression.
+             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @param items Input run-rule bodies.
+             * @param current_level Current hierarchy level.
+             * @param dic Dynamic grammar updated during compilation.
+             * @param preprocessor Callback invoked for each added signature.
+             * @param message_paragraph Indentation level for progress messages.
+             * @return Shrunk run-rule deque at the next level.
+             */
             template <typename CALLBACK = decltype(no_callback)>
             static std::deque<RunRuleBody> restricted_shrink(const std::deque<RunRuleBody> &items, uint16_t current_level, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &preprocessor, [[maybe_unused]] int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {

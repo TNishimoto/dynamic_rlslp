@@ -6,11 +6,24 @@
 
 namespace dynRLSLP
 {
+        /**
+         * @brief Static utilities for managing a small vector of parent signatures.
+         * @ingroup ParentClasses
+         */
         class ParentVectorManager
         {
         public:
             static inline uint64_t VECTOR_MAX_SIZE = 64;
             
+            /**
+             * @brief Pushes type-1 primary occurrences for each parent in the vector onto the stack.
+             * @param sig Base signature of the queried nonterminal.
+             * @param position_offset Position offset of the occurrence within its parent.
+             * @param parent_vector List of parent signatures to enumerate.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @param output Stack receiving temporary occurrences to expand further.
+             */
             static void get_all_type_1_primary_occurrences_of_signature_sub(BaseSignature sig, int64_t position_offset, const std::vector<SignatureWithRelativeLevel> &parent_vector,
                                                                             const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list, VStack<TemporaryOccurrence> &output)
             {
@@ -20,6 +33,14 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Searches the parent vector for a pair rule with the given children.
+             * @param left_sig Left child signature.
+             * @param right_sig Right child signature.
+             * @param parent_vector List of parent signatures to search.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @return Parent signature if found, otherwise -1.
+             */
             static int64_t get_pair_signature(SignatureWithRelativeLevel left_sig, SignatureWithRelativeLevel right_sig, const std::vector<SignatureWithRelativeLevel> &parent_vector, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
             {
                 for (auto parent : parent_vector)
@@ -32,6 +53,14 @@ namespace dynRLSLP
                 }
                 return -1;
             }
+            /**
+             * @brief Searches the parent vector for a power rule with the given child and exponent.
+             * @param child_sig Child signature.
+             * @param power Exponent of the power rule.
+             * @param parent_vector List of parent signatures to search.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @return Parent signature if found, otherwise -1.
+             */
             static int64_t get_power_signature(SignatureWithRelativeLevel child_sig, uint64_t power, const std::vector<SignatureWithRelativeLevel> &parent_vector, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
             {
                 for (auto parent : parent_vector)
@@ -45,13 +74,30 @@ namespace dynRLSLP
                 return -1;
             }
 
+            /**
+             * @brief Appends a parent signature to the parent vector.
+             * @param parent Parent signature to insert.
+             * @param parent_vector Parent vector to modify.
+             */
             static void insert_signature(SignatureWithRelativeLevel parent, std::vector<SignatureWithRelativeLevel> &parent_vector){
                 parent_vector.push_back(parent);
             }
+            /**
+             * @brief Removes all entries equal to the given parent signature from the vector.
+             * @param parent Parent signature to erase.
+             * @param parent_vector Parent vector to modify.
+             */
             static void erase_signature(SignatureWithRelativeLevel parent, std::vector<SignatureWithRelativeLevel> &parent_vector){
                 parent_vector.erase(std::remove(parent_vector.begin(), parent_vector.end(), parent), parent_vector.end());
             }
 
+            /**
+             * @brief Removes and returns one parent of the given child from the vector.
+             * @param child Child signature whose parent is requested.
+             * @param parent_vector Parent vector to modify.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @return A parent signature, or EMPTY_FLAG if none matches the child.
+             */
             static SignatureWithRelativeLevel take_any_parent(SignatureWithRelativeLevel child, std::vector<SignatureWithRelativeLevel> &parent_vector, const std::vector<RLSLPRuleBody> &base_signature_rule_list){
                 int64_t idx = -1;
                 for(uint64_t i = 0; i < parent_vector.size(); i++){

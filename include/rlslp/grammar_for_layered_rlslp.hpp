@@ -18,6 +18,10 @@ namespace dynRLSLP
 {
 	inline const auto no_callback = [](auto &&...) noexcept {};
 
+	/**
+	 * @brief Layered RLSLP grammar with dictionary and document set.
+	 * @ingroup RLSLPClasses
+	 */
 	class GrammarForLayeredRLSLP
 	{
 	private:
@@ -28,20 +32,25 @@ namespace dynRLSLP
 
 	public:
 		inline static const SignatureWithRelativeLevel DOCUMENT_MARK = INT64_MAX - 1;
+		/**
+		 * @brief Construct an empty layered RLSLP grammar.
+		 */
 		GrammarForLayeredRLSLP()
 		{
 		}
+		/**
+		 * @brief Destroy the grammar and release all stored data.
+		 */
 		~GrammarForLayeredRLSLP()
 		{
 			this->clear();
 		}
 
-		/**
-		 * @brief Deleted copy constructor.
-		 */
+		/** @brief Copy constructor (deleted). */
 		GrammarForLayeredRLSLP(const GrammarForLayeredRLSLP &) = delete;
 		/**
-		 * @brief Move constructor.
+		 * @brief Move constructor; transfers dictionary, documents, and parsing type.
+		 * @param other Source grammar to move from.
 		 */
 		GrammarForLayeredRLSLP(GrammarForLayeredRLSLP &&other) noexcept : grammarParsingType(std::move(other.grammarParsingType)),
 																		  documentCounter(std::move(other.documentCounter)),
@@ -50,12 +59,12 @@ namespace dynRLSLP
 		{
 		}
 
-		/**
-		 * @brief Deleted copy assignment operator.
-		 */
+		/** @brief Copy assignment (deleted). */
 		GrammarForLayeredRLSLP &operator=(const GrammarForLayeredRLSLP &) = delete;
 		/**
-		 * @brief Move assignment operator.
+		 * @brief Move assignment; transfers contents from @p other when distinct.
+		 * @param other Source grammar to move from.
+		 * @return Reference to this grammar after assignment.
 		 */
 		GrammarForLayeredRLSLP &operator=(GrammarForLayeredRLSLP &&other) noexcept
 		{
@@ -69,31 +78,49 @@ namespace dynRLSLP
 			return *this;
 		}
 
+		/**
+		 * @brief Return a const reference to the random-bit dictionary.
+		 * @return Const reference to random bits used in restricted block compression.
+		 */
 		const RandomBitDictionary &get_random_bit_dictionary() const
 		{
 			return this->random_bit_dictionary;
 		}
+		/**
+		 * @brief Return the layered RLSLP dictionary (D, H, L).
+		 * @return Const reference to the internal dictionary.
+		 */
 		const DictionaryForLayeredRLSLP &get_rlslp_dictionary() const
 		{
 			return this->rlslp_dictionary;
 		}
+		/**
+		 * @brief Return the document occurrence counter map.
+		 * @return Map from document-root signature to occurrence count.
+		 */
 		const std::unordered_map<SignatureWithRelativeLevel, uint64_t> &get_document_counter() const
 		{
 			return this->documentCounter;
 		}
+		/**
+		 * @brief Return the grammar parsing algorithm type.
+		 * @return Active GrammarParsingType (signature encoding or restricted block compression).
+		 */
 		GrammarParsingType get_grammar_parsing_type() const
 		{
 			return this->grammarParsingType;
 		}
 		/**
-		 * @brief Return the number of distinct documents
+		 * @brief Return the number of distinct document roots.
+		 * @return Size of the document counter map.
 		 */
 		uint64_t get_distinct_document_count() const
 		{
 			return this->documentCounter.size();
 		}
 		/**
-		 * @brief Return the total number of the documents represented by \p G
+		 * @brief Return the total number of document occurrences.
+		 * @return Sum of all values in the document counter map.
 		 */
 		uint64_t get_document_count() const
 		{
@@ -104,6 +131,10 @@ namespace dynRLSLP
 			}
 			return sum;
 		}
+		/**
+		 * @brief Return the maximum derivation level.
+		 * @return Absolute level of the document root, or 0 if no root exists.
+		 */
 		uint64_t get_max_level() const
 		{
 			if (this->has_root())
@@ -115,12 +146,18 @@ namespace dynRLSLP
 				return 0;
 			}
 		}
+		/**
+		 * @brief Return whether the grammar has exactly one document root.
+		 * @return True if the document counter contains exactly one entry.
+		 */
 		bool has_root() const
 		{
 			return this->documentCounter.size() == 1;
 		}
 		/**
-		 * @brief Return the signature of the root of the derivation tree represented by \p G if \p G has only one document. Otherwise, throw an exception.
+		 * @brief Return the base signature index of the unique document root.
+		 * @return Root base signature when exactly one document exists.
+		 * @throws std::runtime_error if there is no document or multiple documents.
 		 */
 		uint64_t get_root() const
 		{
@@ -137,10 +174,19 @@ namespace dynRLSLP
 				return this->documentCounter.begin()->first;
 			}
 		}
+		/**
+		 * @brief Return the total count of single signatures.
+		 * @return Sum of single-signature counts from the internal dictionary.
+		 */
 		int64_t count_single_signatures() const
 		{
 			return this->rlslp_dictionary.count_single_signatures(this->grammarParsingType);
 		}
+		/**
+		 * @brief Reset the grammar and select a parsing algorithm.
+		 * @param restricted_recompression If true, use restricted block compression and initialize random bits.
+		 * @param seed Random seed for the random-bit dictionary when restricted recompression is enabled.
+		 */
 		void initialize(bool restricted_recompression = false, uint64_t seed = 0)
 		{
 			this->clear();
@@ -154,11 +200,18 @@ namespace dynRLSLP
 				this->grammarParsingType = GrammarParsingType::SignatureEncoding;
 			}
 		}
+		/**
+		 * @brief Return the total number of signatures.
+		 * @return Total signature count from the internal dictionary.
+		 */
 		uint64_t signature_count() const
 		{
 			return this->rlslp_dictionary.signature_count(this->grammarParsingType);
 		}
 
+		/**
+		 * @brief Clear dictionary, random bits, and document counters.
+		 */
 		void clear()
 		{
 			this->random_bit_dictionary.clear();
@@ -166,6 +219,10 @@ namespace dynRLSLP
 			this->documentCounter.clear();
 		}
 
+		/**
+		 * @brief Swap contents with another instance.
+		 * @param other Other instance to compare or swap with.
+		 */
 		void swap(GrammarForLayeredRLSLP &other)
 		{
 			std::swap(this->grammarParsingType, other.grammarParsingType);
@@ -174,7 +231,8 @@ namespace dynRLSLP
 			this->documentCounter.swap(other.documentCounter);
 		}
 		/**
-		 * @brief Add a new document to the grammar \p G, where the derivation tree of the document is rooted at the nonterminal \p v_{i}
+		 * @brief Register a document rooted at the given signature.
+		 * @param i Document-root signature (increments counter or inserts new entry).
 		 */
 		void add_document(SignatureWithRelativeLevel i)
 		{
@@ -192,7 +250,10 @@ namespace dynRLSLP
 			}
 		}
 		/**
-		 * @brief If \p G contains a document rooted at the nonterminal \p v_{i}, remove it from \p G and execute the callback function \p preprocessor. Otherwise, throw an error.
+		 * @brief Remove one occurrence of a document rooted at the given signature.
+		 * @param i Signature or base-signature index.
+		 * @return True after decrementing or removing the document entry.
+		 * @throws std::runtime_error if the document is not found.
 		 */
 		bool remove_document(SignatureWithRelativeLevel i)
 		{
@@ -213,6 +274,10 @@ namespace dynRLSLP
 			}
 		}
 
+		/**
+		 * @brief Allocate a new base signature slot.
+		 * @return Index of the new base signature (also extends random-bit storage when applicable).
+		 */
 		BaseSignature add_new_base_signature()
 		{
 
@@ -224,23 +289,47 @@ namespace dynRLSLP
 			}
 			return new_number;
 		}
+		/**
+		 * @brief Increment the relative maximum level of a base signature.
+		 * @param base_signature Base signature index.
+		 */
 		void increase_relative_max_level(BaseSignature base_signature)
 		{
 			this->rlslp_dictionary.increase_relative_max_level(base_signature);
 		}
+		/**
+		 * @brief Decrement the relative maximum level of a base signature.
+		 * @param base_signature Base signature index.
+		 */
 		void decrease_relative_max_level(BaseSignature base_signature)
 		{
 			this->rlslp_dictionary.decrease_relative_max_level(base_signature);
 		}
+		/**
+		 * @brief Reset a base signature slot to null in the dictionary.
+		 * @param base_signature Base signature index.
+		 */
 		void clear_element(BaseSignature base_signature)
 		{
 			this->rlslp_dictionary.clear_element(base_signature);
 		}
+		/**
+		 * @brief Write rule body and metadata for a base signature.
+		 * @param base_signature Base signature index.
+		 * @param rule_body RLSLP rule body to store.
+		 * @param new_level Absolute level of the base signature.
+		 * @param relative_max_level Maximum relative level for the base signature.
+		 * @param base_signature_length_list Base-signature length list (L).
+		 */
 		void write_element(BaseSignature base_signature, const RLSLPRuleBody &rule_body, uint16_t new_level, uint16_t relative_max_level, const std::vector<uint64_t> &base_signature_length_list)
 		{
 			this->rlslp_dictionary.write_element(base_signature, rule_body, new_level, relative_max_level, base_signature_length_list);
 		}
 
+		/**
+		 * @brief Create random bits for a base signature (restricted block compression only).
+		 * @param base_signature Base signature index whose single-signature count defines bit width.
+		 */
 		void create_random_bit(BaseSignature base_signature)
 		{
 			if (this->grammarParsingType == GrammarParsingType::RestrictedBlockCompression)
@@ -250,6 +339,10 @@ namespace dynRLSLP
 			}
 		}
 
+		/**
+		 * @brief Remove random bits for a signature.
+		 * @param signature Encoded signature with relative level.
+		 */
 		void erase_random_bit(SignatureWithRelativeLevel signature)
 		{
 			if (this->grammarParsingType == GrammarParsingType::RestrictedBlockCompression)
@@ -263,7 +356,7 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Print the documents in the grammar \p G
+		 * @brief Print document counts to standard output.
 		 */
 		void print_documents() const
 		{
@@ -273,10 +366,18 @@ namespace dynRLSLP
 				std::cout << it.first << " " << it.second << std::endl;
 			}
 		}
+		/**
+		 * @brief Print all grammar rules to standard output.
+		 * @param message_paragraph Indentation level for formatted output.
+		 */
 		void print_info(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
 		{
 			this->rlslp_dictionary.print_info(this->grammarParsingType, message_paragraph);
 		}
+		/**
+		 * @brief Print summary statistics to standard output.
+		 * @param message_paragraph Indentation level for formatted output.
+		 */
 		void print_statistics(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
 		{
 
@@ -298,7 +399,10 @@ namespace dynRLSLP
 			rlslp_dictionary.print_statistics(this->grammarParsingType, message_paragraph + 1);
 		}
 		/**
-		 * @brief Verify if the grammar \p G is nearly equal to the grammar \p other
+		 * @brief Verify structural near-equality with another instance.
+		 * @param other Other instance to compare or swap with.
+		 * @return True if parsing type, dictionary, documents, and random bits match.
+		 * @throws std::runtime_error on mismatch.
 		 */
 		bool verify_nearly_equal(const GrammarForLayeredRLSLP &other) const
 		{
@@ -341,6 +445,11 @@ namespace dynRLSLP
 			return true;
 		}
 
+		/**
+		 * @brief Deserialize from a binary input stream.
+		 * @param ifs Input file stream.
+		 * @return Grammar loaded from the binary stream.
+		 */
 		static GrammarForLayeredRLSLP load_from_file(std::ifstream &ifs)
 		{
 			/*
@@ -380,6 +489,11 @@ namespace dynRLSLP
 			return r;
 		}
 
+		/**
+		 * @brief Serialize to a binary output stream.
+		 * @param item Grammar to write.
+		 * @param os Output file stream.
+		 */
 		static void store_to_file(const GrammarForLayeredRLSLP &item, std::ofstream &os)
 		{
 			if (item.documentCounter.size() > 1)

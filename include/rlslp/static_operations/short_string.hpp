@@ -16,12 +16,21 @@ namespace dynRLSLP
 
 
         /**
-         * @brief XXXXXXXX
-         * @ingroup RLSLPClasses
+         * @brief Packed prefix/suffix strings for fast LCE on RLSLP runs.
+         * @ingroup StaticOperationsClasses
          */
         class ShortString{
             public:
-            
+
+			/**
+			 * @brief Build the left short string for a pair rule.
+			 * @param left_signature Left child signature.
+			 * @param right_signature Right child signature.
+			 * @param char_bit_size Bits per character in the packed representation.
+			 * @param base_signature_length_list Base-signature length list (L).
+			 * @param leftShortStringList Precomputed left short-string table.
+			 * @return Packed 64-bit left short string.
+			 */
 			static uint64_t create_left_short_string_for_pair(SignatureWithRelativeLevel left_signature, SignatureWithRelativeLevel right_signature, 
                 uint8_t char_bit_size, 
                 const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t>& leftShortStringList) {
@@ -43,13 +52,30 @@ namespace dynRLSLP
                     return result;
                 }
 			}
+			/**
+			 * @brief Build the right short string for a pair rule.
+			 * @param left_signature Left child signature.
+			 * @param right_signature Right child signature.
+			 * @param char_bit_size Bits per character in the packed representation.
+			 * @param base_signature_length_list Base-signature length list (L).
+			 * @param rightShortStringList Precomputed right short-string table.
+			 * @return Packed 64-bit right short string.
+			 */
 			static uint64_t create_right_short_string_for_pair(SignatureWithRelativeLevel left_signature, SignatureWithRelativeLevel right_signature, 
                 uint8_t char_bit_size, 
                 const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t>& rightShortStringList) {
                 return create_left_short_string_for_pair(right_signature, left_signature, char_bit_size, base_signature_length_list, rightShortStringList);
 			}
 
-
+			/**
+			 * @brief Build the left short string for a power rule.
+			 * @param child_signature Child signature repeated in the power rule.
+			 * @param power Repetition count.
+			 * @param char_bit_size Bits per character in the packed representation.
+			 * @param base_signature_length_list Base-signature length list (L).
+			 * @param leftShortStringList Precomputed left short-string table.
+			 * @return Packed 64-bit left short string.
+			 */
 			static uint64_t create_left_short_string_for_power(SignatureWithRelativeLevel child_signature, uint64_t power, 
                 uint8_t char_bit_size, 
                 const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t>& leftShortStringList) {
@@ -75,24 +101,54 @@ namespace dynRLSLP
                     return result;
                 }
 			}
+			/**
+			 * @brief Build the right short string for a power rule.
+			 * @param child_signature Child signature repeated in the power rule.
+			 * @param power Repetition count.
+			 * @param char_bit_size Bits per character in the packed representation.
+			 * @param base_signature_length_list Base-signature length list (L).
+			 * @param rightShortStringList Precomputed right short-string table.
+			 * @return Packed 64-bit right short string.
+			 */
 			static uint64_t create_right_short_string_for_power(SignatureWithRelativeLevel child_signature, uint64_t power, 
                 uint8_t char_bit_size, 
                 const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t>& rightShortStringList) {
                 return create_left_short_string_for_power(child_signature, power, char_bit_size, base_signature_length_list, rightShortStringList);
 			}
 
-            
 
+			/**
+			 * @brief Build the left short string for a character rule.
+			 * @param character Raw character value.
+			 * @param char_bit_size Bits per character in the packed representation.
+			 * @param character_id_map Map from characters to alphabet identifiers.
+			 * @return Packed 64-bit left short string.
+			 */
 			static uint64_t create_left_short_string_for_character(uint64_t character, 
                 uint8_t char_bit_size, const std::unordered_map<int64_t, uint64_t> &character_id_map) {
                     uint64_t character_id = character_id_map.at(character);
                     return character_id << (64 - char_bit_size);
 			}
+			/**
+			 * @brief Build the right short string for a character rule.
+			 * @param character Raw character value.
+			 * @param char_bit_size Bits per character in the packed representation.
+			 * @param character_id_map Map from characters to alphabet identifiers.
+			 * @return Packed 64-bit right short string.
+			 */
 			static uint64_t create_right_short_string_for_character(uint64_t character, 
                 uint8_t char_bit_size, const std::unordered_map<int64_t, uint64_t> &character_id_map) {
                     return create_left_short_string_for_character(character, char_bit_size, character_id_map);
 			}
 
+            /**
+             * @brief Decode a packed short string to plain text.
+             * @param short_string Packed 64-bit short string.
+             * @param length Number of characters to decode.
+             * @param alphabet_bit_size Bits per alphabet symbol.
+             * @param character_id_map Map from characters to alphabet identifiers.
+             * @return Decoded string of length \p length.
+             */
             static std::string get_short_string_as_string(uint64_t short_string, uint64_t length, uint8_t alphabet_bit_size, const std::unordered_map<int64_t, uint64_t> &character_id_map){
                 std::unordered_map<uint64_t, uint8_t> id_to_character;
                 for(const auto &pair : character_id_map){
@@ -111,19 +167,44 @@ namespace dynRLSLP
                 return result;
             }
 
+            /**
+             * @brief Return the left short string of a run stack as text.
+             * @param item1 Run stack (modified temporarily during the call).
+             * @param alphabet_bit_size Bits per alphabet symbol.
+             * @param base_signature_length_list Base-signature length list (L).
+             * @param leftShortStringList Precomputed left short-string table.
+             * @param character_id_map Map from characters to alphabet identifiers.
+             * @return Decoded left prefix string.
+             */
             static std::string get_left_short_string_as_string(VStack<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &base_signature_length_list, 
                 const std::vector<uint64_t> &leftShortStringList, const std::unordered_map<int64_t, uint64_t> &character_id_map){
                 std::pair<uint64_t, uint8_t> result = get_left_short_string(item1, alphabet_bit_size, base_signature_length_list, leftShortStringList);
                 return get_short_string_as_string(result.first, result.second / alphabet_bit_size, alphabet_bit_size, character_id_map);
             }
 
+            /**
+             * @brief Return the right short string of a run stack as text.
+             * @param item1 Run stack (modified temporarily during the call).
+             * @param alphabet_bit_size Bits per alphabet symbol.
+             * @param base_signature_length_list Base-signature length list (L).
+             * @param rightShortStringList Precomputed right short-string table.
+             * @param character_id_map Map from characters to alphabet identifiers.
+             * @return Decoded right prefix string.
+             */
             static std::string get_right_short_string_as_string(VStack<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &base_signature_length_list, 
                 const std::vector<uint64_t> &rightShortStringList, const std::unordered_map<int64_t, uint64_t> &character_id_map){
                 std::pair<uint64_t, uint8_t> result = get_right_short_string(item1, alphabet_bit_size, base_signature_length_list, rightShortStringList);
                 return get_short_string_as_string(result.first, result.second / alphabet_bit_size, alphabet_bit_size, character_id_map);
             }
 
-
+            /**
+             * @brief Return the packed left short string and bit length for a run stack.
+             * @param item1 Run stack (restored after the call).
+             * @param alphabet_bit_size Bits per alphabet symbol.
+             * @param base_signature_length_list Base-signature length list (L).
+             * @param leftShortStringList Precomputed left short-string table.
+             * @return Pair of (packed string, length in bits).
+             */
             static ShortStringInfo get_left_short_string(VStack<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t> &leftShortStringList){
                 VStack<RunRuleBody> tmp;
                 uint64_t len = 0;
@@ -158,6 +239,14 @@ namespace dynRLSLP
 
                 return std::make_pair(short_string, len);
             }
+            /**
+             * @brief Return the packed left short string and bit length for a run vector.
+             * @param item1 Sequence of runs (left to right).
+             * @param alphabet_bit_size Bits per alphabet symbol.
+             * @param base_signature_length_list Base-signature length list (L).
+             * @param leftShortStringList Precomputed left short-string table.
+             * @return Pair of (packed string, length in bits).
+             */
             static ShortStringInfo get_left_short_string(const std::vector<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t> &leftShortStringList){
                 uint64_t len = 0;
                 uint64_t short_string = 0;
@@ -188,14 +277,37 @@ namespace dynRLSLP
 
             }
 
-
+            /**
+             * @brief Return the packed right short string and bit length for a run stack.
+             * @param item1 Run stack.
+             * @param alphabet_bit_size Bits per alphabet symbol.
+             * @param base_signature_length_list Base-signature length list (L).
+             * @param rightShortStringList Precomputed right short-string table.
+             * @return Pair of (packed string, length in bits).
+             */
             static ShortStringInfo get_right_short_string(VStack<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t> &rightShortStringList){
                 return get_left_short_string(item1, alphabet_bit_size, base_signature_length_list, rightShortStringList);
-            }            
+            }
+            /**
+             * @brief Return the packed right short string and bit length for a run vector.
+             * @param item1 Sequence of runs (left to right).
+             * @param alphabet_bit_size Bits per alphabet symbol.
+             * @param base_signature_length_list Base-signature length list (L).
+             * @param rightShortStringList Precomputed right short-string table.
+             * @return Pair of (packed string, length in bits).
+             */
             static ShortStringInfo get_right_short_string(const std::vector<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t> &rightShortStringList){
                 return get_left_short_string(item1, alphabet_bit_size, base_signature_length_list, rightShortStringList);
-            }            
+            }
 
+            /**
+             * @brief Return the packed left short string for a single run rule body.
+             * @param body Run rule body.
+             * @param char_bit_size Bits per character in the packed representation.
+             * @param base_signature_length_list Base-signature length list (L).
+             * @param leftShortStringList Precomputed left short-string table.
+             * @return Pair of (packed string, length in bits).
+             */
             static ShortStringInfo get_left_short_string(const RunRuleBody &body, 
                 uint8_t char_bit_size, 
                 const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t>& leftShortStringList) {
@@ -204,6 +316,14 @@ namespace dynRLSLP
                     return std::make_pair(short_string, std::min<uint64_t>(len, 64ULL / char_bit_size) * char_bit_size);
 
                 }
+            /**
+             * @brief Return the packed right short string for a single run rule body.
+             * @param body Run rule body.
+             * @param char_bit_size Bits per character in the packed representation.
+             * @param base_signature_length_list Base-signature length list (L).
+             * @param rightShortStringList Precomputed right short-string table.
+             * @return Pair of (packed string, length in bits).
+             */
             static ShortStringInfo get_right_short_string(const RunRuleBody &body, 
                 uint8_t char_bit_size, 
                 const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t>& rightShortStringList) {
@@ -212,8 +332,13 @@ namespace dynRLSLP
                     return std::make_pair(short_string, std::min<uint64_t>(len, 64ULL / char_bit_size) * char_bit_size);   
                 }
 
-
-
+            /**
+             * @brief Compare two short strings and return LCE length and lexicographic order.
+             * @param str1 First packed short string and bit length.
+             * @param str2 Second packed short string and bit length.
+             * @param char_bit_size Bits per character.
+             * @return Pair of (LCE length in characters, order: -1/0/1).
+             */
             static std::pair<uint64_t, int8_t> short_lce(const std::pair<uint64_t, uint8_t> &str1, const std::pair<uint64_t, uint8_t> &str2, uint8_t char_bit_size){
                 //uint64_t short_string_length = 64 / char_bit_size;
 
@@ -258,10 +383,27 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Compare two short strings for reverse LCE (same as short_lce here).
+             * @param str1 First packed short string and bit length.
+             * @param str2 Second packed short string and bit length.
+             * @param char_bit_size Bits per character.
+             * @return Pair of (LCE length in characters, order: -1/0/1).
+             */
             static std::pair<uint64_t, int8_t> short_reverse_lce(const std::pair<uint64_t, uint8_t> &str1, const std::pair<uint64_t, uint8_t> &str2, uint8_t char_bit_size){
                 return short_lce(str1, str2, char_bit_size);
             }
 
+            /**
+             * @brief Verify a left short string against the decompressed prefix of a signature.
+             * @param signature Signature to check.
+             * @param alphabet_bit_size Bits per alphabet symbol.
+             * @param base_signature_rule_list Base-signature rule list (D).
+             * @param base_signature_length_list Base-signature length list (L).
+             * @param leftShortStringList Precomputed left short-string table.
+             * @param character_id_map Map from characters to alphabet identifiers.
+             * @return True if the short string matches the text prefix.
+             */
             static bool verify_left_short_string(SignatureWithRelativeLevel signature, uint8_t alphabet_bit_size, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t> &leftShortStringList, 
                 const std::unordered_map<int64_t, uint64_t> &character_id_map){
                 RLSLPRuleBody item = RLSLPRuleBody::decodeRule(signature, base_signature_rule_list);

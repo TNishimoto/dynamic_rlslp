@@ -10,6 +10,13 @@ namespace dynRLSLP
         class TSVParser
         {
         private:
+            /**
+             * @brief Replaces escape sequences in a line with tab and newline characters.
+             * @param line Raw input line.
+             * @param replacement_code_to_tab Escape sequence representing a tab.
+             * @param replacement_code_to_line_break Escape sequence representing a newline.
+             * @return Sanitized line with real tab and newline characters.
+             */
             static std::string get_sanitized_line(const std::string line, const std::string replacement_code_to_tab, const std::string replacement_code_to_line_break)
             {
                 std::string r;
@@ -48,6 +55,13 @@ namespace dynRLSLP
             }
 
         public:
+            /**
+             * @brief Splits a TSV line into fields after sanitizing escape sequences.
+             * @param line Raw input line.
+             * @param replacement_code_to_tab Escape sequence representing a tab.
+             * @param replacement_code_to_line_break Escape sequence representing a newline.
+             * @return Vector of tab-separated field strings.
+             */
             static std::vector<std::string> line_parse(const std::string line, const std::string replacement_code_to_tab, const std::string replacement_code_to_line_break)
             {
                 std::string sanitized_line = get_sanitized_line(line, replacement_code_to_tab, replacement_code_to_line_break);

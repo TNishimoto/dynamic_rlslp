@@ -12,31 +12,51 @@
 namespace dynRLSLP
 {
         /**
-         * @brief XXXXXXXX
+         * @brief A signature together with a position offset during occurrence enumeration.
          * @ingroup ParentClasses
          */
         struct TemporaryOccurrence
         {
             BaseSignature signature;
             uint64_t position;
+            /**
+             * @brief Constructs a temporary occurrence for a signature at a position offset.
+             * @param signature Base signature of the occurrence.
+             * @param position Position offset within the expanded string.
+             */
             TemporaryOccurrence(BaseSignature signature, uint64_t position) : signature(signature), position(position)
             {
             }
+            /**
+             * @brief Default constructor initializing fields to sentinel maximum values.
+             */
             TemporaryOccurrence() : signature(std::numeric_limits<BaseSignature>::max()), position(std::numeric_limits<uint64_t>::max())
             {
             }
 
+            /**
+             * @brief Creates a null sentinel occurrence.
+             * @return Temporary occurrence with maximum signature and position values.
+             */
             static TemporaryOccurrence create_null_occurrence()
             {
                 return TemporaryOccurrence(std::numeric_limits<BaseSignature>::max(), std::numeric_limits<uint64_t>::max());
             }
 
+            /**
+             * @brief Tests whether this occurrence is the null sentinel.
+             * @return True if both fields hold their maximum sentinel values.
+             */
             bool is_null() const
             {
                 return this->signature == std::numeric_limits<BaseSignature>::max() && this->position == std::numeric_limits<uint64_t>::max();
             }
         };
 
+        /**
+         * @brief Manages large numbers of tertiary and quaternary parents for one base signature.
+         * @ingroup ParentClasses
+         */
         class ManyParentsManager
         {
         private:
@@ -46,9 +66,15 @@ namespace dynRLSLP
         public:
             inline static const uint64_t PARENT_NUMBER_THRESHOLD = 64;
             inline static const int64_t EMPTY_FLAG = INT64_MAX;
+            /**
+             * @brief Default constructor creating an empty manager.
+             */
             ManyParentsManager()
             {
             }
+            /**
+             * @brief Default destructor.
+             */
             ~ManyParentsManager()
             {
             }
@@ -57,10 +83,18 @@ namespace dynRLSLP
             ///   @name Lightweight functions for accessing to properties of this class
             ////////////////////////////////////////////////////////////////////////////////
             //@{
+            /**
+             * @brief Tests whether any quaternary parent groups are stored.
+             * @return True if the quaternary parent list is non-empty.
+             */
             bool has_quaternary_parents() const
             {
                 return this->quaternary_parent_list_.size() > 0;
             }
+            /**
+             * @brief Returns the total number of parents across tertiary and quaternary tiers.
+             * @return Total parent count.
+             */
             uint64_t size() const
             {
                 uint64_t size = 0;
@@ -74,14 +108,26 @@ namespace dynRLSLP
                 }
                 return size;
             }
+            /**
+             * @brief Returns the number of tertiary parent groups.
+             * @return Length of the tertiary parent list.
+             */
             uint64_t tertiary_parents_list_length() const
             {
                 return this->tertiary_parent_list_.size();
             }
+            /**
+             * @brief Returns the number of quaternary parent groups.
+             * @return Length of the quaternary parent list.
+             */
             uint64_t quaternary_parents_list_length() const
             {
                 return this->quaternary_parent_list_.size();
             }
+            /**
+             * @brief Counts all parents stored in tertiary groups.
+             * @return Total tertiary parent count.
+             */
             uint64_t count_tertiary_parents() const
             {
                 uint64_t count = 0;
@@ -91,6 +137,10 @@ namespace dynRLSLP
                 }
                 return count;
             }
+            /**
+             * @brief Counts all parents stored in quaternary hash maps.
+             * @return Total quaternary parent count.
+             */
             uint64_t count_quaternary_parents() const
             {
                 uint64_t count = 0;
@@ -100,6 +150,10 @@ namespace dynRLSLP
                 }
                 return count;
             }
+            /**
+             * @brief Returns the maximum size of any single tertiary parent group.
+             * @return Largest tertiary group length.
+             */
             uint64_t max_tertiary_parent_count() const
             {
                 uint64_t max_count = 0;
@@ -109,6 +163,10 @@ namespace dynRLSLP
                 }
                 return max_count;
             }
+            /**
+             * @brief Returns the maximum size of any single quaternary parent map.
+             * @return Largest quaternary map size.
+             */
             uint64_t max_quaternary_parent_count() const
             {
                 uint64_t max_count = 0;
@@ -119,11 +177,22 @@ namespace dynRLSLP
                 return max_count;
             }
 
+            /**
+             * @brief Tests whether this manager stores no parents.
+             * @return True if both tertiary and quaternary lists are empty.
+             */
             bool is_empty() const
             {
                 return this->tertiary_parent_list_.size() == 0 && this->quaternary_parent_list_.size() == 0;
             }
 
+            /**
+             * @brief Tests whether the parent group at a relative level is empty.
+             * @param level_diff Relative level to test.
+             * @param list_offset Offset into the shared level-diff list.
+             * @param level_diff_list_ Shared relative-level index table.
+             * @return True if no parents exist at the given level.
+             */
             bool is_empty(uint16_t level_diff, uint16_t list_offset, const std::vector<uint16_t> &level_diff_list_)
             {
                 int16_t tertiary_index = this->find_tertiary_list_index(level_diff, list_offset, level_diff_list_);
@@ -167,6 +236,10 @@ namespace dynRLSLP
             //@{
 
 
+            /**
+             * @brief Appends all parent signatures to the output vector.
+             * @param output Vector receiving parent signatures.
+             */
             void get_all_important_ancestors(std::vector<SignatureWithRelativeLevel> &output) const{
                 for(const std::vector<SignatureWithRelativeLevel> &parent : this->tertiary_parent_list_){
                     for(auto p : parent){
@@ -180,6 +253,15 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Pushes type-1 primary occurrences for all parents onto the stack.
+             * @param sig Base signature of the queried nonterminal.
+             * @param position_offset Position offset of the occurrence within its parent.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @param output Stack receiving temporary occurrences to expand further.
+             * @return True if at least one parent occurrence was pushed.
+             */
             bool get_all_type_1_primary_occurrences_of_signature(BaseSignature sig, int64_t position_offset, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list, VStack<TemporaryOccurrence> &output) const
             {
                 bool b = this->tertiary_parent_list_.size() > 0;
@@ -201,6 +283,13 @@ namespace dynRLSLP
                 return b;
             }
 
+            /**
+             * @brief Finds the tertiary group index for a relative level.
+             * @param level_diff Relative level to search for.
+             * @param list_offset Offset into the shared level-diff list.
+             * @param level_diff_list_ Shared relative-level index table.
+             * @return Tertiary group index, or -1 if not found.
+             */
             int16_t find_tertiary_list_index(uint16_t level_diff, uint16_t list_offset, const std::vector<uint16_t> &level_diff_list_) const
             {
                 uint64_t tertiary_size = this->tertiary_parent_list_.size();
@@ -213,6 +302,13 @@ namespace dynRLSLP
                 }
                 return -1;
             }
+            /**
+             * @brief Finds the quaternary group index for a relative level.
+             * @param level_diff Relative level to search for.
+             * @param list_offset Offset into the shared level-diff list.
+             * @param level_diff_list_ Shared relative-level index table.
+             * @return Quaternary group index, or -1 if not found.
+             */
             int16_t find_quaternary_list_index(uint16_t level_diff, uint16_t list_offset, const std::vector<uint16_t> &level_diff_list_) const
             {
                 uint64_t tertiary_size = this->tertiary_parent_list_.size();
@@ -228,6 +324,17 @@ namespace dynRLSLP
             }
 
 
+            /**
+             * @brief Looks up a pair parent with the given children at a relative level.
+             * @param level_diff Relative level of the left child.
+             * @param list_offset Offset into the shared level-diff list.
+             * @param left_child Left child signature.
+             * @param right_child Right child signature.
+             * @param quaternary_key Quaternary lookup key for hash-map parents.
+             * @param level_diff_list_ Shared relative-level index table.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @return Parent signature if found, otherwise -1.
+             */
             int64_t get_pair_signature(uint16_t level_diff, uint16_t list_offset, SignatureWithRelativeLevel left_child, SignatureWithRelativeLevel right_child, QuaternaryKey quaternary_key, 
                 const std::vector<uint16_t> &level_diff_list_, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
             {
@@ -258,6 +365,17 @@ namespace dynRLSLP
                 }
                 return -1;
             }
+            /**
+             * @brief Looks up a power parent with the given child and exponent at a relative level.
+             * @param level_diff Relative level of the child.
+             * @param list_offset Offset into the shared level-diff list.
+             * @param child Child signature.
+             * @param power Exponent of the power rule.
+             * @param quaternary_key Quaternary lookup key for hash-map parents.
+             * @param level_diff_list_ Shared relative-level index table.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @return Parent signature if found, otherwise -1.
+             */
             int64_t get_power_signature(uint16_t level_diff, uint16_t list_offset, SignatureWithRelativeLevel child, uint64_t power, QuaternaryKey quaternary_key, const std::vector<uint16_t> &level_diff_list_, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
             {
                 int16_t tertiary_index = this->find_tertiary_list_index(level_diff, list_offset, level_diff_list_);
@@ -289,6 +407,12 @@ namespace dynRLSLP
             }
 
 
+            /**
+             * @brief Returns all (relative level, parent signature) pairs stored in this manager.
+             * @param list_offset Offset into the shared level-diff list.
+             * @param level_diff_list_ Shared relative-level index table.
+             * @return List of level-parent pairs from tertiary and quaternary tiers.
+             */
             std::vector<std::pair<uint16_t, SignatureWithRelativeLevel>> get_all_elements(uint16_t list_offset, const std::vector<uint16_t> &level_diff_list_) const
             {
                 std::vector<std::pair<uint16_t, SignatureWithRelativeLevel>> output;
@@ -317,6 +441,10 @@ namespace dynRLSLP
             ///   @name Print and verification functions
             ////////////////////////////////////////////////////////////////////////////////
             //@{
+            /**
+             * @brief Returns the memory usage of this manager in bytes.
+             * @return Memory footprint of tertiary vectors and quaternary hash maps.
+             */
             uint64_t size_in_bytes() const
             {
                 size_t total = 0;
@@ -337,6 +465,13 @@ namespace dynRLSLP
                 return total;
             }
 
+            /**
+             * @brief Prints all parents managed for one base signature.
+             * @param base_signature Base signature used to reconstruct child signatures for display.
+             * @param list_offset Offset into the shared level-diff list.
+             * @param level_diff_list_ Shared relative-level index table.
+             * @param message_paragraph Indentation depth for log output.
+             */
             void print_tree(uint64_t base_signature, uint16_t list_offset, const std::vector<uint16_t> &level_diff_list_, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
             {
                 for (uint64_t i = 0; i < this->tertiary_parent_list_.size(); i++)
@@ -377,6 +512,12 @@ namespace dynRLSLP
                 }
                 */
             }
+            /**
+             * @brief Verifies that this manager is equal to another instance.
+             * @param other Manager to compare against.
+             * @return True if all tertiary and quaternary storage match.
+             * @throws std::runtime_error on mismatch.
+             */
             bool verify_equal(const ManyParentsManager &other) const
             {
                 if (this->tertiary_parent_list_.size() != other.tertiary_parent_list_.size())
@@ -422,16 +563,31 @@ namespace dynRLSLP
             ///   @name Update operations
             ////////////////////////////////////////////////////////////////////////////////
             //@{
+            /**
+             * @brief Clears all tertiary and quaternary parent storage.
+             */
             void clear()
             {
                 this->tertiary_parent_list_.clear();
                 this->quaternary_parent_list_.clear();
             }
+            /**
+             * @brief Swaps contents with another manager instance.
+             * @param other Manager to swap with.
+             */
             void swap(ManyParentsManager &other)
             {
                 this->tertiary_parent_list_.swap(other.tertiary_parent_list_);
                 this->quaternary_parent_list_.swap(other.quaternary_parent_list_);
             }
+            /**
+             * @brief Inserts a parent at the given relative level, promoting to quaternary storage when a tertiary group is full.
+             * @param level_diff Relative level of the child within the parent rule.
+             * @param list_offset Offset into the shared level-diff list.
+             * @param level_diff_list_ Shared relative-level index table to update when new groups are created.
+             * @param parent Parent signature to register.
+             * @param quaternary_key Quaternary lookup key used when the tertiary group overflows.
+             */
             void insert(uint16_t level_diff, uint16_t list_offset, std::vector<uint16_t> &level_diff_list_, SignatureWithRelativeLevel parent, QuaternaryKey quaternary_key)
             {
                 int16_t tertiary_index = this->find_tertiary_list_index(level_diff, list_offset, level_diff_list_);
@@ -455,6 +611,14 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Removes one parent at the given relative level from tertiary or quaternary storage.
+             * @param level_diff Relative level of the parent to erase.
+             * @param list_offset Offset into the shared level-diff list.
+             * @param level_diff_list_ Shared relative-level index table to update when groups become empty.
+             * @param parent Parent signature to remove.
+             * @param quaternary_key Quaternary lookup key for hash-map parents.
+             */
             void erase(uint16_t level_diff, uint16_t list_offset, std::vector<uint16_t> &level_diff_list_, SignatureWithRelativeLevel parent, QuaternaryKey quaternary_key)
             {
                 int16_t tertiary_index = this->find_tertiary_list_index(level_diff, list_offset, level_diff_list_);
@@ -489,6 +653,13 @@ namespace dynRLSLP
                     throw std::runtime_error("erase_tertiary_or_quaternary: tertiary_index is not found");
                 }
             }
+            /**
+             * @brief Removes and returns one parent at the given relative level.
+             * @param level_diff Relative level of the parent to take.
+             * @param list_offset Offset into the shared level-diff list.
+             * @param level_diff_list_ Shared relative-level index table to update when groups become empty.
+             * @return Removed parent signature, or EMPTY_FLAG if none exists at that level.
+             */
             SignatureWithRelativeLevel take_any_parent(uint16_t level_diff, uint16_t list_offset, std::vector<uint16_t> &level_diff_list_)
             {
                 int16_t tertiary_index = this->find_tertiary_list_index(level_diff, list_offset, level_diff_list_);
@@ -527,6 +698,11 @@ namespace dynRLSLP
             //@{
 
         public:
+            /**
+             * @brief Loads a manager from a binary input stream.
+             * @param ifs Input stream positioned at the manager data.
+             * @return Restored ManyParentsManager instance.
+             */
             static ManyParentsManager load_from_file(std::ifstream &ifs)
             {
                 // INSERT_YOUR_CODE
@@ -572,6 +748,11 @@ namespace dynRLSLP
                 return r;
             }
 
+            /**
+             * @brief Writes a manager to a binary output stream.
+             * @param item Manager to serialize.
+             * @param os Output stream to write to.
+             */
             static void store_to_file(const ManyParentsManager &item, std::ofstream &os)
             {
                 uint64_t _tertiaryParents_count = item.tertiary_parent_list_.size();
@@ -604,6 +785,13 @@ namespace dynRLSLP
             }
             //}@
 
+            /**
+             * @brief Builds the quaternary lookup key for a parent rule and main child.
+             * @param main_child Child signature used as the lookup anchor.
+             * @param parent_item Decoded rule body of the parent.
+             * @param is_restricted_recompression_mode True when restricted block compression is active.
+             * @return Encoded quaternary key distinguishing left/right pair children or power exponents.
+             */
             static QuaternaryKey get_quaternary_key(SignatureWithRelativeLevel main_child, RLSLPRuleBody parent_item, bool is_restricted_recompression_mode)
             {
                 if (parent_item.get_type() == RLSLPRuleType::Pair)
@@ -639,6 +827,15 @@ namespace dynRLSLP
                     throw std::runtime_error("get_quaternary_key: unknown rule type");
                 }
             }
+            /**
+             * @brief Pushes one type-1 primary occurrence of a child within a parent rule onto the stack.
+             * @param sig Base signature of the child occurrence.
+             * @param position_offset Position offset of the occurrence within its parent.
+             * @param parent Base signature of the parent rule.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @param output Stack receiving the temporary occurrence.
+             */
             static void get_all_type_1_primary_occurrences_of_signature_sub(BaseSignature sig, int64_t position_offset, BaseSignature parent,
                                                           const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list, VStack<TemporaryOccurrence> &output)
             {
@@ -667,6 +864,15 @@ namespace dynRLSLP
                     throw std::runtime_error("get_all_important_occurrences: unknown rule type");
                 }
             }
+            /**
+             * @brief Returns one important occurrence of a child within a parent rule.
+             * @param sig Base signature of the child occurrence.
+             * @param position_offset Position offset of the occurrence within its parent.
+             * @param parent Base signature of the parent rule.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @return A single temporary occurrence for the child within the parent.
+             */
             static TemporaryOccurrence take_any_important_occurrence_sub(BaseSignature sig, int64_t position_offset, BaseSignature parent,
                                                           const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list)
             {
@@ -698,6 +904,14 @@ namespace dynRLSLP
                     throw std::runtime_error("get_all_important_occurrences: unknown rule type");
                 }
             }
+            /**
+             * @brief Determines which child slot of a parent rule contains the given child.
+             * @param child Child signature to locate.
+             * @param parent Base signature of the parent rule.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param useBaseSignature True to compare base signatures only; false for full signature equality.
+             * @return ChildType indicating left, right, power, signature child, or none.
+             */
             static ChildType get_child_type(SignatureWithRelativeLevel child, BaseSignature parent, const std::vector<RLSLPRuleBody> &base_signature_rule_list, bool useBaseSignature){
                 const RLSLPRuleBody& parent_item = RLSLPRuleBody::refer_body_of_base_signature(parent, base_signature_rule_list);
                 if(!useBaseSignature){
@@ -759,6 +973,15 @@ namespace dynRLSLP
                     }    
                 }
             }
+            /**
+             * @brief Returns the start position of a child occurrence within the string derived from a parent.
+             * @param child Child signature to locate.
+             * @param parent Base signature of the parent rule.
+             * @param base_signature_rule_list Rule bodies indexed by base signature.
+             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @param useBaseSignature True to compare base signatures only; false for full signature equality.
+             * @return Position offset of the child within the parent's derived string.
+             */
             static uint64_t get_any_occurrence_position(SignatureWithRelativeLevel child, BaseSignature parent, const std::vector<RLSLPRuleBody> &base_signature_rule_list , const std::vector<uint64_t> &base_signature_length_list, bool useBaseSignature){
                 const RLSLPRuleBody& parent_item = RLSLPRuleBody::refer_body_of_base_signature(parent, base_signature_rule_list);
                 if(!useBaseSignature){
@@ -822,6 +1045,13 @@ namespace dynRLSLP
             }
 
             private:
+            /**
+             * @brief Removes and returns one quaternary parent at the given relative level.
+             * @param level_diff Relative level of the parent to take.
+             * @param list_offset Offset into the shared level-diff list.
+             * @param level_diff_list_ Shared relative-level index table to update when a map becomes empty.
+             * @return Removed parent signature, or EMPTY_FLAG if no quaternary group exists.
+             */
             SignatureWithRelativeLevel take_any_quaternary(uint16_t level_diff, uint16_t list_offset, std::vector<uint16_t> &level_diff_list_)
             {
                 int16_t quaternary_index = this->find_quaternary_list_index(level_diff, list_offset, level_diff_list_);
@@ -844,6 +1074,13 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Removes one quaternary parent entry at the given relative level.
+             * @param level_diff Relative level of the parent to erase.
+             * @param list_offset Offset into the shared level-diff list.
+             * @param level_diff_list_ Shared relative-level index table to update when a map becomes empty.
+             * @param quaternary_key Quaternary lookup key of the entry to erase.
+             */
             void erase_quaternary(uint16_t level_diff, uint16_t list_offset, std::vector<uint16_t> &level_diff_list_, uint64_t quaternary_key)
             {
                 int16_t quaternary_index = this->find_quaternary_list_index(level_diff, list_offset, level_diff_list_);
@@ -872,6 +1109,14 @@ namespace dynRLSLP
                 }
             }
 
+            /**
+             * @brief Inserts one quaternary parent entry at the given relative level.
+             * @param level_diff Relative level of the child within the parent rule.
+             * @param list_offset Offset into the shared level-diff list.
+             * @param level_diff_list_ Shared relative-level index table to extend when a new map is created.
+             * @param key Quaternary lookup key for the new entry.
+             * @param new_parent Parent signature to register.
+             */
             void insert_quaternary(uint16_t level_diff, uint16_t list_offset, std::vector<uint16_t> &level_diff_list_, QuaternaryKey key, SignatureWithRelativeLevel new_parent)
             {
                 int16_t quaternary_index = this->find_quaternary_list_index(level_diff, list_offset, level_diff_list_);
