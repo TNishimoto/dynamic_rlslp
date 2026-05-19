@@ -50,7 +50,7 @@ namespace dynRLSLP
 
                 assert(RunRuleBody::verify_vector(current_seq));
 
-                while (!RunRuleBody::is_single_nonterminal(current_seq))
+                while (!RunRuleBody::is_implicit_nonterminal(current_seq))
                 {
                     assert(current_seq.size() > 0);
                     std::deque<RunRuleBody> new_seq;

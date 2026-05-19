@@ -16,7 +16,7 @@ namespace dynRLSLP
         using ExplicitNonterminal = int64_t;
 
 		/** @brief Bottom level value for base nonterminals in layered RLSLP representations. */
-		const inline int64_t BNonterminalBottomLevel = 0;
+		const inline int64_t NonterminalBottomLevel = 0;
 		/** @brief Upper bound on relative level values used in nonterminal encoding. */
 		const inline int64_t LEVEL_LIMIT = 10000;
 

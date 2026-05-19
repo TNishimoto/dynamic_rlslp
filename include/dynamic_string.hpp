@@ -405,7 +405,7 @@ namespace dynRLSLP
                         throw std::runtime_error("set_mode: DictionaryMode::Fast is not supported when the alphabet is not explicit");
                     }
 
-                    uint64_t ruleSize = this->dynamic_grammar.explicit_nonterminal_count();
+                    uint64_t ruleSize = this->dynamic_grammar.count_explicit_nonterminals();
                     this->leftShortStringList.resize(ruleSize, UINT64_MAX);
                     this->rightShortStringList.resize(ruleSize, UINT64_MAX);
 
@@ -645,9 +645,9 @@ namespace dynRLSLP
             const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
             const FastParentDictionary &fast_parent_dictionary = this->dynamic_grammar.get_parent_dictionary();
             const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
-            this->ancestorCacheList.resize(this->dynamic_grammar.explicit_nonterminal_count(), TemporaryOccurrence::create_null_occurrence());
+            this->ancestorCacheList.resize(this->dynamic_grammar.count_explicit_nonterminals(), TemporaryOccurrence::create_null_occurrence());
 
-            for (ExplicitNonterminal i = 0; i < (int64_t)this->dynamic_grammar.explicit_nonterminal_count(); i++)
+            for (ExplicitNonterminal i = 0; i < (int64_t)this->dynamic_grammar.count_explicit_nonterminals(); i++)
             {
                 RLSLPRuleBody item = RLSLPRuleBody::decode_rule(i, explicit_nonterminal_rule_list);
                 if (item.get_type() != RLSLPRuleType::Null)
@@ -819,7 +819,7 @@ namespace dynRLSLP
             uint64_t size = explicit_nonterminal_rule_list.size();
             for (uint64_t i = 0; i < size; i++)
             {
-                if (!this->dynamic_grammar.check_empty_item(i))
+                if (!this->dynamic_grammar.check_null_item(i))
                 {
                     RLSLPRuleBody item = this->dynamic_grammar.get_item(i);
                     auto left_str = Access::get_left_string(item, explicit_nonterminal_rule_list);
@@ -1285,7 +1285,7 @@ namespace dynRLSLP
             const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
             const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
             uint64_t alphabet_bit_size = this->dynamic_grammar.get_alphabet_bit_size();
-            uint64_t ruleSize = this->dynamic_grammar.explicit_nonterminal_count();
+            uint64_t ruleSize = this->dynamic_grammar.count_explicit_nonterminals();
             assert(this->leftShortStringList.size() == ruleSize);
 
             for (uint64_t i = 0; i < ruleSize; i++)

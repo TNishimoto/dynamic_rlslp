@@ -73,7 +73,7 @@ namespace dynRLSLP
 				std::vector<bool> factorBits;
 
 				ShrinkAndPow::shrink_char(text, dic, callback_for_added_nonterminal, nonterminal_vec, message_paragraph);
-				uint64_t current_sequence_level = BNonterminalBottomLevel;				
+				uint64_t current_sequence_level = NonterminalBottomLevel;				
 
 				RunRuleBody::pow(nonterminal_vec, nonterminal_runs);
 				ShrinkAndPow::pow(nonterminal_runs, current_sequence_level, dic, callback_for_added_nonterminal, nonterminal_vec);

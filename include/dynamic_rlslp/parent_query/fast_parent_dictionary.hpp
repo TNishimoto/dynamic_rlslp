@@ -781,7 +781,7 @@ namespace dynRLSLP
              * @param explicit_nonterminal Base nonterminal whose level is increasing.
              * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
              */
-            void insert_single_nonterminal(ExplicitNonterminal explicit_nonterminal, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list)
+            void insert_implicit_nonterminal(ExplicitNonterminal explicit_nonterminal, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list)
             {
 
                 uint64_t previous_level_diff = (*this->relative_max_level_list_)[explicit_nonterminal];

@@ -68,13 +68,13 @@ namespace dynRLSLP
                 }
                 std::deque<RunRuleBody> r;
                 RLSLPRuleBody first_char_body = RLSLPRuleBody::create_char_item(text[0]);
-                NonterminalWithRelativeLevel first_sig = (int64_t)dic.get_or_add_nonterminal(first_char_body, BNonterminalBottomLevel, callback_for_added_nonterminal);
+                NonterminalWithRelativeLevel first_sig = (int64_t)dic.get_or_add_nonterminal(first_char_body, NonterminalBottomLevel, callback_for_added_nonterminal);
                 RunRuleBody current_run = RunRuleBody(first_sig, 1);
 
                 for (uint64_t i = 1; i < text.size(); i++)
                 {
                     RLSLPRuleBody char_body = RLSLPRuleBody::create_char_item(text[i]);
-                    NonterminalWithRelativeLevel char_sig = (int64_t)dic.get_or_add_nonterminal(char_body, BNonterminalBottomLevel, callback_for_added_nonterminal);
+                    NonterminalWithRelativeLevel char_sig = (int64_t)dic.get_or_add_nonterminal(char_body, NonterminalBottomLevel, callback_for_added_nonterminal);
                     if (char_sig == (int64_t)current_run.number)
                     {
                         current_run.power++;

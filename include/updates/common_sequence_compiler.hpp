@@ -50,7 +50,7 @@ namespace dynRLSLP
 
                 assert(RunRuleBody::verify_vector(current_seq));
 
-                while (!RunRuleBody::is_single_nonterminal(current_seq))
+                while (!RunRuleBody::is_implicit_nonterminal(current_seq))
                 {
                     assert(current_seq.size() > 0);
                     std::deque<RunRuleBody> new_seq = ShrinkAndPow::center_line_compile(empty_left_line, current_seq, empty_right_line, level, dic, callback_for_added_nonterminals, stool::Message::increment_paragraph_level(message_paragraph));
@@ -224,7 +224,7 @@ namespace dynRLSLP
                 std::vector<RunRuleBody> tmp_left_line;
                 std::vector<RunRuleBody> tmp_right_line;
                 uint64_t level = 0;
-                while (!RunRuleBody::is_single_nonterminal(current_seq))
+                while (!RunRuleBody::is_implicit_nonterminal(current_seq))
                 {
                     assert(current_seq.size() > 0);
                     std::deque<RunRuleBody> new_seq = ShrinkAndPow::center_line_compile(tmp_left_line, current_seq, tmp_right_line, level, dic, dynRLSLP::no_callback, stool::Message::increment_paragraph_level(message_paragraph));
@@ -493,7 +493,7 @@ namespace dynRLSLP
                     }
                     std::deque<RunRuleBody> new_center = CommonSequenceCompiler::LCR_semi_compile(left, center, right, t++, dic, callback_for_added_nonterminal, stool::Message::increment_paragraph_level(message_paragraph));
                     center.swap(new_center);
-                    if (RunRuleBody::is_single_nonterminal(center) && left.is_empty() && right.is_empty())
+                    if (RunRuleBody::is_implicit_nonterminal(center) && left.is_empty() && right.is_empty())
                         break;
                 }
                 return center[0].number;

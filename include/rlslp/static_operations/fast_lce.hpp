@@ -542,7 +542,7 @@ namespace dynRLSLP
                         }
                         else
                         {
-                            if (h1 == BNonterminalBottomLevel && h2 == BNonterminalBottomLevel)
+                            if (h1 == NonterminalBottomLevel && h2 == NonterminalBottomLevel)
                             {
                                 RLSLPRuleBody front_item1 = RLSLPRuleBody::decode_rule(top1.number, explicit_nonterminal_rule_list);
                                 RLSLPRuleBody front_item2 = RLSLPRuleBody::decode_rule(top2.number, explicit_nonterminal_rule_list);
@@ -563,7 +563,7 @@ namespace dynRLSLP
                     }
                     else if (h1 < h2)
                     {
-                        if (h2 == BNonterminalBottomLevel)
+                        if (h2 == NonterminalBottomLevel)
                         {
                             break;
                         }
@@ -574,7 +574,7 @@ namespace dynRLSLP
                     }
                     else
                     {
-                        if (h1 == BNonterminalBottomLevel)
+                        if (h1 == NonterminalBottomLevel)
                         {
                         }
                         else
@@ -655,7 +655,7 @@ namespace dynRLSLP
                         }
                         else
                         {
-                            if (h1 == BNonterminalBottomLevel && h2 == BNonterminalBottomLevel)
+                            if (h1 == NonterminalBottomLevel && h2 == NonterminalBottomLevel)
                             {
                                 RLSLPRuleBody front_item1 = RLSLPRuleBody::decode_rule(top1.number, explicit_nonterminal_rule_list);
                                 RLSLPRuleBody front_item2 = RLSLPRuleBody::decode_rule(top2.number, explicit_nonterminal_rule_list);
@@ -684,7 +684,7 @@ namespace dynRLSLP
                     }
                     else if (h1 < h2)
                     {
-                        if (h2 == BNonterminalBottomLevel)
+                        if (h2 == NonterminalBottomLevel)
                         {
                             break;
                         }
@@ -695,7 +695,7 @@ namespace dynRLSLP
                     }
                     else
                     {
-                        if (h1 == BNonterminalBottomLevel)
+                        if (h1 == NonterminalBottomLevel)
                         {
                         }
                         else

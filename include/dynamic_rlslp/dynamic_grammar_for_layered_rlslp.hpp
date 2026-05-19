@@ -222,9 +222,9 @@ namespace dynRLSLP
 			 * @brief Returns the number of base nonterminal slots allocated in the dictionary.
 			 * @return Base nonterminal count including unused slots.
 			 */
-			uint64_t explicit_nonterminal_count() const
+			uint64_t count_explicit_nonterminals() const
 			{
-				return this->grammar.get_rlslp_dictionary().explicit_nonterminal_count();
+				return this->grammar.get_rlslp_dictionary().count_explicit_nonterminals();
 			}
 
 			/**
@@ -241,7 +241,7 @@ namespace dynRLSLP
 			 */
 			bool is_empty() const
 			{
-				return this->explicit_nonterminal_count() == 0;
+				return this->count_explicit_nonterminals() == 0;
 			}
 
 
@@ -913,12 +913,12 @@ namespace dynRLSLP
 				const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = rlslp_dictionary.get_explicit_nonterminal_rule_list();
 				r.fastParentDictionary.set_pointer(&rlslp_dictionary.get_relative_max_level_list(), r.grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression);
 
-				for (uint64_t i = 0; i < rlslp_dictionary.explicit_nonterminal_count(); i++)
+				for (uint64_t i = 0; i < rlslp_dictionary.count_explicit_nonterminals(); i++)
 				{
 					r.fastParentDictionary.add_new_element();
 				}
 
-				for (uint64_t i = 0; i < rlslp_dictionary.explicit_nonterminal_count(); i++)
+				for (uint64_t i = 0; i < rlslp_dictionary.count_explicit_nonterminals(); i++)
 				{
 					RLSLPRuleBody rule = RLSLPRuleBody::decode_rule(i, explicit_nonterminal_rule_list);
 					if (rule.get_type() == RLSLPRuleType::Character)
@@ -1057,7 +1057,7 @@ namespace dynRLSLP
 				{
 
 					assert(new_level - this->get_explicit_nonterminal_level_list()[explicit_nonterminal] == diff);
-					this->fastParentDictionary.insert_single_nonterminal(explicit_nonterminal, explicit_nonterminal_rule_list);
+					this->fastParentDictionary.insert_implicit_nonterminal(explicit_nonterminal, explicit_nonterminal_rule_list);
 					this->grammar.increase_relative_max_level(explicit_nonterminal);
 				}
 

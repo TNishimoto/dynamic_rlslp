@@ -178,9 +178,9 @@ namespace dynRLSLP
 		 * @brief Return the total count of single nonterminals.
 		 * @return Sum of single-nonterminal counts from the internal dictionary.
 		 */
-		int64_t count_single_nonterminals() const
+		int64_t count_implicit_nonterminals() const
 		{
-			return this->rlslp_dictionary.count_single_nonterminals(this->grammarParsingType);
+			return this->rlslp_dictionary.valid_implicit_nonterminal_count();
 		}
 		/**
 		 * @brief Reset the grammar and select a parsing algorithm.
@@ -206,7 +206,7 @@ namespace dynRLSLP
 		 */
 		uint64_t nonterminal_count() const
 		{
-			return this->rlslp_dictionary.nonterminal_count(this->grammarParsingType);
+			return this->rlslp_dictionary.valid_nonterminal_count();
 		}
 
 		/**
@@ -396,7 +396,7 @@ namespace dynRLSLP
 			{
 				std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "The grammar does not have a root." << std::endl;
 			}
-			rlslp_dictionary.print_statistics(this->grammarParsingType, message_paragraph + 1);
+			rlslp_dictionary.print_statistics(message_paragraph + 1);
 		}
 		/**
 		 * @brief Verify structural near-equality with another instance.
@@ -471,7 +471,7 @@ namespace dynRLSLP
 			ifs.read(reinterpret_cast<char *>(&_document_nonterminal), sizeof(_document_nonterminal));
 			ifs.read(reinterpret_cast<char *>(&_document_counter_size), sizeof(_document_counter_size));
 
-			if (r.rlslp_dictionary.explicit_nonterminal_count() > 0)
+			if (r.rlslp_dictionary.count_explicit_nonterminals() > 0)
 			{
 				r.documentCounter[_document_nonterminal] = _document_counter_size;
 			}

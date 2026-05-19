@@ -148,7 +148,7 @@ namespace dynRLSLP
              * @param seq Input run sequence.
              * @return True if the check succeeds.
              */
-            static bool is_single_nonterminal(SEQ_TYPE &seq)
+            static bool is_implicit_nonterminal(SEQ_TYPE &seq)
             {
                 if (seq.size() != 1)
                 {

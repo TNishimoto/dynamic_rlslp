@@ -14,16 +14,21 @@
 namespace dynRLSLP
 {
 	/**
-	 * @brief Core dictionary (D, H, L) for a layered RLSLP.
+	 * @brief Core dictionary (D, Y, L, R) for @ref term_layered_rlslp "Layered RLSLP".
+	 * This class stores four vector arrays D, Y, L, R.
+	 * - std::vector<RLSLPRuleBody> D[i] stores the rule body of the explicit nonterminal *i*.
+	 * - std::vector<uint16_t> Y[i] stores the level of the explicit nonterminal *i*.
+	 * - std::vector<uint64_t> L[i] stores the length of the string derived from the explicit nonterminal *i*.
+	 * - std::vector<uint16_t> R[i] stores the largest integer *d* such that NonterminalWithRelativeLevel (i, d).
 	 * @ingroup RLSLPClasses
 	 */
 	class DictionaryForLayeredRLSLP
 	{
 	private:
 		std::vector<RLSLPRuleBody> explicit_nonterminal_rule_list_; // D
-		std::vector<uint16_t> explicit_nonterminal_level_list_;	  // H2
-		std::vector<uint64_t> explicit_nonterminal_length_list_;	  // L
-		std::vector<uint16_t> relative_max_level_list_;
+		std::vector<uint16_t> explicit_nonterminal_level_list_;		// Y
+		std::vector<uint64_t> explicit_nonterminal_length_list_;	// L
+		std::vector<uint16_t> relative_max_level_list_;				// R
 
 	public:
 		/**
@@ -34,92 +39,76 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return the base-nonterminal rule list (D).
-		 * @return Const reference to stored rule bodies.
+		 * @brief Return const reference to *D*.
 		 */
 		const std::vector<RLSLPRuleBody> &get_explicit_nonterminal_rule_list() const
 		{
 			return this->explicit_nonterminal_rule_list_;
 		}
 		/**
-		 * @brief Return the base-nonterminal level list (H).
-		 * @return Const reference to absolute derivation levels per base nonterminal.
+		 * @brief Return const reference to *Y*.
 		 */
 		const std::vector<uint16_t> &get_explicit_nonterminal_level_list() const
 		{
 			return this->explicit_nonterminal_level_list_;
 		}
 		/**
-		 * @brief Return the base-nonterminal length list (L).
-		 * @return Const reference to expanded string lengths per base nonterminal.
+		 * @brief Return const reference to *L*.
 		 */
 		const std::vector<uint64_t> &get_explicit_nonterminal_length_list() const
 		{
 			return this->explicit_nonterminal_length_list_;
 		}
 		/**
-		 * @brief Return the per-base-nonterminal relative maximum level list.
-		 * @return Const reference to highest relative level index per base nonterminal.
+		 * @brief Return const reference to *R*.
 		 */
 		const std::vector<uint16_t> &get_relative_max_level_list() const
 		{
 			return this->relative_max_level_list_;
 		}
 		/**
-		 * @brief Return the string length of a nonterminal using the base length list.
-		 * @param sig Encoded nonterminal with relative level.
-		 * @return Expanded string length of @p sig.
+		 * @brief Return the string length of a given nonterminal X.
 		 */
-		uint64_t get_length(NonterminalWithRelativeLevel sig) const
+		uint64_t get_length(NonterminalWithRelativeLevel X) const
 		{
-			return NonterminalFunctions::get_length(sig, this->explicit_nonterminal_length_list_);
+			return NonterminalFunctions::get_length(X, this->explicit_nonterminal_length_list_);
 		}
 		/**
-		 * @brief Return the absolute derivation level of a nonterminal.
-		 * @param sig Encoded nonterminal with relative level.
-		 * @return Absolute level from the base level list (H).
+		 * @brief Return the level of a given nonterminal X.
 		 */
-		uint64_t get_level(NonterminalWithRelativeLevel sig) const
+		uint64_t get_level(NonterminalWithRelativeLevel X) const
 		{
-			return NonterminalFunctions::get_level(sig, this->explicit_nonterminal_level_list_);
+			return NonterminalFunctions::get_level(X, this->explicit_nonterminal_level_list_);
 		}
 		/**
-		 * @brief Return the decoded rule body for a nonterminal.
-		 * @param sig Encoded nonterminal with relative level.
-		 * @return Rule body obtained by decoding @p sig against D.
+		 * @brief Return the rule body for a given nonterminal X. (O(1) time)
 		 */
-		RLSLPRuleBody get_rule_body(NonterminalWithRelativeLevel sig) const
+		RLSLPRuleBody get_rule_body(NonterminalWithRelativeLevel X) const
 		{
-			return RLSLPRuleBody::decode_rule(sig, this->explicit_nonterminal_rule_list_);
+			return RLSLPRuleBody::decode_rule(X, this->explicit_nonterminal_rule_list_);
 		}
 
 		/**
-		 * @brief Return the number of base nonterminals.
-		 * @return Size of the base-nonterminal rule list D.
+		 * @brief Return the number of explicit nonterminals, which includes unused explicit nonterminals (O(1) time).
 		 */
-		uint64_t explicit_nonterminal_count() const
+		uint64_t count_explicit_nonterminals() const
 		{
 			return this->explicit_nonterminal_rule_list_.size();
 		}
-		/**
-		 * @brief Return the number of single (non-base) nonterminals for a base nonterminal.
-		 * @param grammar_parsing_type Grammar parsing algorithm type.
-		 * @param explicit_nonterminal Base nonterminal index.
-		 * @return Count of relative-level nonterminals excluding the base slot; 0 if base is null.
-		 */
-		uint64_t get_single_nonterminal_count(GrammarParsingType grammar_parsing_type, ExplicitNonterminal explicit_nonterminal) const
+		/*
+		uint64_t count_implicit_nonterminals(GrammarParsingType grammar_parsing_type, ExplicitNonterminal X) const
 		{
-			RLSLPRuleBody rule_body = RLSLPRuleBody::decode_rule(explicit_nonterminal, this->explicit_nonterminal_rule_list_);
+			RLSLPRuleBody rule_body = RLSLPRuleBody::decode_rule(X, this->explicit_nonterminal_rule_list_);
 			if (rule_body.get_type() != RLSLPRuleType::Null)
 			{
 				if (grammar_parsing_type == GrammarParsingType::RestrictedBlockCompression)
 				{
-					uint64_t uncountable_nonterminal_count = NonterminalFunctions::count_uncountable_nonterminals(explicit_nonterminal, this->explicit_nonterminal_length_list_, this->explicit_nonterminal_level_list_);
-					return this->relative_max_level_list_[explicit_nonterminal] - uncountable_nonterminal_count;
+					uint64_t uncountable_nonterminal_count = NonterminalFunctions::count_uncountable_nonterminals(X, this->explicit_nonterminal_length_list_, this->explicit_nonterminal_level_list_);
+					return this->relative_max_level_list_[X] - uncountable_nonterminal_count;
 				}
 				else
 				{
-					return this->relative_max_level_list_[explicit_nonterminal];
+					return this->relative_max_level_list_[X];
 				}
 			}
 			else
@@ -127,42 +116,68 @@ namespace dynRLSLP
 				return 0;
 			}
 		}
-		/**
-		 * @brief Return the total count of single nonterminals.
-		 * @param grammar_parsing_type Grammar parsing algorithm type.
-		 * @return Sum of single-nonterminal counts over all base nonterminals.
-		 */
-		int64_t count_single_nonterminals(GrammarParsingType grammar_parsing_type) const
+		*/
+
+		/*
+		int64_t count_implicit_nonterminals(GrammarParsingType grammar_parsing_type) const
 		{
 			uint64_t sz = 0;
-			for (ExplicitNonterminal explicit_nonterminal = 0; explicit_nonterminal < (ExplicitNonterminal)this->explicit_nonterminal_count(); explicit_nonterminal++)
+			for (ExplicitNonterminal explicit_nonterminal = 0; explicit_nonterminal < (ExplicitNonterminal)this->count_explicit_nonterminals(); explicit_nonterminal++)
 			{
-				sz += this->get_single_nonterminal_count(grammar_parsing_type, explicit_nonterminal);
+				sz += this->count_implicit_nonterminals(grammar_parsing_type, explicit_nonterminal);
+			}
+			return sz;
+		}
+		*/
+
+		/**
+		 * @brief Return the total number of implicit nonterminals.
+		 */
+		uint64_t valid_implicit_nonterminal_count() const
+		{
+			const auto &relative_max_level_list = this->get_relative_max_level_list();
+			uint64_t sz = 0;
+			for (ExplicitNonterminal X = 0; X < (ExplicitNonterminal)this->count_explicit_nonterminals(); X++)
+			{
+				RLSLPRuleBody body = RLSLPRuleBody::decode_rule(X, this->explicit_nonterminal_rule_list_);
+				if (body.get_type() != RLSLPRuleType::Null)
+				{
+					sz += relative_max_level_list[X];
+				}
 			}
 			return sz;
 		}
 		/**
-		 * @brief Return the total number of nonterminals (base plus single).
-		 * @param grammar_parsing_type Grammar parsing algorithm type.
-		 * @return Total nonterminal count across all base nonterminals.
+		 * @brief Return the total number of explicit nonterminals that are not null.
 		 */
-		uint64_t nonterminal_count(GrammarParsingType grammar_parsing_type) const
+		uint64_t valid_explicit_nonterminal_count() const
 		{
 			uint64_t sz = 0;
-			for (ExplicitNonterminal explicit_nonterminal = 0; explicit_nonterminal < (ExplicitNonterminal)this->explicit_nonterminal_count(); explicit_nonterminal++)
+			for (ExplicitNonterminal X = 0; X < (ExplicitNonterminal)this->count_explicit_nonterminals(); X++)
 			{
-				sz += 1 + this->get_single_nonterminal_count(grammar_parsing_type, explicit_nonterminal);
+				RLSLPRuleBody body = RLSLPRuleBody::decode_rule(X, this->explicit_nonterminal_rule_list_);
+				if (body.get_type() != RLSLPRuleType::Null)
+				{
+					sz += 1;
+				}
 			}
 			return sz;
 		}
 		/**
-		 * @brief Return the number of null base nonterminals.
-		 * @return Count of base nonterminals whose rule type is Null.
+		 * @brief Return the total number of nonterminals that are not null.
+		 */
+		uint64_t valid_nonterminal_count() const
+		{
+			return this->valid_implicit_nonterminal_count() + this->valid_explicit_nonterminal_count();
+		}
+
+		/**
+		 * @brief Return the number of null explicit nonterminals.
 		 */
 		uint64_t count_null_nonterminals() const
 		{
 			uint64_t counter = 0;
-			for (uint64_t i = 0; i < this->explicit_nonterminal_count(); i++)
+			for (uint64_t i = 0; i < this->count_explicit_nonterminals(); i++)
 			{
 				if (this->explicit_nonterminal_rule_list_[i].get_type() == RLSLPRuleType::Null)
 				{
@@ -176,7 +191,7 @@ namespace dynRLSLP
 		 * @param i Nonterminal or base-nonterminal index.
 		 * @return True if the decoded rule at @p i is of type Null.
 		 */
-		bool check_empty_item(NonterminalWithRelativeLevel i) const
+		bool check_null_item(NonterminalWithRelativeLevel i) const
 		{
 			return RLSLPRuleBody::decode_rule(i, this->explicit_nonterminal_rule_list_).get_type() == RLSLPRuleType::Null;
 		}
@@ -269,19 +284,17 @@ namespace dynRLSLP
 		 * @param grammar_parsing_type Grammar parsing algorithm type.
 		 * @param message_paragraph Indentation level for formatted output.
 		 */
-		void print_statistics(GrammarParsingType grammar_parsing_type, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
+		void print_statistics(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
 		{
-			uint64_t nonterminal_count = this->nonterminal_count(grammar_parsing_type);
-			uint64_t explicit_nonterminal_count = this->explicit_nonterminal_count();
-			uint64_t single_nonterminal_count = this->count_single_nonterminals(grammar_parsing_type);
+			uint64_t nonterminal_count = this->valid_nonterminal_count();
+			uint64_t explicit_nonterminal_count = this->valid_explicit_nonterminal_count();
+			uint64_t implicit_nonterminal_count = this->valid_implicit_nonterminal_count();
 			uint64_t null_nonterminal_count = this->count_null_nonterminals();
-			uint64_t nonnull_nonterminal_count = nonterminal_count - null_nonterminal_count;
 
 			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics(Dictionary):" << std::endl;
 			std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Nonterminals:           \t" << nonterminal_count << std::endl;
-			std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "Non-null Nonterminals:  \t" << nonnull_nonterminal_count << std::endl;
-			std::cout << stool::Message::get_paragraph_string(message_paragraph + 3) << "Base Nonterminals:      \t" << explicit_nonterminal_count << std::endl;
-			std::cout << stool::Message::get_paragraph_string(message_paragraph + 3) << "Single Nonterminals:    \t" << single_nonterminal_count << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph + 3) << "Explicit Nonterminals:      \t" << explicit_nonterminal_count << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph + 3) << "Implicit Nonterminals:    \t" << implicit_nonterminal_count << std::endl;
 			std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "Null Nonterminals:      \t" << null_nonterminal_count << std::endl;
 		}
 		/**
@@ -289,18 +302,18 @@ namespace dynRLSLP
 		 * @param grammar_parsing_type Grammar parsing algorithm type.
 		 * @param message_paragraph Indentation level for formatted output.
 		 */
-		void print_detailed_statistics(GrammarParsingType grammar_parsing_type, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
+		void print_detailed_statistics(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
 		{
 
-			uint64_t nonterminal_count = this->nonterminal_count(grammar_parsing_type);
-			uint64_t explicit_nonterminal_count = this->explicit_nonterminal_count();
-			uint64_t single_nonterminal_count = this->count_single_nonterminals(grammar_parsing_type);
+			uint64_t nonterminal_count = this->valid_nonterminal_count();
+			uint64_t explicit_nonterminal_count = this->valid_explicit_nonterminal_count();
+			uint64_t implicit_nonterminal_count = this->valid_implicit_nonterminal_count();
 			uint64_t null_nonterminal_count = this->count_null_nonterminals();
-			uint64_t nonnull_nonterminal_count = nonterminal_count - null_nonterminal_count;
+			uint64_t list_size = this->explicit_nonterminal_rule_list_.size();
 
 			std::unordered_map<uint64_t, uint64_t> nonterminal_length_map;
 
-			for (uint64_t i = 0; i < explicit_nonterminal_count; i++)
+			for (uint64_t i = 0; i < list_size; i++)
 			{
 				NonterminalWithRelativeLevel sig = NonterminalFunctions::get_nonterminal(0, i);
 				uint64_t length = this->get_length(sig);
@@ -320,9 +333,8 @@ namespace dynRLSLP
 
 			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics(Dictionary):" << std::endl;
 			std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Nonterminals:           \t" << nonterminal_count << std::endl;
-			std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "Non-null Nonterminals:  \t" << nonnull_nonterminal_count << std::endl;
-			std::cout << stool::Message::get_paragraph_string(message_paragraph + 3) << "Base Nonterminals:      \t" << explicit_nonterminal_count << std::endl;
-			std::cout << stool::Message::get_paragraph_string(message_paragraph + 3) << "Single Nonterminals:    \t" << single_nonterminal_count << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph + 3) << "Explicit Nonterminals:      \t" << explicit_nonterminal_count << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph + 3) << "Implicit Nonterminals:    \t" << implicit_nonterminal_count << std::endl;
 			std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "Null Nonterminals:      \t" << null_nonterminal_count << std::endl;
 
 			for (auto &[length, count] : nonterminal_length_vector)
@@ -344,7 +356,7 @@ namespace dynRLSLP
 
 			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "==== Rules ====" << std::endl;
 			uint64_t x = 0;
-			for (int64_t i = 0; i < (int64_t)this->explicit_nonterminal_count(); i++)
+			for (int64_t i = 0; i < (int64_t)this->count_explicit_nonterminals(); i++)
 			{
 				uint64_t uncountable_nonterminal_count = NonterminalFunctions::count_uncountable_nonterminals(i, this->explicit_nonterminal_length_list_, this->explicit_nonterminal_level_list_);
 
@@ -399,7 +411,7 @@ namespace dynRLSLP
 		 */
 		ExplicitNonterminal add_new_explicit_nonterminal()
 		{
-			uint64_t new_number = this->explicit_nonterminal_count();
+			uint64_t new_number = this->count_explicit_nonterminals();
 			this->explicit_nonterminal_rule_list_.push_back(RLSLPRuleBody::create_null_item());
 			this->explicit_nonterminal_length_list_.push_back(UINT64_MAX);
 			this->explicit_nonterminal_level_list_.push_back(UINT16_MAX);

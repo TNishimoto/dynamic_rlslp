@@ -219,7 +219,7 @@ namespace dynRLSLP
 			}
 			else if (this->get_type() == RLSLPRuleType::Character)
 			{
-				return BNonterminalBottomLevel;
+				return NonterminalBottomLevel;
 			}
 			else
 			{
