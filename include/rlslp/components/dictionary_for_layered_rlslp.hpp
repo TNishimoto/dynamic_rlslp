@@ -38,6 +38,11 @@ namespace dynRLSLP
 		{
 		}
 
+		////////////////////////////////////////////////////////////////////////////////
+		///   @name Basic functions for accessing to properties of this class
+		////////////////////////////////////////////////////////////////////////////////
+		//@{
+
 		/**
 		 * @brief Return const reference to *D*.
 		 */
@@ -95,45 +100,10 @@ namespace dynRLSLP
 		{
 			return this->explicit_nonterminal_rule_list_.size();
 		}
-		/*
-		uint64_t count_implicit_nonterminals(GrammarParsingType grammar_parsing_type, ExplicitNonterminal X) const
-		{
-			RLSLPRuleBody rule_body = RLSLPRuleBody::decode_rule(X, this->explicit_nonterminal_rule_list_);
-			if (rule_body.get_type() != RLSLPRuleType::Null)
-			{
-				if (grammar_parsing_type == GrammarParsingType::RestrictedBlockCompression)
-				{
-					uint64_t uncountable_nonterminal_count = NonterminalFunctions::count_uncountable_nonterminals(X, this->explicit_nonterminal_length_list_, this->explicit_nonterminal_level_list_);
-					return this->relative_max_level_list_[X] - uncountable_nonterminal_count;
-				}
-				else
-				{
-					return this->relative_max_level_list_[X];
-				}
-			}
-			else
-			{
-				return 0;
-			}
-		}
-		*/
-
-		/*
-		int64_t count_implicit_nonterminals(GrammarParsingType grammar_parsing_type) const
-		{
-			uint64_t sz = 0;
-			for (ExplicitNonterminal explicit_nonterminal = 0; explicit_nonterminal < (ExplicitNonterminal)this->count_explicit_nonterminals(); explicit_nonterminal++)
-			{
-				sz += this->count_implicit_nonterminals(grammar_parsing_type, explicit_nonterminal);
-			}
-			return sz;
-		}
-		*/
-
 		/**
 		 * @brief Return the total number of implicit nonterminals.
 		 */
-		uint64_t valid_implicit_nonterminal_count() const
+		uint64_t count_valid_implicit_nonterminals() const
 		{
 			const auto &relative_max_level_list = this->get_relative_max_level_list();
 			uint64_t sz = 0;
@@ -150,7 +120,7 @@ namespace dynRLSLP
 		/**
 		 * @brief Return the total number of explicit nonterminals that are not null.
 		 */
-		uint64_t valid_explicit_nonterminal_count() const
+		uint64_t count_valid_explicit_nonterminals() const
 		{
 			uint64_t sz = 0;
 			for (ExplicitNonterminal X = 0; X < (ExplicitNonterminal)this->count_explicit_nonterminals(); X++)
@@ -166,9 +136,9 @@ namespace dynRLSLP
 		/**
 		 * @brief Return the total number of nonterminals that are not null.
 		 */
-		uint64_t valid_nonterminal_count() const
+		uint64_t count_valid_nonterminals() const
 		{
-			return this->valid_implicit_nonterminal_count() + this->valid_explicit_nonterminal_count();
+			return this->count_valid_implicit_nonterminals() + this->count_valid_explicit_nonterminals();
 		}
 
 		/**
@@ -196,16 +166,127 @@ namespace dynRLSLP
 			return RLSLPRuleBody::decode_rule(i, this->explicit_nonterminal_rule_list_).get_type() == RLSLPRuleType::Null;
 		}
 		/**
-		 * @brief Return rule body, length, and level for a nonterminal index.
-		 * @param i Encoded nonterminal or base-nonterminal index.
-		 * @return Aggregated RLSLPRuleInfo for @p i.
+		 * @brief Return the RLSLPRuleInfo for a given explicit nonterminal *i*.
 		 */
-		RLSLPRuleInfo get_nonterminal_info(int64_t i) const
+		RLSLPRuleInfo get_nonterminal_info(ExplicitNonterminal i) const
 		{
 			uint64_t length = this->get_length(i);
 			uint64_t level = this->get_level(i);
 			return RLSLPRuleInfo(RLSLPRuleBody::decode_rule(i, this->explicit_nonterminal_rule_list_), length, level);
 		}
+
+		//}@
+
+		////////////////////////////////////////////////////////////////////////////////
+		///   @name Update operations
+		////////////////////////////////////////////////////////////////////////////////
+		//@{
+		/**
+		 * @brief Reset an explicit nonterminal X slot to null.
+		 */
+		void clear_element(ExplicitNonterminal X)
+		{
+			assert(this->explicit_nonterminal_rule_list_[X].get_type() != RLSLPRuleType::Null);
+			this->explicit_nonterminal_rule_list_[X] = RLSLPRuleBody::create_null_item();
+			this->explicit_nonterminal_length_list_[X] = UINT64_MAX;
+			this->explicit_nonterminal_level_list_[X] = UINT16_MAX;
+			this->relative_max_level_list_[X] = UINT16_MAX;
+		}
+
+		/**
+		 * @brief Clear all stored data.
+		 */
+		void clear()
+		{
+			this->explicit_nonterminal_rule_list_.clear();
+			this->explicit_nonterminal_level_list_.clear();
+			this->explicit_nonterminal_length_list_.clear();
+			this->relative_max_level_list_.clear();
+		}
+
+		/**
+		 * @brief Swap contents with another dictionary.
+		 * @param other Dictionary to swap with.
+		 */
+		void swap(DictionaryForLayeredRLSLP &other)
+		{
+			this->explicit_nonterminal_rule_list_.swap(other.explicit_nonterminal_rule_list_);
+			this->explicit_nonterminal_level_list_.swap(other.explicit_nonterminal_level_list_);
+			this->explicit_nonterminal_length_list_.swap(other.explicit_nonterminal_length_list_);
+			this->relative_max_level_list_.swap(other.relative_max_level_list_);
+		}
+
+		/**
+		 * @brief Decrement the relative maximum level of a given explicit nonterminal X.
+		 */
+		void decrease_relative_max_level(ExplicitNonterminal X)
+		{
+			assert(this->relative_max_level_list_[X] > 0);
+			this->relative_max_level_list_[X]--;
+		}
+		/**
+		 * @brief Increment the relative maximum level of a given explicit nonterminal X.
+		 */
+		void increase_relative_max_level(ExplicitNonterminal X)
+		{
+			assert(this->relative_max_level_list_[X] < UINT16_MAX);
+			this->relative_max_level_list_[X]++;
+		}
+
+		/**
+		 * @brief Allocate a new explicit nonterminal slot initialized to null.
+		 * @return Index of the newly added base nonterminal.
+		 */
+		ExplicitNonterminal add_new_explicit_nonterminal()
+		{
+			uint64_t new_number = this->count_explicit_nonterminals();
+			this->explicit_nonterminal_rule_list_.push_back(RLSLPRuleBody::create_null_item());
+			this->explicit_nonterminal_length_list_.push_back(UINT64_MAX);
+			this->explicit_nonterminal_level_list_.push_back(UINT16_MAX);
+			this->relative_max_level_list_.push_back(UINT16_MAX);
+			return new_number;
+		}
+		/**
+		 * @brief Write rule body and metadata into the slot of a given explicit nonterminal X.
+		 * @param rule_body RLSLP rule body to store.
+		 * @param new_level Absolute level of the explicit nonterminal X.
+		 * @param relative_max_level Maximum relative level for the explicit nonterminal X.
+		 * @param explicit_nonterminal_length_list Length list used to compute stored length.
+		 */
+		void write_element(ExplicitNonterminal X, const RLSLPRuleBody &rule_body, uint16_t new_level, uint16_t relative_max_level, const std::vector<uint64_t> &explicit_nonterminal_length_list)
+		{
+			assert(this->explicit_nonterminal_rule_list_[X].get_type() == RLSLPRuleType::Null);
+			assert(this->explicit_nonterminal_length_list_[X] == UINT64_MAX);
+			assert(this->explicit_nonterminal_level_list_[X] == UINT16_MAX);
+			assert(this->relative_max_level_list_[X] == UINT16_MAX);
+
+			this->explicit_nonterminal_rule_list_[X] = rule_body;
+			this->explicit_nonterminal_level_list_[X] = new_level;
+			this->explicit_nonterminal_length_list_[X] = rule_body.get_length(explicit_nonterminal_length_list);
+			this->relative_max_level_list_[X] = relative_max_level;
+
+#ifdef DEBUG
+			if (rule_body.get_type() == RLSLPRuleType::Pair)
+			{
+				assert(NonterminalFunctions::get_explicit_nonterminal(rule_body.A) < this->explicit_nonterminal_rule_list_.size());
+				assert(NonterminalFunctions::get_explicit_nonterminal(rule_body.B) < this->explicit_nonterminal_rule_list_.size());
+			}
+			else if (rule_body.get_type() == RLSLPRuleType::Power)
+			{
+				assert(NonterminalFunctions::get_explicit_nonterminal(rule_body.A) < this->explicit_nonterminal_rule_list_.size());
+			}
+			else if (rule_body.get_type() == RLSLPRuleType::Nonterminal)
+			{
+				assert(NonterminalFunctions::get_explicit_nonterminal(rule_body.A) < this->explicit_nonterminal_rule_list_.size());
+			}
+#endif
+		}
+		//}@
+
+		////////////////////////////////////////////////////////////////////////////////
+		///   @name Print and verification functions
+		////////////////////////////////////////////////////////////////////////////////
+		//@{
 
 		/**
 		 * @brief Verify structural near-equality with another dictionary.
@@ -270,25 +351,14 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return the decoded rule body for a nonterminal index.
-		 * @param i Nonterminal or base-nonterminal index.
-		 * @return Decoded rule body at index @p i (alias for decode_rule).
-		 */
-		RLSLPRuleBody get_item(int64_t i) const
-		{
-			return RLSLPRuleBody::decode_rule(i, this->explicit_nonterminal_rule_list_);
-		}
-
-		/**
 		 * @brief Print summary dictionary statistics to standard output.
-		 * @param grammar_parsing_type Grammar parsing algorithm type.
 		 * @param message_paragraph Indentation level for formatted output.
 		 */
 		void print_statistics(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
 		{
-			uint64_t nonterminal_count = this->valid_nonterminal_count();
-			uint64_t explicit_nonterminal_count = this->valid_explicit_nonterminal_count();
-			uint64_t implicit_nonterminal_count = this->valid_implicit_nonterminal_count();
+			uint64_t nonterminal_count = this->count_valid_nonterminals();
+			uint64_t explicit_nonterminal_count = this->count_valid_explicit_nonterminals();
+			uint64_t implicit_nonterminal_count = this->count_valid_implicit_nonterminals();
 			uint64_t null_nonterminal_count = this->count_null_nonterminals();
 
 			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics(Dictionary):" << std::endl;
@@ -299,15 +369,14 @@ namespace dynRLSLP
 		}
 		/**
 		 * @brief Print detailed dictionary statistics.
-		 * @param grammar_parsing_type Grammar parsing algorithm type.
 		 * @param message_paragraph Indentation level for formatted output.
 		 */
 		void print_detailed_statistics(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
 		{
 
-			uint64_t nonterminal_count = this->valid_nonterminal_count();
-			uint64_t explicit_nonterminal_count = this->valid_explicit_nonterminal_count();
-			uint64_t implicit_nonterminal_count = this->valid_implicit_nonterminal_count();
+			uint64_t nonterminal_count = this->count_valid_nonterminals();
+			uint64_t explicit_nonterminal_count = this->count_valid_explicit_nonterminals();
+			uint64_t implicit_nonterminal_count = this->count_valid_implicit_nonterminals();
 			uint64_t null_nonterminal_count = this->count_null_nonterminals();
 			uint64_t list_size = this->explicit_nonterminal_rule_list_.size();
 
@@ -385,110 +454,12 @@ namespace dynRLSLP
 			}
 			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "==== Rules[END] ====" << std::endl;
 		}
+		//}@
 
-		/**
-		 * @brief Decrement the relative maximum level of a base nonterminal.
-		 * @param explicit_nonterminal Base nonterminal index.
-		 */
-		void decrease_relative_max_level(ExplicitNonterminal explicit_nonterminal)
-		{
-			assert(this->relative_max_level_list_[explicit_nonterminal] > 0);
-			this->relative_max_level_list_[explicit_nonterminal]--;
-		}
-		/**
-		 * @brief Increment the relative maximum level of a base nonterminal.
-		 * @param explicit_nonterminal Base nonterminal index.
-		 */
-		void increase_relative_max_level(ExplicitNonterminal explicit_nonterminal)
-		{
-			assert(this->relative_max_level_list_[explicit_nonterminal] < UINT16_MAX);
-			this->relative_max_level_list_[explicit_nonterminal]++;
-		}
-
-		/**
-		 * @brief Allocate a new base nonterminal slot initialized to null.
-		 * @return Index of the newly added base nonterminal.
-		 */
-		ExplicitNonterminal add_new_explicit_nonterminal()
-		{
-			uint64_t new_number = this->count_explicit_nonterminals();
-			this->explicit_nonterminal_rule_list_.push_back(RLSLPRuleBody::create_null_item());
-			this->explicit_nonterminal_length_list_.push_back(UINT64_MAX);
-			this->explicit_nonterminal_level_list_.push_back(UINT16_MAX);
-			this->relative_max_level_list_.push_back(UINT16_MAX);
-			return new_number;
-		}
-		/**
-		 * @brief Reset a base nonterminal slot to null.
-		 * @param explicit_nonterminal Base nonterminal index.
-		 */
-		void clear_element(ExplicitNonterminal explicit_nonterminal)
-		{
-			assert(this->explicit_nonterminal_rule_list_[explicit_nonterminal].get_type() != RLSLPRuleType::Null);
-			this->explicit_nonterminal_rule_list_[explicit_nonterminal] = RLSLPRuleBody::create_null_item();
-			this->explicit_nonterminal_length_list_[explicit_nonterminal] = UINT64_MAX;
-			this->explicit_nonterminal_level_list_[explicit_nonterminal] = UINT16_MAX;
-			this->relative_max_level_list_[explicit_nonterminal] = UINT16_MAX;
-		}
-		/**
-		 * @brief Write rule body and metadata into a previously null base nonterminal slot.
-		 * @param explicit_nonterminal Base nonterminal index (must currently be null).
-		 * @param rule_body RLSLP rule body to store.
-		 * @param new_level Absolute level of the base nonterminal.
-		 * @param relative_max_level Maximum relative level for the base nonterminal.
-		 * @param explicit_nonterminal_length_list Length list used to compute stored length.
-		 */
-		void write_element(ExplicitNonterminal explicit_nonterminal, const RLSLPRuleBody &rule_body, uint16_t new_level, uint16_t relative_max_level, const std::vector<uint64_t> &explicit_nonterminal_length_list)
-		{
-			assert(this->explicit_nonterminal_rule_list_[explicit_nonterminal].get_type() == RLSLPRuleType::Null);
-			assert(this->explicit_nonterminal_length_list_[explicit_nonterminal] == UINT64_MAX);
-			assert(this->explicit_nonterminal_level_list_[explicit_nonterminal] == UINT16_MAX);
-			assert(this->relative_max_level_list_[explicit_nonterminal] == UINT16_MAX);
-
-			this->explicit_nonterminal_rule_list_[explicit_nonterminal] = rule_body;
-			this->explicit_nonterminal_level_list_[explicit_nonterminal] = new_level;
-			this->explicit_nonterminal_length_list_[explicit_nonterminal] = rule_body.get_length(explicit_nonterminal_length_list);
-			this->relative_max_level_list_[explicit_nonterminal] = relative_max_level;
-
-#ifdef DEBUG
-			if (rule_body.get_type() == RLSLPRuleType::Pair)
-			{
-				assert(NonterminalFunctions::get_explicit_nonterminal(rule_body.A) < this->explicit_nonterminal_rule_list_.size());
-				assert(NonterminalFunctions::get_explicit_nonterminal(rule_body.B) < this->explicit_nonterminal_rule_list_.size());
-			}
-			else if (rule_body.get_type() == RLSLPRuleType::Power)
-			{
-				assert(NonterminalFunctions::get_explicit_nonterminal(rule_body.A) < this->explicit_nonterminal_rule_list_.size());
-			}
-			else if (rule_body.get_type() == RLSLPRuleType::Nonterminal)
-			{
-				assert(NonterminalFunctions::get_explicit_nonterminal(rule_body.A) < this->explicit_nonterminal_rule_list_.size());
-			}
-#endif
-		}
-
-		/**
-		 * @brief Clear all stored data.
-		 */
-		void clear()
-		{
-			this->explicit_nonterminal_rule_list_.clear();
-			this->explicit_nonterminal_level_list_.clear();
-			this->explicit_nonterminal_length_list_.clear();
-			this->relative_max_level_list_.clear();
-		}
-
-		/**
-		 * @brief Swap contents with another dictionary.
-		 * @param other Dictionary to swap with.
-		 */
-		void swap(DictionaryForLayeredRLSLP &other)
-		{
-			this->explicit_nonterminal_rule_list_.swap(other.explicit_nonterminal_rule_list_);
-			this->explicit_nonterminal_level_list_.swap(other.explicit_nonterminal_level_list_);
-			this->explicit_nonterminal_length_list_.swap(other.explicit_nonterminal_length_list_);
-			this->relative_max_level_list_.swap(other.relative_max_level_list_);
-		}
+		////////////////////////////////////////////////////////////////////////////////
+		///   @name Load, save, and builder functions
+		////////////////////////////////////////////////////////////////////////////////
+		//@{
 
 		/**
 		 * @brief Deserialize from a binary input stream.
@@ -533,6 +504,7 @@ namespace dynRLSLP
 			os.write(reinterpret_cast<const char *>(item.explicit_nonterminal_length_list_.data()), sizeof(uint64_t) * nonterminal_vec_size);
 			os.write(reinterpret_cast<const char *>(item.relative_max_level_list_.data()), sizeof(uint16_t) * nonterminal_vec_size);
 		}
+		//}@
 	};
 
 }

@@ -120,7 +120,7 @@ namespace dynRLSLP
                 const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
 
                 uint64_t nonterminal = grammar.get_root();
-                RLSLPRuleBody item = small_dic.get_item(nonterminal);
+                RLSLPRuleBody item = small_dic.get_rule_body(nonterminal);
                 auto c = Access::random_access(item, pos, explicit_nonterminal_rule_list, explicit_nonterminal_length_list);
                 return c;
             }
@@ -234,7 +234,7 @@ namespace dynRLSLP
         uint64_t get_left_string_length(NonterminalWithRelativeLevel i) const
         {
             const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
-            RLSLPRuleBody item = small_dic.get_item(i);
+            RLSLPRuleBody item = small_dic.get_rule_body(i);
             const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
             if (item.get_type() == RLSLPRuleType::Pair)
             {
@@ -331,7 +331,7 @@ namespace dynRLSLP
             const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
             const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
             NonterminalWithRelativeLevel root = grammar.get_root();
-            RLSLPRuleBody item = small_dic.get_item(root);
+            RLSLPRuleBody item = small_dic.get_rule_body(root);
             std::string s = Access::get_string(item, explicit_nonterminal_rule_list);
 
             return s;
@@ -821,7 +821,7 @@ namespace dynRLSLP
             {
                 if (!this->dynamic_grammar.check_null_item(i))
                 {
-                    RLSLPRuleBody item = this->dynamic_grammar.get_item(i);
+                    RLSLPRuleBody item = this->dynamic_grammar.get_rule_body(i);
                     auto left_str = Access::get_left_string(item, explicit_nonterminal_rule_list);
                     auto right_str = Access::get_right_string(item, explicit_nonterminal_rule_list);
                     std::cout << "i = " << i << "\t" << left_str << "|" << right_str << std::endl;

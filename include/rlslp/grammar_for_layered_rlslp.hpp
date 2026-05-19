@@ -180,7 +180,7 @@ namespace dynRLSLP
 		 */
 		int64_t count_implicit_nonterminals() const
 		{
-			return this->rlslp_dictionary.valid_implicit_nonterminal_count();
+			return this->rlslp_dictionary.count_valid_implicit_nonterminals();
 		}
 		/**
 		 * @brief Reset the grammar and select a parsing algorithm.
@@ -206,7 +206,7 @@ namespace dynRLSLP
 		 */
 		uint64_t nonterminal_count() const
 		{
-			return this->rlslp_dictionary.valid_nonterminal_count();
+			return this->rlslp_dictionary.count_valid_nonterminals();
 		}
 
 		/**
