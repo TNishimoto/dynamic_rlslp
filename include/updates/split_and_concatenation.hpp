@@ -17,25 +17,25 @@ namespace dynRLSLP
         {
         public:
             /**
-             * @brief Splits a document signature into left and right parts at a given length.
-             * @tparam CALLBACK1 Callback type invoked when signatures are removed.
-             * @tparam CALLBACK2 Callback type invoked when signatures are added.
-             * @param node Signature of the document to split.
+             * @brief Splits a document nonterminal into left and right parts at a given length.
+             * @tparam CALLBACK1 Callback type invoked when nonterminals are removed.
+             * @tparam CALLBACK2 Callback type invoked when nonterminals are added.
+             * @param node Nonterminal of the document to split.
              * @param leftLength Length of the left part in characters.
              * @param remove_node If true, remove the original document when @p process_document is set.
              * @param process_document If true, update the document set in the grammar.
              * @param dic Dynamic grammar updated during the split.
-             * @param callback_for_removed_signatures Callback invoked for removed signatures.
-             * @param callback_for_added_signatures Callback invoked for added signatures.
-             * @return Pair of signatures for the left and right parts.
+             * @param callback_for_removed_nonterminals Callback invoked for removed nonterminals.
+             * @param callback_for_added_nonterminals Callback invoked for added nonterminals.
+             * @return Pair of nonterminals for the left and right parts.
              */
             template <typename CALLBACK1 = decltype(no_callback), typename CALLBACK2 = decltype(no_callback)>
-            static std::pair<int64_t, int64_t> split(SignatureWithRelativeLevel node, int64_t leftLength, bool remove_node, bool process_document, DynamicGrammarForLayeredRLSLP &dic, CALLBACK1 &callback_for_removed_signatures, CALLBACK2 &callback_for_added_signatures)
+            static std::pair<int64_t, int64_t> split(NonterminalWithRelativeLevel node, int64_t leftLength, bool remove_node, bool process_document, DynamicGrammarForLayeredRLSLP &dic, CALLBACK1 &callback_for_removed_nonterminals, CALLBACK2 &callback_for_added_nonterminals)
             {
 
                 const DictionaryForLayeredRLSLP &small_dic = dic.get_dictionary();
 
-                assert(0 < leftLength && leftLength < (int64_t)SignatureFunctions::get_length(node, small_dic.get_base_signature_length_list()));
+                assert(0 < leftLength && leftLength < (int64_t)NonterminalFunctions::get_length(node, small_dic.get_explicit_nonterminal_length_list()));
                 FastCommonSequenceBuilder::initialize(dic.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression);
 
                 #ifdef DEBUG
@@ -53,14 +53,14 @@ namespace dynRLSLP
 
                 RunRuleVector right = FastCommonSequenceBuilder::build(node, leftLength, small_dic);
                 //assert(right.check_equal_sequence(right2));
-                assert((int64_t)right.get_string_length() == (int64_t)(SignatureFunctions::get_length(node, small_dic.get_base_signature_length_list()) - leftLength));
+                assert((int64_t)right.get_string_length() == (int64_t)(NonterminalFunctions::get_length(node, small_dic.get_explicit_nonterminal_length_list()) - leftLength));
                 //std::cout << "Right: " << std::endl;
                 //right.print_derivation_tree(3, 2);
 
-                int64_t left1 = CommonSequenceCompiler::single_compile(left, dic, callback_for_added_signatures);
-                int64_t right1 = CommonSequenceCompiler::single_compile(right, dic, callback_for_added_signatures);
+                int64_t left1 = CommonSequenceCompiler::single_compile(left, dic, callback_for_added_nonterminals);
+                int64_t right1 = CommonSequenceCompiler::single_compile(right, dic, callback_for_added_nonterminals);
 
-                assert((int64_t)SignatureFunctions::get_length(left1, small_dic.get_base_signature_length_list()) == leftLength);
+                assert((int64_t)NonterminalFunctions::get_length(left1, small_dic.get_explicit_nonterminal_length_list()) == leftLength);
 
                 if (process_document)
                 {
@@ -74,63 +74,63 @@ namespace dynRLSLP
 #endif
                 if (remove_node && process_document)
                 {
-                    dic.remove_document(node, callback_for_removed_signatures);
+                    dic.remove_document(node, callback_for_removed_nonterminals);
                 }
 
 #ifdef SLOWDEBUG
                 this->CheckDocumentKey(left1);
                 this->CheckDocumentKey(right1);
 #endif
-                assert(SignatureFunctions::get_length(left1, small_dic.get_base_signature_length_list()) > 0 && SignatureFunctions::get_length(right1, small_dic.get_base_signature_length_list()) > 0);
+                assert(NonterminalFunctions::get_length(left1, small_dic.get_explicit_nonterminal_length_list()) > 0 && NonterminalFunctions::get_length(right1, small_dic.get_explicit_nonterminal_length_list()) > 0);
 
                 // std::cout << "Split = " << left1 << ", " << right1 << std::endl;
                 return std::pair<int64_t, int64_t>(left1, right1);
             }
 
             /**
-             * @brief Concatenates two document signatures into one.
-             * @tparam CALLBACK1 Callback type invoked when signatures are removed.
-             * @tparam CALLBACK2 Callback type invoked when signatures are added.
-             * @param left Signature of the left document.
-             * @param right Signature of the right document.
+             * @brief Concatenates two document nonterminals into one.
+             * @tparam CALLBACK1 Callback type invoked when nonterminals are removed.
+             * @tparam CALLBACK2 Callback type invoked when nonterminals are added.
+             * @param left Nonterminal of the left document.
+             * @param right Nonterminal of the right document.
              * @param process_document If true, update the document set in the grammar.
              * @param dic Dynamic grammar updated during concatenation.
-             * @param callback_for_removed_signatures Callback invoked for removed signatures.
-             * @param callback_for_added_signatures Callback invoked for added signatures.
+             * @param callback_for_removed_nonterminals Callback invoked for removed nonterminals.
+             * @param callback_for_added_nonterminals Callback invoked for added nonterminals.
              * @param message_paragraph Indentation level for progress messages.
-             * @return Signature of the concatenated document.
+             * @return Nonterminal of the concatenated document.
              */
             template <typename CALLBACK1 = decltype(no_callback), typename CALLBACK2 = decltype(no_callback)>
-            static int64_t concatenate(int64_t left, int64_t right, bool process_document, DynamicGrammarForLayeredRLSLP &dic, CALLBACK1 &callback_for_removed_signatures = no_callback, CALLBACK2 &callback_for_added_signatures = no_callback, int message_paragraph = stool::Message::SHOW_MESSAGE)
+            static int64_t concatenate(int64_t left, int64_t right, bool process_document, DynamicGrammarForLayeredRLSLP &dic, CALLBACK1 &callback_for_removed_nonterminals = no_callback, CALLBACK2 &callback_for_added_nonterminals = no_callback, int message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 FastCommonSequenceBuilder::initialize(dic.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression);
                 const DictionaryForLayeredRLSLP &small_dic = dic.get_dictionary();
 
 #ifdef DEBUG
-                int64_t leftLen = SignatureFunctions::get_length(left, small_dic.get_base_signature_length_list());
-                int64_t rightLen = SignatureFunctions::get_length(right, small_dic.get_base_signature_length_list());
+                int64_t leftLen = NonterminalFunctions::get_length(left, small_dic.get_explicit_nonterminal_length_list());
+                int64_t rightLen = NonterminalFunctions::get_length(right, small_dic.get_explicit_nonterminal_length_list());
 #endif
 
                 RunRuleVector left2 = FastCommonSequenceBuilder::build(left, small_dic);
                 RunRuleVector right2 = FastCommonSequenceBuilder::build(right, small_dic);
 
 
-                SignatureWithRelativeLevel p = CommonSequenceCompiler::LR_compile(left2, right2, dic, callback_for_added_signatures, stool::Message::increment_paragraph_level(message_paragraph));
+                NonterminalWithRelativeLevel p = CommonSequenceCompiler::LR_compile(left2, right2, dic, callback_for_added_nonterminals, stool::Message::increment_paragraph_level(message_paragraph));
 
 #ifdef SLOWDEBUG
                 this->CheckDocumentKey(p);
 #endif
 
 #ifdef DEBUG
-                [[maybe_unused]] int64_t resultLen = SignatureFunctions::get_length(p, small_dic.get_base_signature_length_list());
+                [[maybe_unused]] int64_t resultLen = NonterminalFunctions::get_length(p, small_dic.get_explicit_nonterminal_length_list());
                 assert(leftLen + rightLen == resultLen);
                 assert(resultLen > 0);
 #endif
 
                 if (process_document)
                 {
-                    dic.remove_document(left, callback_for_removed_signatures);
-                    dic.remove_document(right, callback_for_removed_signatures);
+                    dic.remove_document(left, callback_for_removed_nonterminals);
+                    dic.remove_document(right, callback_for_removed_nonterminals);
 
                     dic.add_document(p);
                 }

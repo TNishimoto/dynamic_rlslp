@@ -76,8 +76,8 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Construct a vector containing a single signature run.
-             * @param number Encoded signature identifier.
+             * @brief Construct a vector containing a single nonterminal run.
+             * @param number Encoded nonterminal identifier.
              * @param dic Layered RLSLP dictionary.
              */
             RunRuleVector(int64_t number, const DictionaryForLayeredRLSLP &dic)
@@ -248,7 +248,7 @@ namespace dynRLSLP
                 {
                     for (auto it : this->left_lines[i])
                     {
-                        size += it.get_length(this->dic.get_base_signature_length_list());
+                        size += it.get_length(this->dic.get_explicit_nonterminal_length_list());
                     }
                 }
                 return size;
@@ -304,7 +304,7 @@ namespace dynRLSLP
                         tmp_item_count++;
                         if (max_string_length != INT64_MAX)
                         {
-                            tmp_string_length += this->left_lines[i][j].get_length(this->dic.get_base_signature_length_list());
+                            tmp_string_length += this->left_lines[i][j].get_length(this->dic.get_explicit_nonterminal_length_list());
                             if (tmp_string_length >= max_string_length)
                             {
                                 tmp.update_front_and_back_level();
@@ -327,7 +327,7 @@ namespace dynRLSLP
 
                         if (max_string_length != INT64_MAX)
                         {
-                            tmp_string_length += this->right_lines[i][j].get_length(this->dic.get_base_signature_length_list());
+                            tmp_string_length += this->right_lines[i][j].get_length(this->dic.get_explicit_nonterminal_length_list());
                             if (tmp_string_length >= max_string_length)
                             {
                                 tmp.update_front_and_back_level();
@@ -490,7 +490,7 @@ namespace dynRLSLP
              * @return bool
              */
                 assert(!this->is_empty());
-                return this->peek_front().get_length(this->dic.get_base_signature_length_list());
+                return this->peek_front().get_length(this->dic.get_explicit_nonterminal_length_list());
             }
             /**
              * @brief Return the derived length of the backmost run.
@@ -503,7 +503,7 @@ namespace dynRLSLP
              * @return bool
              */
                 assert(!this->is_empty());
-                return this->peek_back().get_length(this->dic.get_base_signature_length_list());
+                return this->peek_back().get_length(this->dic.get_explicit_nonterminal_length_list());
             }
 
             /**
@@ -518,11 +518,11 @@ namespace dynRLSLP
                 {
                     for (RunRuleBody it : this->left_lines[i])
                     {
-                        length += it.get_length(this->dic.get_base_signature_length_list());
+                        length += it.get_length(this->dic.get_explicit_nonterminal_length_list());
                     }
                     for (RunRuleBody it : this->right_lines[i])
                     {
-                        length += it.get_length(this->dic.get_base_signature_length_list());
+                        length += it.get_length(this->dic.get_explicit_nonterminal_length_list());
                     }
                 }
                 return length;
@@ -540,8 +540,8 @@ namespace dynRLSLP
              */
                 assert(this->front_level() != -1);
                 RunRuleBody p = this->peek_front();
-                uint64_t length = SignatureFunctions::get_length(p.number, this->dic.get_base_signature_length_list()) * p.power;
-                uint64_t level = SignatureFunctions::get_level(p.number, this->dic.get_base_signature_level_list());
+                uint64_t length = NonterminalFunctions::get_length(p.number, this->dic.get_explicit_nonterminal_length_list()) * p.power;
+                uint64_t level = NonterminalFunctions::get_level(p.number, this->dic.get_explicit_nonterminal_level_list());
                 return RLSLPRuleInfo(RLSLPRuleBody::create_run_rule_body(p.number, p.power), length, level);
             }
             /**
@@ -557,8 +557,8 @@ namespace dynRLSLP
              */
                 assert(this->back_level() != -1);
                 RunRuleBody p = this->peek_back();
-                uint64_t length = SignatureFunctions::get_length(p.number, this->dic.get_base_signature_length_list()) * p.power;
-                uint64_t level = SignatureFunctions::get_level(p.number, this->dic.get_base_signature_level_list());
+                uint64_t length = NonterminalFunctions::get_length(p.number, this->dic.get_explicit_nonterminal_length_list()) * p.power;
+                uint64_t level = NonterminalFunctions::get_level(p.number, this->dic.get_explicit_nonterminal_level_list());
                 return RLSLPRuleInfo(RLSLPRuleBody::create_run_rule_body(p.number, p.power), length, level);
             }
             /**
@@ -648,24 +648,24 @@ namespace dynRLSLP
 
             /**
              * @brief Return whether any run decodes to a null rule.
-             * ('@param base_signature_rule_list', 'Base-signature rule list.')
+             * ('@param explicit_nonterminal_rule_list', 'Base-nonterminal rule list.')
              * @return bool
              */
-            bool has_null_item([[maybe_unused]] const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
+            bool has_null_item([[maybe_unused]] const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list) const
             {
                 int64_t max_level = this->get_max_level();
                 for (int64_t i = 0; i <= max_level; i++)
                 {
                     for (RunRuleBody it : this->left_lines[i])
                     {
-                        if (RLSLPRuleBody::decode_rule(it.number, base_signature_rule_list).get_type() == RLSLPRuleType::Null)
+                        if (RLSLPRuleBody::decode_rule(it.number, explicit_nonterminal_rule_list).get_type() == RLSLPRuleType::Null)
                         {
                             return true;
                         }
                     }
                     for (RunRuleBody it : this->right_lines[i])
                     {
-                        if (RLSLPRuleBody::decode_rule(it.number, base_signature_rule_list).get_type() == RLSLPRuleType::Null)
+                        if (RLSLPRuleBody::decode_rule(it.number, explicit_nonterminal_rule_list).get_type() == RLSLPRuleType::Null)
                         {
                             return true;
                         }
@@ -983,7 +983,7 @@ namespace dynRLSLP
                 assert(this->front_level() > 0);
                 int64_t level = this->front_level();
                 RunRuleBody pop = this->pop_front();
-                int64_t child_level = SignatureFunctions::get_level(pop.number, this->dic.get_base_signature_level_list());
+                int64_t child_level = NonterminalFunctions::get_level(pop.number, this->dic.get_explicit_nonterminal_level_list());
 
                 assert(child_level <= level);
                 if (pop.power > 1)
@@ -1002,7 +1002,7 @@ namespace dynRLSLP
 
                     std::vector<RunRuleBody> pairs;
                     // RLSLPRuleBody child = itemList[pop.number];
-                    RunRuleBody::y_break(pop.number, this->dic.get_base_signature_rule_list(), this->dic.get_base_signature_level_list(), pairs);
+                    RunRuleBody::y_break(pop.number, this->dic.get_explicit_nonterminal_rule_list(), this->dic.get_explicit_nonterminal_level_list(), pairs);
                     assert(pairs.size() > 0);
 
                     if (this->get_max_level() < level - 1)
@@ -1012,7 +1012,7 @@ namespace dynRLSLP
 
                     for (RunRuleBody it : pairs)
                     {
-                        assert((int64_t)SignatureFunctions::get_level(it.number, this->dic.get_base_signature_level_list()) <= level - 1);
+                        assert((int64_t)NonterminalFunctions::get_level(it.number, this->dic.get_explicit_nonterminal_level_list()) <= level - 1);
                         this->left_lines[level - 1].push_back(it);
                     }
                     this->update_front_level_by_insertion(level - 1, true);
@@ -1025,7 +1025,7 @@ namespace dynRLSLP
                     {
                         this->set_dummy_lines(level - 1, true);
                     }
-                    assert(SignatureFunctions::get_level(pop.number, this->dic.get_base_signature_level_list()) <= level - 1);
+                    assert(NonterminalFunctions::get_level(pop.number, this->dic.get_explicit_nonterminal_level_list()) <= level - 1);
                     assert((int64_t)level - 1 >= 0 && (int64_t)level - 1 < (int64_t)this->left_lines.size());
                     this->left_lines[level - 1].push_back(RunRuleBody(pop.number, 1));
                     this->update_front_level_by_insertion(level - 1, true);
@@ -1044,7 +1044,7 @@ namespace dynRLSLP
                 assert(this->back_level() > 0);
                 int64_t level = this->back_level();
                 RunRuleBody pop = this->pop_back();
-                uint16_t child_level = SignatureFunctions::get_level(pop.number, this->dic.get_base_signature_level_list());
+                uint16_t child_level = NonterminalFunctions::get_level(pop.number, this->dic.get_explicit_nonterminal_level_list());
 
                 assert(child_level <= level);
                 if (pop.power > 1)
@@ -1062,7 +1062,7 @@ namespace dynRLSLP
                 {
                     std::vector<RunRuleBody> pairs;
                     // RLSLPRuleBody child = itemList[pop.number];
-                    RunRuleBody::y_break(pop.number, this->dic.get_base_signature_rule_list(), this->dic.get_base_signature_level_list(), pairs);
+                    RunRuleBody::y_break(pop.number, this->dic.get_explicit_nonterminal_rule_list(), this->dic.get_explicit_nonterminal_level_list(), pairs);
                     assert(pairs.size() > 0);
 
                     if (this->get_max_level() < level - 1)
@@ -1071,7 +1071,7 @@ namespace dynRLSLP
                     }
                     for (RunRuleBody it : pairs)
                     {
-                        assert(SignatureFunctions::get_level(it.number, this->dic.get_base_signature_level_list()) <= level - 1);
+                        assert(NonterminalFunctions::get_level(it.number, this->dic.get_explicit_nonterminal_level_list()) <= level - 1);
                         assert((int64_t)level - 1 >= 0 && (int64_t)level - 1 < (int64_t)this->right_lines.size());
                         this->right_lines[level - 1].push_back(it);
                     }
@@ -1303,7 +1303,7 @@ namespace dynRLSLP
                 for (RunRuleBody it : items)
                 {
                     r.append(it.to_string());
-                    r.append(std::to_string(it.get_length(this->dic.get_base_signature_length_list())));
+                    r.append(std::to_string(it.get_length(this->dic.get_explicit_nonterminal_length_list())));
                 }
                 return r;
             }
@@ -1444,16 +1444,16 @@ namespace dynRLSLP
                 {
                     for (int64_t j = 0; j < (int64_t)this->left_lines[i].size(); j++)
                     {
-                        if (i < SignatureFunctions::get_level(this->left_lines[i][j].number, this->dic.get_base_signature_level_list()))
+                        if (i < NonterminalFunctions::get_level(this->left_lines[i][j].number, this->dic.get_explicit_nonterminal_level_list()))
                         {
-                            throw std::runtime_error("Error in verify: i < SignatureFunctions::get_level(this->left_lines[i][j].number, this->base_signature_level_list)");
+                            throw std::runtime_error("Error in verify: i < NonterminalFunctions::get_level(this->left_lines[i][j].number, this->explicit_nonterminal_level_list)");
                         }
                     }
                     for (int64_t j = 0; j < (int64_t)this->right_lines[i].size(); j++)
                     {
-                        if (i < SignatureFunctions::get_level(this->right_lines[i][j].number, this->dic.get_base_signature_level_list()))
+                        if (i < NonterminalFunctions::get_level(this->right_lines[i][j].number, this->dic.get_explicit_nonterminal_level_list()))
                         {
-                            throw std::runtime_error("Error in verify: i < SignatureFunctions::get_level(this->right_lines[i][j].number, this->base_signature_level_list)");
+                            throw std::runtime_error("Error in verify: i < NonterminalFunctions::get_level(this->right_lines[i][j].number, this->explicit_nonterminal_level_list)");
                         }
                     }
                 }
@@ -1552,8 +1552,8 @@ namespace dynRLSLP
                 std::vector<RunRuleBody> items = this->to_vector();
                 for (auto it : items)
                 {
-                    it.decompress(this->dic.get_base_signature_rule_list(), output);
-                    //body.decompress(this->base_signature_rule_list, output);
+                    it.decompress(this->dic.get_explicit_nonterminal_rule_list(), output);
+                    //body.decompress(this->explicit_nonterminal_rule_list, output);
                 }
             }
             /**
@@ -1576,13 +1576,13 @@ namespace dynRLSLP
                 std::vector<uint64_t> r;
                 auto items = this->to_vector();
 
-                const std::vector<uint64_t>& base_signature_length_list = this->dic.get_base_signature_length_list();
+                const std::vector<uint64_t>& explicit_nonterminal_length_list = this->dic.get_explicit_nonterminal_length_list();
                 if (items.size() > 0)
                 {
                     uint64_t p = 0;
                     for (RunRuleBody it : items)
                     {
-                        p += SignatureFunctions::get_length(it.number, base_signature_length_list) * it.power;
+                        p += NonterminalFunctions::get_length(it.number, explicit_nonterminal_length_list) * it.power;
                         r.push_back(p);
                     }
                     r.pop_back();
@@ -1649,8 +1649,8 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Create a substring vector for signature item over [pos, pos+len).
-             * ('@param item', 'Encoded signature.')
+             * @brief Create a substring vector for nonterminal item over [pos, pos+len).
+             * ('@param item', 'Encoded nonterminal.')
              * ('@param pos', 'Start offset.')
              * ('@param len', 'Length.')
              * ('@param dic', 'Dictionary.')
@@ -1661,7 +1661,7 @@ namespace dynRLSLP
                 assert(len >= 0);
                 RunRuleVector r(item, dic);
 
-                int64_t item_len = SignatureFunctions::get_length(item, dic.get_base_signature_length_list());
+                int64_t item_len = NonterminalFunctions::get_length(item, dic.get_explicit_nonterminal_length_list());
                 if (pos >= item_len)
                 {
                     throw std::runtime_error("Error in create: pos >= item_len");
@@ -1674,15 +1674,15 @@ namespace dynRLSLP
                 return r.create_substring_link(pos, len);
             }
             /**
-             * @brief Create a suffix vector for signature item starting at pos.
-             * ('@param item', 'Encoded signature.')
+             * @brief Create a suffix vector for nonterminal item starting at pos.
+             * ('@param item', 'Encoded nonterminal.')
              * ('@param pos', 'Start offset.')
              * ('@param dic', 'Dictionary.')
              * @return Suffix run-rule vector.
              */
             static RunRuleVector create(int64_t item, int64_t pos, const DictionaryForLayeredRLSLP &dic)
             {
-                int64_t len = SignatureFunctions::get_length(item, dic.get_base_signature_length_list());
+                int64_t len = NonterminalFunctions::get_length(item, dic.get_explicit_nonterminal_length_list());
                 if (pos >= len)
                 {
                     throw std::runtime_error("Error in create: pos >= len");
@@ -1706,11 +1706,11 @@ namespace dynRLSLP
                     std::vector<RunRuleBody> tmp;
                     for (auto it : this->left_lines[max_level])
                     {
-                        break_item(it, max_level, this->dic.get_base_signature_rule_list(), this->dic.get_base_signature_level_list(), tmp);
+                        break_item(it, max_level, this->dic.get_explicit_nonterminal_rule_list(), this->dic.get_explicit_nonterminal_level_list(), tmp);
                     }
                     for (auto it : this->right_lines[max_level])
                     {
-                        break_item(it, max_level, this->dic.get_base_signature_rule_list(), this->dic.get_base_signature_level_list(), tmp);
+                        break_item(it, max_level, this->dic.get_explicit_nonterminal_rule_list(), this->dic.get_explicit_nonterminal_level_list(), tmp);
                     }
                     for (auto it : tmp)
                     {
@@ -2022,20 +2022,20 @@ namespace dynRLSLP
              * @brief Decompose a run at a given level into lower-level runs.
              * @param item Rule body item.
              * @param level Derivation-tree level.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @param base_signature_level_list Base-signature level list (H).
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @param explicit_nonterminal_level_list Base-nonterminal level list (H).
              * @param output Output container for decompressed data.
              */
-            static void break_item(const RunRuleBody &item, uint64_t level, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint16_t> &base_signature_level_list, std::vector<RunRuleBody> &output)
+            static void break_item(const RunRuleBody &item, uint64_t level, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list, const std::vector<uint16_t> &explicit_nonterminal_level_list, std::vector<RunRuleBody> &output)
             {
-                uint16_t child_level = SignatureFunctions::get_level(item.number, base_signature_level_list);
+                uint16_t child_level = NonterminalFunctions::get_level(item.number, explicit_nonterminal_level_list);
 
                 assert(child_level <= level);
 
                 if (child_level == level)
                 {
                     std::vector<RunRuleBody> tmp;
-                    RunRuleBody::y_break(item.number, base_signature_rule_list, base_signature_level_list, tmp);
+                    RunRuleBody::y_break(item.number, explicit_nonterminal_rule_list, explicit_nonterminal_level_list, tmp);
                     for (uint64_t i = 0; i < item.power; i++)
                     {
                         for (RunRuleBody it : tmp)
@@ -2062,12 +2062,12 @@ namespace dynRLSLP
                 std::vector<RunRuleBody> items;
                 for (auto it : vec.left_lines[max_level])
                 {
-                    assert(SignatureFunctions::get_level(it.number, vec.dic.get_base_signature_level_list()) <= current_level);
+                    assert(NonterminalFunctions::get_level(it.number, vec.dic.get_explicit_nonterminal_level_list()) <= current_level);
                     items.push_back(it);
                 }
                 for (auto it : vec.right_lines[max_level])
                 {
-                    assert(SignatureFunctions::get_level(it.number, vec.dic.get_base_signature_level_list()) <= current_level);
+                    assert(NonterminalFunctions::get_level(it.number, vec.dic.get_explicit_nonterminal_level_list()) <= current_level);
                     items.push_back(it);
                 }
 
@@ -2077,7 +2077,7 @@ namespace dynRLSLP
                     for (auto it : items)
                     {
                         int64_t power = it.power;
-                        char c = RLSLPRuleBody::decode_rule(it.number, vec.dic.get_base_signature_rule_list()).A;
+                        char c = RLSLPRuleBody::decode_rule(it.number, vec.dic.get_explicit_nonterminal_rule_list()).A;
                         for (int64_t i = 0; i < power; i++)
                         {
                             assert(p < output_strings.size());
@@ -2096,7 +2096,7 @@ namespace dynRLSLP
 
                 uint64_t starting_position = vec.compute_ceil_string_starting_position();
                 uint64_t p = 0;
-                const std::vector<uint64_t>& base_signature_length_list = vec.dic.get_base_signature_length_list();
+                const std::vector<uint64_t>& explicit_nonterminal_length_list = vec.dic.get_explicit_nonterminal_length_list();
                 for (uint64_t i = 0; i < starting_position; i++)
                 {
                     assert(p < output_strings.size());
@@ -2108,7 +2108,7 @@ namespace dynRLSLP
                     output_strings[p].push_back('-');
 
                     output_strings[p++].append(it.to_string());
-                    uint64_t length = it.get_length(base_signature_length_list);
+                    uint64_t length = it.get_length(explicit_nonterminal_length_list);
                     for (uint64_t j = 1; j < length; j++)
                     {
                         output_strings[p++].push_back('-');

@@ -1,6 +1,6 @@
 #pragma once
 #include "./rlslp_rule_body.hpp"
-#include "./signature_functions.hpp"
+#include "./nonterminal_functions.hpp"
 #include "stool/include/all.hpp"
 namespace dynRLSLP
 {
@@ -11,7 +11,7 @@ namespace dynRLSLP
         struct RunRuleBody
         {
         public:
-            /** Nonterminal signature *X*. */
+            /** Nonterminal nonterminal *X*. */
             uint64_t number;
 
             /** Repetition count *k*. */
@@ -19,7 +19,7 @@ namespace dynRLSLP
 
             /**
              * @brief Construct a run from a nonterminal and repetition count.
-             * @param number Nonterminal signature (X).
+             * @param number Nonterminal nonterminal (X).
              * @param power Repetition count (k).
              */
             RunRuleBody(uint64_t number, uint64_t power)
@@ -61,13 +61,13 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Return the string length of a signature using the base length list.
-             * @param base_signature_length_list Base-signature length list (L).
+             * @brief Return the string length of a nonterminal using the base length list.
+             * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
              * @return Computed integer value.
              */
-            uint64_t get_length(const std::vector<uint64_t>& base_signature_length_list) const
+            uint64_t get_length(const std::vector<uint64_t>& explicit_nonterminal_length_list) const
             {
-                return base_signature_length_list[SignatureFunctions::get_base_signature(this->number)] * this->power;
+                return explicit_nonterminal_length_list[NonterminalFunctions::get_explicit_nonterminal(this->number)] * this->power;
             }
 
             /**
@@ -98,14 +98,14 @@ namespace dynRLSLP
             /**
              * @brief Append the expanded string of this run to an output container.
              * @param OUTPUT_VEC_TYPE Output container type.
-             * @param base_signature_rule_list Base-signature rule list (D).
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
              * @param output Output container for decompressed bytes.
              */
             template <typename OUTPUT_VEC_TYPE = std::vector<uint8_t>>
-            void decompress(const std::vector<RLSLPRuleBody> &base_signature_rule_list, OUTPUT_VEC_TYPE &output) const {
+            void decompress(const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list, OUTPUT_VEC_TYPE &output) const {
                 for(int64_t i = 0; i < (int64_t)this->power; i++){
-                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(this->number, base_signature_rule_list);
-                    item.decompress(base_signature_rule_list, output);
+                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(this->number, explicit_nonterminal_rule_list);
+                    item.decompress(explicit_nonterminal_rule_list, output);
                 }
             }
 
@@ -148,7 +148,7 @@ namespace dynRLSLP
              * @param seq Input run sequence.
              * @return True if the check succeeds.
              */
-            static bool is_single_signature(SEQ_TYPE &seq)
+            static bool is_single_nonterminal(SEQ_TYPE &seq)
             {
                 if (seq.size() != 1)
                 {
@@ -200,7 +200,7 @@ namespace dynRLSLP
              * @brief Merge adjacent runs with the same nonterminal.
              * @param items Sequence of run rules or integers.
              */
-            static void merge_same_signatures(VEC_TYPE &items)
+            static void merge_same_nonterminals(VEC_TYPE &items)
             {
                 VEC_TYPE tmp;
                 if (items.size() > 0)
@@ -227,48 +227,48 @@ namespace dynRLSLP
             /**
              * @brief Return total string length of a run vector.
              * @param items Sequence of run rules or integers.
-             * @param base_signature_length_list Base-signature length list (L).
+             * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
              * @return Computed integer value.
              */
-            static int64_t compute_string_length(const VEC_TYPE &items, const std::vector<uint64_t>& base_signature_length_list)
+            static int64_t compute_string_length(const VEC_TYPE &items, const std::vector<uint64_t>& explicit_nonterminal_length_list)
             {
                 uint64_t length = 0;
                 for (int64_t i = 0; i < (int64_t)items.size(); i++)
                 {
-                    length += items[i].get_length(base_signature_length_list);
+                    length += items[i].get_length(explicit_nonterminal_length_list);
                 }
                 return length;
             }
 
             /**
-             * @brief Recursively decompose a signature into a sequence of RunRuleBody objects.
-             * @param signature Signature to decompose.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @param base_signature_level_list Base-signature level list (H).
+             * @brief Recursively decompose a nonterminal into a sequence of RunRuleBody objects.
+             * @param nonterminal Nonterminal to decompose.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @param explicit_nonterminal_level_list Base-nonterminal level list (H).
              * @param output Output vector of runs.
              */
-            static void y_break(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint16_t> &base_signature_level_list, std::vector<RunRuleBody> &output)
+            static void y_break(NonterminalWithRelativeLevel nonterminal, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list, const std::vector<uint16_t> &explicit_nonterminal_level_list, std::vector<RunRuleBody> &output)
             {
-                uint16_t child_level = SignatureFunctions::get_level(signature, base_signature_level_list);
-                RLSLPRuleBody child = RLSLPRuleBody::decode_rule(signature, base_signature_rule_list);
+                uint16_t child_level = NonterminalFunctions::get_level(nonterminal, explicit_nonterminal_level_list);
+                RLSLPRuleBody child = RLSLPRuleBody::decode_rule(nonterminal, explicit_nonterminal_rule_list);
                 if(child.get_type() == RLSLPRuleType::Power){
                     output.push_back(RunRuleBody(child.A, child.B));
                 }else if(child.get_type() == RLSLPRuleType::Pair){
-                    uint64_t left_level = SignatureFunctions::get_level(child.A, base_signature_level_list);
+                    uint64_t left_level = NonterminalFunctions::get_level(child.A, explicit_nonterminal_level_list);
                     if(left_level < child_level){
                         output.push_back(RunRuleBody(child.A, 1));
                         output.push_back(RunRuleBody(child.B, 1));
                     }else{
-                        y_break(child.A, base_signature_rule_list, base_signature_level_list, output);
+                        y_break(child.A, explicit_nonterminal_rule_list, explicit_nonterminal_level_list, output);
                         output.push_back(RunRuleBody(child.B, 1));
                     }
                 }
-                else if(child.get_type() == RLSLPRuleType::Signature){
-                    uint64_t level = SignatureFunctions::get_level(child.A, base_signature_level_list);
+                else if(child.get_type() == RLSLPRuleType::Nonterminal){
+                    uint64_t level = NonterminalFunctions::get_level(child.A, explicit_nonterminal_level_list);
                     if(level < child_level){
                         output.push_back(RunRuleBody(child.A, 1));
                     }else{
-                        y_break(child.A, base_signature_rule_list, base_signature_level_list, output);
+                        y_break(child.A, explicit_nonterminal_rule_list, explicit_nonterminal_level_list, output);
                     }
 
                 }

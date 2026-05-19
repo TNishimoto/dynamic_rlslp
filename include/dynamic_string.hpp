@@ -116,12 +116,12 @@ namespace dynRLSLP
             {
                 const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
                 const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
-                const std::vector<uint64_t> &base_signature_length_list = this->dynamic_grammar.get_base_signature_length_list();
-                const std::vector<RLSLPRuleBody> &base_signature_rule_list = this->dynamic_grammar.get_base_signature_rule_list();
+                const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
+                const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
 
-                uint64_t signature = grammar.get_root();
-                RLSLPRuleBody item = small_dic.get_item(signature);
-                auto c = Access::random_access(item, pos, base_signature_rule_list, base_signature_length_list);
+                uint64_t nonterminal = grammar.get_root();
+                RLSLPRuleBody item = small_dic.get_item(nonterminal);
+                auto c = Access::random_access(item, pos, explicit_nonterminal_rule_list, explicit_nonterminal_length_list);
                 return c;
             }
         }
@@ -194,9 +194,9 @@ namespace dynRLSLP
             else
             {
                 const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
-                SignatureWithRelativeLevel signature = grammar.get_root();
-                const std::vector<uint64_t> &base_signature_length_list = this->dynamic_grammar.get_base_signature_length_list();
-                return SignatureFunctions::get_length(signature, base_signature_length_list);
+                NonterminalWithRelativeLevel nonterminal = grammar.get_root();
+                const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
+                return NonterminalFunctions::get_length(nonterminal, explicit_nonterminal_length_list);
             }
         }
         /**
@@ -208,12 +208,12 @@ namespace dynRLSLP
             return this->dynamic_grammar.get_alphabet();
         }
         /**
-         * @brief Get the number of non-null rules in the base signature rule list of \p G.
-         * @return Count of grammar rules excluding null signatures.
+         * @brief Get the number of non-null rules in the base nonterminal rule list of \p G.
+         * @return Count of grammar rules excluding null nonterminals.
          */
         uint64_t get_grammar_size() const
         {
-            return this->dynamic_grammar.signature_count_without_null_signatures();
+            return this->dynamic_grammar.nonterminal_count_without_null_nonterminals();
         }
 
         /**
@@ -231,18 +231,18 @@ namespace dynRLSLP
          * @param i Signature (with relative level) of the rule.
          * @return Length of the left-derived substring for a Pair or Power rule.
          */
-        uint64_t get_left_string_length(SignatureWithRelativeLevel i) const
+        uint64_t get_left_string_length(NonterminalWithRelativeLevel i) const
         {
             const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
             RLSLPRuleBody item = small_dic.get_item(i);
-            const std::vector<uint64_t> &base_signature_length_list = this->dynamic_grammar.get_base_signature_length_list();
+            const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
             if (item.get_type() == RLSLPRuleType::Pair)
             {
-                return SignatureFunctions::get_length(item.A, base_signature_length_list);
+                return NonterminalFunctions::get_length(item.A, explicit_nonterminal_length_list);
             }
             else if (item.get_type() == RLSLPRuleType::Power)
             {
-                return SignatureFunctions::get_length(item.A, base_signature_length_list);
+                return NonterminalFunctions::get_length(item.A, explicit_nonterminal_length_list);
             }
             else
             {
@@ -327,12 +327,12 @@ namespace dynRLSLP
             {
                 return "";
             }
-            const std::vector<RLSLPRuleBody> &base_signature_rule_list = this->dynamic_grammar.get_base_signature_rule_list();
+            const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
             const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
             const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
-            SignatureWithRelativeLevel root = grammar.get_root();
+            NonterminalWithRelativeLevel root = grammar.get_root();
             RLSLPRuleBody item = small_dic.get_item(root);
-            std::string s = Access::get_string(item, base_signature_rule_list);
+            std::string s = Access::get_string(item, explicit_nonterminal_rule_list);
 
             return s;
         }
@@ -358,11 +358,11 @@ namespace dynRLSLP
             else
             {
                 std::vector<uint8_t> text;
-                const std::vector<RLSLPRuleBody> &base_signature_rule_list = this->dynamic_grammar.get_base_signature_rule_list();
+                const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
                 const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
-                SignatureWithRelativeLevel root = grammar.get_root();
-                RLSLPRuleBody rootBody = RLSLPRuleBody::decode_rule(root, base_signature_rule_list);
-                rootBody.decompress(base_signature_rule_list, text);
+                NonterminalWithRelativeLevel root = grammar.get_root();
+                RLSLPRuleBody rootBody = RLSLPRuleBody::decode_rule(root, explicit_nonterminal_rule_list);
+                rootBody.decompress(explicit_nonterminal_rule_list, text);
                 return text;
             }
         }
@@ -405,7 +405,7 @@ namespace dynRLSLP
                         throw std::runtime_error("set_mode: DictionaryMode::Fast is not supported when the alphabet is not explicit");
                     }
 
-                    uint64_t ruleSize = this->dynamic_grammar.base_signature_count();
+                    uint64_t ruleSize = this->dynamic_grammar.explicit_nonterminal_count();
                     this->leftShortStringList.resize(ruleSize, UINT64_MAX);
                     this->rightShortStringList.resize(ruleSize, UINT64_MAX);
 
@@ -434,27 +434,27 @@ namespace dynRLSLP
 
         /**
          * @brief Insert a byte pattern into \p T at position \p i, invoking callbacks on grammar changes.
-         * @tparam CALLBACK1 Callable invoked before a signature is removed (\p SignatureWithRelativeLevel).
-         * @tparam CALLBACK2 Callable invoked after a signature is inserted (\p SignatureWithRelativeLevel).
+         * @tparam CALLBACK1 Callable invoked before a nonterminal is removed (\p NonterminalWithRelativeLevel).
+         * @tparam CALLBACK2 Callable invoked after a nonterminal is inserted (\p NonterminalWithRelativeLevel).
          * @param i Insert position (0 .. |T|).
          * @param pattern Byte sequence to insert.
-         * @param preprocessor_for_removed_signature Callback run before signature removal.
-         * @param postprocessor_for_inserted_signature Callback run after signature insertion.
+         * @param preprocessor_for_removed_nonterminal Callback run before nonterminal removal.
+         * @param postprocessor_for_inserted_nonterminal Callback run after nonterminal insertion.
          */
         template <typename CALLBACK1 = decltype(no_callback), typename CALLBACK2 = decltype(no_callback)>
-        void insert_string_with_callback(int64_t i, const std::vector<uint8_t> &pattern, const CALLBACK1 &preprocessor_for_removed_signature = no_callback, const CALLBACK2 &postprocessor_for_inserted_signature = no_callback)
+        void insert_string_with_callback(int64_t i, const std::vector<uint8_t> &pattern, const CALLBACK1 &preprocessor_for_removed_nonterminal = no_callback, const CALLBACK2 &postprocessor_for_inserted_nonterminal = no_callback)
         {
-            std::unordered_set<SignatureWithRelativeLevel> changed_signatures;
+            std::unordered_set<NonterminalWithRelativeLevel> changed_nonterminals;
             const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
-            auto wrapped_preprocessor_for_removed_signature = [&](SignatureWithRelativeLevel sig)
+            auto wrapped_preprocessor_for_removed_nonterminal = [&](NonterminalWithRelativeLevel sig)
             {
-                this->callback_for_removed_signature(sig, changed_signatures);
-                preprocessor_for_removed_signature(sig);
+                this->callback_for_removed_nonterminal(sig, changed_nonterminals);
+                preprocessor_for_removed_nonterminal(sig);
             };
-            auto wrapped_postprocessor_for_inserted_signature = [&](SignatureWithRelativeLevel sig)
+            auto wrapped_postprocessor_for_inserted_nonterminal = [&](NonterminalWithRelativeLevel sig)
             {
-                this->callback_for_added_signature(sig, changed_signatures);
-                postprocessor_for_inserted_signature(sig);
+                this->callback_for_added_nonterminal(sig, changed_nonterminals);
+                postprocessor_for_inserted_nonterminal(sig);
             };
 
             uint64_t size = this->size();
@@ -466,7 +466,7 @@ namespace dynRLSLP
             else if (size == 0)
             {
 
-                Compress::compress(this->dynamic_grammar, pattern, postprocessor_for_inserted_signature, stool::Message::NO_MESSAGE);
+                Compress::compress(this->dynamic_grammar, pattern, postprocessor_for_inserted_nonterminal, stool::Message::NO_MESSAGE);
                 assert(this->size() == size + pattern.size());
                 assert(this->dynamic_grammar.get_document_count() == 1);
             }
@@ -478,13 +478,13 @@ namespace dynRLSLP
 
                     uint64_t leftLen = i;
 
-                    SignatureWithRelativeLevel root = grammar.get_root();
-                    auto pair = SplitAndConcatenation::split(root, leftLen, true, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_signature, wrapped_postprocessor_for_inserted_signature);
+                    NonterminalWithRelativeLevel root = grammar.get_root();
+                    auto pair = SplitAndConcatenation::split(root, leftLen, true, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
 
-                    SignatureWithRelativeLevel pattern_sig = Compress::compress(this->dynamic_grammar, pattern, wrapped_postprocessor_for_inserted_signature, stool::Message::NO_MESSAGE);
-                    SignatureWithRelativeLevel LC = SplitAndConcatenation::concatenate(pair.first, pattern_sig, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_signature, wrapped_postprocessor_for_inserted_signature);
+                    NonterminalWithRelativeLevel pattern_sig = Compress::compress(this->dynamic_grammar, pattern, wrapped_postprocessor_for_inserted_nonterminal, stool::Message::NO_MESSAGE);
+                    NonterminalWithRelativeLevel LC = SplitAndConcatenation::concatenate(pair.first, pattern_sig, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
 
-                    [[maybe_unused]] SignatureWithRelativeLevel LCR = SplitAndConcatenation::concatenate(LC, pair.second, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_signature, wrapped_postprocessor_for_inserted_signature);
+                    [[maybe_unused]] NonterminalWithRelativeLevel LCR = SplitAndConcatenation::concatenate(LC, pair.second, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
 
                     assert(this->size() == size + pattern.size());
                     assert(this->dynamic_grammar.get_document_count() == 1);
@@ -494,11 +494,11 @@ namespace dynRLSLP
                     if (i == 0)
                     {
 
-                        SignatureWithRelativeLevel root = grammar.get_root();
+                        NonterminalWithRelativeLevel root = grammar.get_root();
 
-                        SignatureWithRelativeLevel pattern_sig = Compress::compress(this->dynamic_grammar, pattern, wrapped_postprocessor_for_inserted_signature, stool::Message::NO_MESSAGE);
+                        NonterminalWithRelativeLevel pattern_sig = Compress::compress(this->dynamic_grammar, pattern, wrapped_postprocessor_for_inserted_nonterminal, stool::Message::NO_MESSAGE);
 
-                        SplitAndConcatenation::concatenate(pattern_sig, root, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_signature, wrapped_postprocessor_for_inserted_signature);
+                        SplitAndConcatenation::concatenate(pattern_sig, root, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
 
                         assert(this->size() == size + pattern.size());
                         assert(this->dynamic_grammar.get_document_count() == 1);
@@ -506,9 +506,9 @@ namespace dynRLSLP
                     else if (i == (int64_t)size)
                     {
 
-                        SignatureWithRelativeLevel root = grammar.get_root();
-                        SignatureWithRelativeLevel pattern_sig = Compress::compress(this->dynamic_grammar, pattern, wrapped_postprocessor_for_inserted_signature, stool::Message::NO_MESSAGE);
-                        SplitAndConcatenation::concatenate(root, pattern_sig, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_signature, wrapped_postprocessor_for_inserted_signature);
+                        NonterminalWithRelativeLevel root = grammar.get_root();
+                        NonterminalWithRelativeLevel pattern_sig = Compress::compress(this->dynamic_grammar, pattern, wrapped_postprocessor_for_inserted_nonterminal, stool::Message::NO_MESSAGE);
+                        SplitAndConcatenation::concatenate(root, pattern_sig, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
                         assert(this->size() == size + pattern.size());
                         assert(this->dynamic_grammar.get_document_count() == 1);
                     }
@@ -562,27 +562,27 @@ namespace dynRLSLP
 
         /**
          * @brief Delete a substring from \p T, invoking callbacks on grammar changes.
-         * @tparam CALLBACK1 Callable invoked before a signature is removed (\p SignatureWithRelativeLevel).
-         * @tparam CALLBACK2 Callable invoked after a signature is inserted (\p SignatureWithRelativeLevel).
+         * @tparam CALLBACK1 Callable invoked before a nonterminal is removed (\p NonterminalWithRelativeLevel).
+         * @tparam CALLBACK2 Callable invoked after a nonterminal is inserted (\p NonterminalWithRelativeLevel).
          * @param i Starting position of the range to delete.
          * @param len Number of characters to delete.
-         * @param preprocessor_for_removed_signature Callback run before signature removal.
-         * @param postprocessor_for_inserted_signature Callback run after signature insertion.
+         * @param preprocessor_for_removed_nonterminal Callback run before nonterminal removal.
+         * @param postprocessor_for_inserted_nonterminal Callback run after nonterminal insertion.
          */
         template <typename CALLBACK1 = decltype(no_callback), typename CALLBACK2 = decltype(no_callback)>
-        void delete_substring_with_callback(uint64_t i, uint64_t len, const CALLBACK1 &preprocessor_for_removed_signature = no_callback, const CALLBACK2 &postprocessor_for_inserted_signature = no_callback)
+        void delete_substring_with_callback(uint64_t i, uint64_t len, const CALLBACK1 &preprocessor_for_removed_nonterminal = no_callback, const CALLBACK2 &postprocessor_for_inserted_nonterminal = no_callback)
         {
             const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
-            std::unordered_set<SignatureWithRelativeLevel> changed_signatures;
-            auto wrapped_preprocessor_for_removed_signature = [&](SignatureWithRelativeLevel sig)
+            std::unordered_set<NonterminalWithRelativeLevel> changed_nonterminals;
+            auto wrapped_preprocessor_for_removed_nonterminal = [&](NonterminalWithRelativeLevel sig)
             {
-                this->callback_for_removed_signature(sig, changed_signatures);
-                preprocessor_for_removed_signature(sig);
+                this->callback_for_removed_nonterminal(sig, changed_nonterminals);
+                preprocessor_for_removed_nonterminal(sig);
             };
-            auto wrapped_postprocessor_for_inserted_signature = [&](SignatureWithRelativeLevel sig)
+            auto wrapped_postprocessor_for_inserted_nonterminal = [&](NonterminalWithRelativeLevel sig)
             {
-                this->callback_for_added_signature(sig, changed_signatures);
-                postprocessor_for_inserted_signature(sig);
+                this->callback_for_added_nonterminal(sig, changed_nonterminals);
+                postprocessor_for_inserted_nonterminal(sig);
             };
 
             if (len == 0)
@@ -600,13 +600,13 @@ namespace dynRLSLP
             {
                 uint64_t leftLen1 = end_pos + 1;
                 uint64_t leftLen2 = i;
-                auto pair1 = SplitAndConcatenation::split(grammar.get_root(), leftLen1, true, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_signature, wrapped_postprocessor_for_inserted_signature);
-                auto pair2 = SplitAndConcatenation::split(pair1.first, leftLen2, true, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_signature, wrapped_postprocessor_for_inserted_signature);
-                SignatureWithRelativeLevel L = pair2.first;
-                SignatureWithRelativeLevel C = pair2.second;
-                SignatureWithRelativeLevel R = pair1.second;
-                this->dynamic_grammar.remove_document(C, wrapped_preprocessor_for_removed_signature);
-                SplitAndConcatenation::concatenate(L, R, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_signature, wrapped_postprocessor_for_inserted_signature);
+                auto pair1 = SplitAndConcatenation::split(grammar.get_root(), leftLen1, true, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
+                auto pair2 = SplitAndConcatenation::split(pair1.first, leftLen2, true, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
+                NonterminalWithRelativeLevel L = pair2.first;
+                NonterminalWithRelativeLevel C = pair2.second;
+                NonterminalWithRelativeLevel R = pair1.second;
+                this->dynamic_grammar.remove_document(C, wrapped_preprocessor_for_removed_nonterminal);
+                SplitAndConcatenation::concatenate(L, R, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
             }
             else
             {
@@ -614,45 +614,45 @@ namespace dynRLSLP
                 {
                     if (end_pos + 1 == size)
                     {
-                        this->dynamic_grammar.remove_document(grammar.get_root(), wrapped_preprocessor_for_removed_signature);
+                        this->dynamic_grammar.remove_document(grammar.get_root(), wrapped_preprocessor_for_removed_nonterminal);
                     }
                     else
                     {
                         uint64_t leftLen1 = end_pos + 1;
-                        auto pair1 = SplitAndConcatenation::split(grammar.get_root(), leftLen1, true, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_signature, wrapped_postprocessor_for_inserted_signature);
-                        SignatureWithRelativeLevel L = pair1.first;
-                        // SignatureWithRelativeLevel R = pair1.second;
-                        this->dynamic_grammar.remove_document(L, wrapped_preprocessor_for_removed_signature);
+                        auto pair1 = SplitAndConcatenation::split(grammar.get_root(), leftLen1, true, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
+                        NonterminalWithRelativeLevel L = pair1.first;
+                        // NonterminalWithRelativeLevel R = pair1.second;
+                        this->dynamic_grammar.remove_document(L, wrapped_preprocessor_for_removed_nonterminal);
                     }
                 }
                 else
                 {
                     uint64_t leftLen1 = i;
-                    auto pair1 = SplitAndConcatenation::split(grammar.get_root(), leftLen1, true, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_signature, wrapped_postprocessor_for_inserted_signature);
-                    // SignatureWithRelativeLevel L = pair1.first;
-                    SignatureWithRelativeLevel R = pair1.second;
-                    this->dynamic_grammar.remove_document(R, wrapped_preprocessor_for_removed_signature);
+                    auto pair1 = SplitAndConcatenation::split(grammar.get_root(), leftLen1, true, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
+                    // NonterminalWithRelativeLevel L = pair1.first;
+                    NonterminalWithRelativeLevel R = pair1.second;
+                    this->dynamic_grammar.remove_document(R, wrapped_preprocessor_for_removed_nonterminal);
                 }
             }
         }
 
         /**
-         * @brief Rebuild the ancestor occurrence cache for all base signatures (Fast dictionary mode).
+         * @brief Rebuild the ancestor occurrence cache for all base nonterminals (Fast dictionary mode).
          */
         void rebuild_ancestor_cache_list()
         {
             this->ancestorCacheList.clear();
-            const std::vector<uint64_t> &base_signature_length_list = this->dynamic_grammar.get_base_signature_length_list();
+            const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
             const FastParentDictionary &fast_parent_dictionary = this->dynamic_grammar.get_parent_dictionary();
-            const std::vector<RLSLPRuleBody> &base_signature_rule_list = this->dynamic_grammar.get_base_signature_rule_list();
-            this->ancestorCacheList.resize(this->dynamic_grammar.base_signature_count(), TemporaryOccurrence::create_null_occurrence());
+            const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
+            this->ancestorCacheList.resize(this->dynamic_grammar.explicit_nonterminal_count(), TemporaryOccurrence::create_null_occurrence());
 
-            for (BaseSignature i = 0; i < (int64_t)this->dynamic_grammar.base_signature_count(); i++)
+            for (ExplicitNonterminal i = 0; i < (int64_t)this->dynamic_grammar.explicit_nonterminal_count(); i++)
             {
-                RLSLPRuleBody item = RLSLPRuleBody::decode_rule(i, base_signature_rule_list);
+                RLSLPRuleBody item = RLSLPRuleBody::decode_rule(i, explicit_nonterminal_rule_list);
                 if (item.get_type() != RLSLPRuleType::Null)
                 {
-                    TemporaryOccurrence occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_signature_using_limited_depth(i, fast_parent_dictionary, base_signature_rule_list, base_signature_length_list, DynamicString::ANCESTOR_CACHE_DEPTH, 0);
+                    TemporaryOccurrence occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(i, fast_parent_dictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, DynamicString::ANCESTOR_CACHE_DEPTH, 0);
                     this->ancestorCacheList[i] = occurrence;
                 }
             }
@@ -686,7 +686,7 @@ namespace dynRLSLP
                 return true;
             }
             std::vector<uint8_t> text = this->to_vector();
-            SignatureWithRelativeLevel root = grammar.get_root();
+            NonterminalWithRelativeLevel root = grammar.get_root();
             const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
             RunRuleVector output = RunRuleVector::create_empty_vector(small_dic);
 
@@ -744,9 +744,9 @@ namespace dynRLSLP
                     {
                         throw std::runtime_error("DynamicString::verify_nearly_equal: The right short string must be equal.");
                     }
-                    if (this->ancestorCacheList[i].signature != other.ancestorCacheList[i].signature || this->ancestorCacheList[i].position != other.ancestorCacheList[i].position)
+                    if (this->ancestorCacheList[i].nonterminal != other.ancestorCacheList[i].nonterminal || this->ancestorCacheList[i].position != other.ancestorCacheList[i].position)
                     {
-                        throw std::runtime_error("DynamicString::verify_nearly_equal: The signature and position of ancestor cache must be equal.");
+                        throw std::runtime_error("DynamicString::verify_nearly_equal: The nonterminal and position of ancestor cache must be equal.");
                     }
                 }
             }
@@ -782,14 +782,14 @@ namespace dynRLSLP
         void print_derivation_tree() const
         {
             const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
-            std::vector<SignatureWithRelativeLevel> items;
+            std::vector<NonterminalWithRelativeLevel> items;
             items.push_back(grammar.get_root());
 
-            const std::vector<uint16_t> &base_signature_level_list = this->dynamic_grammar.get_base_signature_level_list();
-            const std::vector<uint64_t> &base_signature_length_list = this->dynamic_grammar.get_base_signature_length_list();
-            const std::vector<RLSLPRuleBody> &base_signature_rule_list = this->dynamic_grammar.get_base_signature_rule_list();
+            const std::vector<uint16_t> &explicit_nonterminal_level_list = this->dynamic_grammar.get_explicit_nonterminal_level_list();
+            const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
+            const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
 
-            std::vector<std::string> r = DerivationTreeVisualizer::compute_derivation_tree(items, base_signature_rule_list, base_signature_level_list, base_signature_length_list);
+            std::vector<std::string> r = DerivationTreeVisualizer::compute_derivation_tree(items, explicit_nonterminal_rule_list, explicit_nonterminal_level_list, explicit_nonterminal_length_list);
             for (auto s : r)
             {
                 std::cout << s << std::endl;
@@ -815,15 +815,15 @@ namespace dynRLSLP
         void print_infomation_about_locate_query() const
         {
             /*
-            const std::vector<RLSLPRuleBody> &base_signature_rule_list = dic.get_base_signature_rule_list();
-            uint64_t size = base_signature_rule_list.size();
+            const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = dic.get_explicit_nonterminal_rule_list();
+            uint64_t size = explicit_nonterminal_rule_list.size();
             for (uint64_t i = 0; i < size; i++)
             {
                 if (!this->dynamic_grammar.check_empty_item(i))
                 {
                     RLSLPRuleBody item = this->dynamic_grammar.get_item(i);
-                    auto left_str = Access::get_left_string(item, base_signature_rule_list);
-                    auto right_str = Access::get_right_string(item, base_signature_rule_list);
+                    auto left_str = Access::get_left_string(item, explicit_nonterminal_rule_list);
+                    auto right_str = Access::get_right_string(item, explicit_nonterminal_rule_list);
                     std::cout << "i = " << i << "\t" << left_str << "|" << right_str << std::endl;
                 }
             }
@@ -846,7 +846,7 @@ namespace dynRLSLP
 
                 const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
 
-                SignatureWithRelativeLevel pattern_sig = Compress::compress(this->dynamic_grammar, pattern, dynRLSLP::no_callback, stool::Message::NO_MESSAGE);
+                NonterminalWithRelativeLevel pattern_sig = Compress::compress(this->dynamic_grammar, pattern, dynRLSLP::no_callback, stool::Message::NO_MESSAGE);
                 RunRuleVector pattern_link = FastCommonSequenceBuilder::build(pattern_sig, small_dic);
                 std::vector<uint64_t> common_positions = pattern_link.to_starting_position_vector();
 
@@ -976,7 +976,7 @@ namespace dynRLSLP
             std::vector<uint8_t> buffer_text;
             uint64_t text_size = stool::OnlineFileReader::get_text_size(stream);
 
-            SignatureWithRelativeLevel text_signature = INT64_MAX;
+            NonterminalWithRelativeLevel text_nonterminal = INT64_MAX;
             uint64_t current_length = 0;
 
             uint64_t text_size_in_mega_bytes = (text_size / (1000 * 1000)) + 1;
@@ -987,7 +987,7 @@ namespace dynRLSLP
             {
                 stool::OnlineFileReader::read(stream, buffer_text, buffer_size, text_size);
                 assert(buffer_text.size() > 0);
-                text_signature = Compress::compress(r.dynamic_grammar, buffer_text, dynRLSLP::no_callback, stool::Message::NO_MESSAGE);
+                text_nonterminal = Compress::compress(r.dynamic_grammar, buffer_text, dynRLSLP::no_callback, stool::Message::NO_MESSAGE);
                 current_length += buffer_text.size();
 
                 uint64_t current_length_in_mega_bytes = (current_length / (1000 * 1000));
@@ -1003,9 +1003,9 @@ namespace dynRLSLP
 
             while (stool::OnlineFileReader::read(stream, buffer_text, buffer_size, text_size))
             {
-                SignatureWithRelativeLevel new_string_signature = Compress::compress(r.dynamic_grammar, buffer_text, dynRLSLP::no_callback, stool::Message::NO_MESSAGE);
+                NonterminalWithRelativeLevel new_string_nonterminal = Compress::compress(r.dynamic_grammar, buffer_text, dynRLSLP::no_callback, stool::Message::NO_MESSAGE);
                 assert(buffer_text.size() > 0);
-                text_signature = SplitAndConcatenation::concatenate(text_signature, new_string_signature, true, r.dynamic_grammar, dynRLSLP::no_callback, dynRLSLP::no_callback);
+                text_nonterminal = SplitAndConcatenation::concatenate(text_nonterminal, new_string_nonterminal, true, r.dynamic_grammar, dynRLSLP::no_callback, dynRLSLP::no_callback);
 
                 current_length += buffer_text.size();
 
@@ -1120,42 +1120,42 @@ namespace dynRLSLP
 
     private:
         /**
-         * @brief Fast-mode callback when a signature is removed during an update.
-         * @param sig Signature that was removed.
-         * @param changed_signatures Set collecting base signatures whose caches must be refreshed.
+         * @brief Fast-mode callback when a nonterminal is removed during an update.
+         * @param sig Nonterminal that was removed.
+         * @param changed_nonterminals Set collecting base nonterminals whose caches must be refreshed.
          */
-        void callback_for_removed_signature(SignatureWithRelativeLevel sig, std::unordered_set<SignatureWithRelativeLevel> &changed_signatures)
+        void callback_for_removed_nonterminal(NonterminalWithRelativeLevel sig, std::unordered_set<NonterminalWithRelativeLevel> &changed_nonterminals)
         {
 
             if (this->dictionaryMode == DictionaryMode::Fast)
             {
 
-                if (SignatureFunctions::is_base_signature(sig))
+                if (NonterminalFunctions::is_explicit_nonterminal(sig))
                 {
                     this->leftShortStringList[sig] = UINT64_MAX;
                     this->rightShortStringList[sig] = UINT64_MAX;
 
-                    this->add_descendants(sig, changed_signatures, DynamicString::ANCESTOR_CACHE_DEPTH, 0);
+                    this->add_descendants(sig, changed_nonterminals, DynamicString::ANCESTOR_CACHE_DEPTH, 0);
                 }
             }
         }
 
         /**
-         * @brief Fast-mode callback when a signature is added during an update.
-         * @param sig Signature that was added.
-         * @param changed_signatures Set collecting base signatures whose caches must be refreshed.
+         * @brief Fast-mode callback when a nonterminal is added during an update.
+         * @param sig Nonterminal that was added.
+         * @param changed_nonterminals Set collecting base nonterminals whose caches must be refreshed.
          */
-        void callback_for_added_signature(SignatureWithRelativeLevel sig, std::unordered_set<SignatureWithRelativeLevel> &changed_signatures)
+        void callback_for_added_nonterminal(NonterminalWithRelativeLevel sig, std::unordered_set<NonterminalWithRelativeLevel> &changed_nonterminals)
         {
             if (this->dictionaryMode == DictionaryMode::Fast)
             {
-                const std::vector<RLSLPRuleBody> &base_signature_rule_list = this->dynamic_grammar.get_base_signature_rule_list();
-                const std::vector<uint64_t> &base_signature_length_list = this->dynamic_grammar.get_base_signature_length_list();
+                const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
+                const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
 
-                BaseSignature base_signature = SignatureFunctions::get_base_signature(sig);
-                if (sig == base_signature)
+                ExplicitNonterminal explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(sig);
+                if (sig == explicit_nonterminal)
                 {
-                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, base_signature_rule_list);
+                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, explicit_nonterminal_rule_list);
 
                     while ((uint64_t)this->leftShortStringList.size() <= (uint64_t)sig)
                     {
@@ -1167,15 +1167,15 @@ namespace dynRLSLP
 
                     if (item.get_type() == RLSLPRuleType::Pair)
                     {
-                        uint64_t left_short_string = ShortString::create_left_short_string_for_pair(item.A, item.B, alphabet_bit_size, base_signature_length_list, this->leftShortStringList);
-                        uint64_t right_short_string = ShortString::create_right_short_string_for_pair(item.A, item.B, alphabet_bit_size, base_signature_length_list, this->rightShortStringList);
+                        uint64_t left_short_string = ShortString::create_left_short_string_for_pair(item.A, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->leftShortStringList);
+                        uint64_t right_short_string = ShortString::create_right_short_string_for_pair(item.A, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->rightShortStringList);
                         this->leftShortStringList[sig] = left_short_string;
                         this->rightShortStringList[sig] = right_short_string;
                     }
                     else if (item.get_type() == RLSLPRuleType::Power)
                     {
-                        uint64_t left_short_string = ShortString::create_left_short_string_for_power(item.A, item.B, alphabet_bit_size, base_signature_length_list, this->leftShortStringList);
-                        uint64_t right_short_string = ShortString::create_right_short_string_for_power(item.A, item.B, alphabet_bit_size, base_signature_length_list, this->rightShortStringList);
+                        uint64_t left_short_string = ShortString::create_left_short_string_for_power(item.A, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->leftShortStringList);
+                        uint64_t right_short_string = ShortString::create_right_short_string_for_power(item.A, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->rightShortStringList);
                         this->leftShortStringList[sig] = left_short_string;
                         this->rightShortStringList[sig] = right_short_string;
                     }
@@ -1188,35 +1188,35 @@ namespace dynRLSLP
                         this->rightShortStringList[sig] = right_short_string;
                     }
 
-                    this->add_descendants(sig, changed_signatures, DynamicString::ANCESTOR_CACHE_DEPTH, 0);
+                    this->add_descendants(sig, changed_nonterminals, DynamicString::ANCESTOR_CACHE_DEPTH, 0);
                 }
             }
         }
         /**
-         * @brief Refresh ancestor caches for all signatures changed during an update (Fast mode).
-         * @param changed_signatures Base signatures whose ancestor occurrences were invalidated.
+         * @brief Refresh ancestor caches for all nonterminals changed during an update (Fast mode).
+         * @param changed_nonterminals Base nonterminals whose ancestor occurrences were invalidated.
          */
-        void callback_for_finished_update(const std::unordered_set<SignatureWithRelativeLevel> &changed_signatures)
+        void callback_for_finished_update(const std::unordered_set<NonterminalWithRelativeLevel> &changed_nonterminals)
         {
             if (this->dictionaryMode == DictionaryMode::Fast)
             {
-                std::vector<uint64_t> changed_signatures_list;
-                changed_signatures_list.resize(changed_signatures.size());
+                std::vector<uint64_t> changed_nonterminals_list;
+                changed_nonterminals_list.resize(changed_nonterminals.size());
                 uint64_t index = 0;
-                for (auto sig : changed_signatures)
+                for (auto sig : changed_nonterminals)
                 {
-                    changed_signatures_list[index] = sig;
+                    changed_nonterminals_list[index] = sig;
                     index++;
                 }
 
-                const std::vector<uint64_t> &base_signature_length_list = this->dynamic_grammar.get_base_signature_length_list();
+                const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
                 const FastParentDictionary &fast_parent_dictionary = this->dynamic_grammar.get_parent_dictionary();
-                const std::vector<RLSLPRuleBody> &base_signature_rule_list = this->dynamic_grammar.get_base_signature_rule_list();
+                const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
 
-                for (uint64_t i = 0; i < changed_signatures_list.size(); i++)
+                for (uint64_t i = 0; i < changed_nonterminals_list.size(); i++)
                 {
-                    BaseSignature sig = changed_signatures_list[i];
-                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, base_signature_rule_list);
+                    ExplicitNonterminal sig = changed_nonterminals_list[i];
+                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, explicit_nonterminal_rule_list);
                     if (item.get_type() != RLSLPRuleType::Null)
                     {
                         if ((uint64_t)this->ancestorCacheList.size() <= (uint64_t)sig)
@@ -1226,7 +1226,7 @@ namespace dynRLSLP
                                 this->ancestorCacheList.push_back(TemporaryOccurrence::create_null_occurrence());
                             }
                         }
-                        TemporaryOccurrence occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_signature_using_limited_depth(sig, fast_parent_dictionary, base_signature_rule_list, base_signature_length_list, DynamicString::ANCESTOR_CACHE_DEPTH, 0);
+                        TemporaryOccurrence occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(sig, fast_parent_dictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, DynamicString::ANCESTOR_CACHE_DEPTH, 0);
                         this->ancestorCacheList[sig] = occurrence;
                     }
                     else
@@ -1241,38 +1241,38 @@ namespace dynRLSLP
         }
 
         /**
-         * @brief Recursively mark descendant base signatures up to \p max_depth for cache invalidation.
-         * @param sig Root signature whose descendants are collected.
-         * @param changed_signatures Output set of affected base signatures.
+         * @brief Recursively mark descendant base nonterminals up to \p max_depth for cache invalidation.
+         * @param sig Root nonterminal whose descendants are collected.
+         * @param changed_nonterminals Output set of affected base nonterminals.
          * @param max_depth Maximum recursion depth.
          * @param current_depth Current recursion depth.
          */
-        void add_descendants(SignatureWithRelativeLevel sig, std::unordered_set<SignatureWithRelativeLevel> &changed_signatures, uint64_t max_depth, uint64_t current_depth) const
+        void add_descendants(NonterminalWithRelativeLevel sig, std::unordered_set<NonterminalWithRelativeLevel> &changed_nonterminals, uint64_t max_depth, uint64_t current_depth) const
         {
-            BaseSignature base_signature = SignatureFunctions::get_base_signature(sig);
-            const std::vector<RLSLPRuleBody> &base_signature_rule_list = this->dynamic_grammar.get_base_signature_rule_list();
-            auto f = changed_signatures.find(base_signature);
-            if (f == changed_signatures.end())
+            ExplicitNonterminal explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(sig);
+            const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
+            auto f = changed_nonterminals.find(explicit_nonterminal);
+            if (f == changed_nonterminals.end())
             {
-                changed_signatures.insert(base_signature);
+                changed_nonterminals.insert(explicit_nonterminal);
 
-                RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, base_signature_rule_list);
+                RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, explicit_nonterminal_rule_list);
                 if (item.get_type() == RLSLPRuleType::Pair)
                 {
-                    BaseSignature left_base_signature = SignatureFunctions::get_base_signature(item.A);
-                    BaseSignature right_base_signature = SignatureFunctions::get_base_signature(item.B);
+                    ExplicitNonterminal left_explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.A);
+                    ExplicitNonterminal right_explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.B);
                     if (current_depth < max_depth)
                     {
-                        add_descendants(left_base_signature, changed_signatures, max_depth, current_depth + 1);
-                        add_descendants(right_base_signature, changed_signatures, max_depth, current_depth + 1);
+                        add_descendants(left_explicit_nonterminal, changed_nonterminals, max_depth, current_depth + 1);
+                        add_descendants(right_explicit_nonterminal, changed_nonterminals, max_depth, current_depth + 1);
                     }
                 }
                 else if (item.get_type() == RLSLPRuleType::Power)
                 {
-                    BaseSignature base_child_signature = SignatureFunctions::get_base_signature(item.A);
+                    ExplicitNonterminal base_child_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.A);
                     if (current_depth < max_depth)
                     {
-                        add_descendants(base_child_signature, changed_signatures, max_depth, current_depth + 1);
+                        add_descendants(base_child_nonterminal, changed_nonterminals, max_depth, current_depth + 1);
                     }
                 }
             }
@@ -1282,10 +1282,10 @@ namespace dynRLSLP
          */
         void rebuild_short_string_list()
         {
-            const std::vector<uint64_t> &base_signature_length_list = this->dynamic_grammar.get_base_signature_length_list();
+            const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
             const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
             uint64_t alphabet_bit_size = this->dynamic_grammar.get_alphabet_bit_size();
-            uint64_t ruleSize = this->dynamic_grammar.base_signature_count();
+            uint64_t ruleSize = this->dynamic_grammar.explicit_nonterminal_count();
             assert(this->leftShortStringList.size() == ruleSize);
 
             for (uint64_t i = 0; i < ruleSize; i++)
@@ -1296,64 +1296,64 @@ namespace dynRLSLP
 
             if (grammar.has_root())
             {
-                VStack<SignatureWithRelativeLevel> signatureStack;
-                SignatureWithRelativeLevel root = grammar.get_root();
-                const std::vector<RLSLPRuleBody> &base_signature_rule_list = this->dynamic_grammar.get_base_signature_rule_list();
-                signatureStack.push(root);
+                VStack<NonterminalWithRelativeLevel> nonterminalStack;
+                NonterminalWithRelativeLevel root = grammar.get_root();
+                const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
+                nonterminalStack.push(root);
 
                 std::vector<bool> flags;
                 flags.resize(ruleSize, false);
 
-                while (signatureStack.size() > 0)
+                while (nonterminalStack.size() > 0)
                 {
-                    SignatureWithRelativeLevel sig = signatureStack.top();
-                    signatureStack.pop();
-                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, base_signature_rule_list);
+                    NonterminalWithRelativeLevel sig = nonterminalStack.top();
+                    nonterminalStack.pop();
+                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, explicit_nonterminal_rule_list);
                     if (!flags[sig])
                     {
                         if (item.get_type() == RLSLPRuleType::Pair)
                         {
-                            SignatureWithRelativeLevel left_sig = item.A;
-                            SignatureWithRelativeLevel right_sig = item.B;
-                            BaseSignature left_base_sig = SignatureFunctions::get_base_signature(left_sig);
-                            BaseSignature right_base_sig = SignatureFunctions::get_base_signature(right_sig);
+                            NonterminalWithRelativeLevel left_sig = item.A;
+                            NonterminalWithRelativeLevel right_sig = item.B;
+                            ExplicitNonterminal left_base_sig = NonterminalFunctions::get_explicit_nonterminal(left_sig);
+                            ExplicitNonterminal right_base_sig = NonterminalFunctions::get_explicit_nonterminal(right_sig);
 
                             if (flags[left_base_sig] && flags[right_base_sig])
                             {
-                                this->leftShortStringList[sig] = ShortString::create_left_short_string_for_pair(left_base_sig, right_base_sig, alphabet_bit_size, base_signature_length_list, this->leftShortStringList);
-                                this->rightShortStringList[sig] = ShortString::create_right_short_string_for_pair(left_base_sig, right_base_sig, alphabet_bit_size, base_signature_length_list, this->rightShortStringList);
+                                this->leftShortStringList[sig] = ShortString::create_left_short_string_for_pair(left_base_sig, right_base_sig, alphabet_bit_size, explicit_nonterminal_length_list, this->leftShortStringList);
+                                this->rightShortStringList[sig] = ShortString::create_right_short_string_for_pair(left_base_sig, right_base_sig, alphabet_bit_size, explicit_nonterminal_length_list, this->rightShortStringList);
 
                                 flags[sig] = true;
                             }
                             else
                             {
-                                signatureStack.push(sig);
+                                nonterminalStack.push(sig);
                                 if (!flags[left_base_sig])
                                 {
-                                    signatureStack.push(left_base_sig);
+                                    nonterminalStack.push(left_base_sig);
                                 }
 
                                 if (left_base_sig != right_base_sig && !flags[right_base_sig])
                                 {
-                                    signatureStack.push(right_base_sig);
+                                    nonterminalStack.push(right_base_sig);
                                 }
                             }
                         }
                         else if (item.get_type() == RLSLPRuleType::Power)
                         {
-                            SignatureWithRelativeLevel child_sig = item.A;
-                            BaseSignature child_base_sig = SignatureFunctions::get_base_signature(child_sig);
+                            NonterminalWithRelativeLevel child_sig = item.A;
+                            ExplicitNonterminal child_base_sig = NonterminalFunctions::get_explicit_nonterminal(child_sig);
                             if (flags[child_base_sig])
                             {
-                                this->leftShortStringList[sig] = ShortString::create_left_short_string_for_power(child_base_sig, item.B, alphabet_bit_size, base_signature_length_list, this->leftShortStringList);
-                                this->rightShortStringList[sig] = ShortString::create_right_short_string_for_power(child_base_sig, item.B, alphabet_bit_size, base_signature_length_list, this->rightShortStringList);
+                                this->leftShortStringList[sig] = ShortString::create_left_short_string_for_power(child_base_sig, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->leftShortStringList);
+                                this->rightShortStringList[sig] = ShortString::create_right_short_string_for_power(child_base_sig, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->rightShortStringList);
 
                                 flags[sig] = true;
                             }
                             else
                             {
-                                signatureStack.push(sig);
-                                signatureStack.push(child_base_sig);
+                                nonterminalStack.push(sig);
+                                nonterminalStack.push(child_base_sig);
                             }
                         }
                         else if (item.get_type() == RLSLPRuleType::Character)

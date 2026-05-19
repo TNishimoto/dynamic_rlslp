@@ -15,14 +15,14 @@ namespace dynRLSLP
         private:
             /**
              * @brief Finds a type-2 primary occurrence by walking up a single-ancestor chain.
-             * @param sig Base signature to locate.
+             * @param sig Base nonterminal to locate.
              * @param fastParentDictionary Parent dictionary of the grammar.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @param explicit_nonterminal_length_list Derived string lengths indexed by base nonterminal.
              * @return Pair of the primary temporary occurrence and the walk depth.
              */
-            static std::pair<TemporaryOccurrence, uint64_t> find_type_2_primary_occurrence_of_signature(BaseSignature sig, const FastParentDictionary &fastParentDictionary, const std::vector<RLSLPRuleBody> &base_signature_rule_list,
-                                                                                                        const std::vector<uint64_t> &base_signature_length_list)
+            static std::pair<TemporaryOccurrence, uint64_t> find_type_2_primary_occurrence_of_nonterminal(ExplicitNonterminal sig, const FastParentDictionary &fastParentDictionary, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list,
+                                                                                                        const std::vector<uint64_t> &explicit_nonterminal_length_list)
             {
                 if (fastParentDictionary.is_empty(sig))
                 {
@@ -30,14 +30,14 @@ namespace dynRLSLP
                 }
                 else
                 {
-                    if (fastParentDictionary.has_single_ancestor(sig, base_signature_rule_list))
+                    if (fastParentDictionary.has_single_ancestor(sig, explicit_nonterminal_rule_list))
                     {
-                        SignatureWithRelativeLevel parent = fastParentDictionary.take_any_important_ancestor(sig);
-                        uint64_t position = ManyParentsManager::get_any_occurrence_position(sig, parent, base_signature_rule_list, base_signature_length_list, true);
+                        NonterminalWithRelativeLevel parent = fastParentDictionary.take_any_important_ancestor(sig);
+                        uint64_t position = ManyParentsManager::get_any_occurrence_position(sig, parent, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, true);
                         FastParentDictionary::MUDA_COUNT++;
-                        auto q = find_type_2_primary_occurrence_of_signature(parent, fastParentDictionary, base_signature_rule_list, base_signature_length_list);
+                        auto q = find_type_2_primary_occurrence_of_nonterminal(parent, fastParentDictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list);
                         uint64_t new_pos = position + q.first.position;
-                        TemporaryOccurrence new_to(q.first.signature, new_pos);
+                        TemporaryOccurrence new_to(q.first.nonterminal, new_pos);
                         uint64_t depth = q.second + 1;
                         return {new_to, depth};
                     }
@@ -49,19 +49,19 @@ namespace dynRLSLP
             }
             /**
              * @brief Finds a type-2 primary occurrence using a precomputed occurrence cache.
-             * @param sig Base signature to locate.
+             * @param sig Base nonterminal to locate.
              * @param position_offset Accumulated position offset along the cache chain.
-             * @param occCacheList Per-base-signature cached primary occurrences.
+             * @param occCacheList Per-base-nonterminal cached primary occurrences.
              * @return Primary temporary occurrence with absolute position offset.
              */
-            static TemporaryOccurrence find_type_2_primary_occurrence_of_signature(BaseSignature sig, int64_t position_offset, const std::vector<TemporaryOccurrence> &occCacheList)
+            static TemporaryOccurrence find_type_2_primary_occurrence_of_nonterminal(ExplicitNonterminal sig, int64_t position_offset, const std::vector<TemporaryOccurrence> &occCacheList)
             {
                 TemporaryOccurrence temp_occurrence = occCacheList[sig];
-                if (temp_occurrence.signature != sig)
+                if (temp_occurrence.nonterminal != sig)
                 {
                     FastParentDictionary::MUDA_COUNT++;
                     int64_t new_offset = position_offset + temp_occurrence.position;
-                    return find_type_2_primary_occurrence_of_signature(temp_occurrence.signature, new_offset, occCacheList);
+                    return find_type_2_primary_occurrence_of_nonterminal(temp_occurrence.nonterminal, new_offset, occCacheList);
                 }
                 else
                 {
@@ -71,31 +71,31 @@ namespace dynRLSLP
 
             /**
              * @brief Resolves type-2 secondary occurrences, optionally expanding through type-1 parents.
-             * @param sig Base signature to locate.
+             * @param sig Base nonterminal to locate.
              * @param fastParentDictionary Parent dictionary of the grammar.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @param base_signature_length_list Derived string lengths indexed by base signature.
-             * @param occCacheList Optional per-base-signature occurrence cache; nullptr disables the cache.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @param explicit_nonterminal_length_list Derived string lengths indexed by base nonterminal.
+             * @param occCacheList Optional per-base-nonterminal occurrence cache; nullptr disables the cache.
              * @param output Stack receiving expanded temporary occurrences when multiple parents exist.
              * @return -1 if multiple occurrences were pushed onto output; otherwise the single position offset.
              */
-            static int64_t find_type_2_secondary_occurrences_of_signature(BaseSignature sig, const FastParentDictionary &fastParentDictionary, const std::vector<RLSLPRuleBody> &base_signature_rule_list,
-                                                                          const std::vector<uint64_t> &base_signature_length_list, const std::vector<TemporaryOccurrence> *occCacheList, VStack<TemporaryOccurrence> &output)
+            static int64_t find_type_2_secondary_occurrences_of_nonterminal(ExplicitNonterminal sig, const FastParentDictionary &fastParentDictionary, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list,
+                                                                          const std::vector<uint64_t> &explicit_nonterminal_length_list, const std::vector<TemporaryOccurrence> *occCacheList, VStack<TemporaryOccurrence> &output)
             {
                 TemporaryOccurrence temp_occurrence = TemporaryOccurrence::create_null_occurrence();
 
                 if (occCacheList == nullptr)
                 {
-                    auto p = find_type_2_primary_occurrence_of_signature(sig, fastParentDictionary, base_signature_rule_list, base_signature_length_list);
+                    auto p = find_type_2_primary_occurrence_of_nonterminal(sig, fastParentDictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list);
                     temp_occurrence = p.first;
                 }
                 else
                 {
-                    temp_occurrence = find_type_2_primary_occurrence_of_signature(sig, 0, *occCacheList);
+                    temp_occurrence = find_type_2_primary_occurrence_of_nonterminal(sig, 0, *occCacheList);
                 }
 
                 uint64_t base_size = output.size();
-                fastParentDictionary.get_all_type_1_primary_occurrences_of_signature(temp_occurrence.signature, temp_occurrence.position, base_signature_rule_list, base_signature_length_list, output);
+                fastParentDictionary.get_all_type_1_primary_occurrences_of_nonterminal(temp_occurrence.nonterminal, temp_occurrence.position, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, output);
                 FastParentDictionary::NOT_MUDA_COUNT++;
                 uint64_t new_size = output.size();
 
@@ -112,16 +112,16 @@ namespace dynRLSLP
         public:
             /**
              * @brief Finds a type-2 primary occurrence with a bounded ancestor-walk depth.
-             * @param sig Base signature to locate.
+             * @param sig Base nonterminal to locate.
              * @param fastParentDictionary Parent dictionary of the grammar.
-             * @param base_signature_rule_list Rule bodies indexed by base signature.
-             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @param explicit_nonterminal_rule_list Rule bodies indexed by base nonterminal.
+             * @param explicit_nonterminal_length_list Derived string lengths indexed by base nonterminal.
              * @param max_depth Maximum number of ancestor hops allowed.
              * @param current_depth Current depth in the ancestor walk.
              * @return Primary temporary occurrence, or (sig, 0) if the depth limit is reached.
              */
-            static TemporaryOccurrence find_type_2_primary_occurrence_of_signature_using_limited_depth(BaseSignature sig, const FastParentDictionary &fastParentDictionary, const std::vector<RLSLPRuleBody> &base_signature_rule_list,
-                                                                                                       const std::vector<uint64_t> &base_signature_length_list, uint64_t max_depth, uint64_t current_depth)
+            static TemporaryOccurrence find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(ExplicitNonterminal sig, const FastParentDictionary &fastParentDictionary, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list,
+                                                                                                       const std::vector<uint64_t> &explicit_nonterminal_length_list, uint64_t max_depth, uint64_t current_depth)
             {
                 if (current_depth >= max_depth)
                 {
@@ -133,14 +133,14 @@ namespace dynRLSLP
                     {
                         return TemporaryOccurrence(sig, 0);
                     }
-                    else if (fastParentDictionary.has_single_ancestor(sig, base_signature_rule_list))
+                    else if (fastParentDictionary.has_single_ancestor(sig, explicit_nonterminal_rule_list))
                     {
-                        SignatureWithRelativeLevel parent = fastParentDictionary.take_any_important_ancestor(sig);
-                        uint64_t position = ManyParentsManager::get_any_occurrence_position(sig, parent, base_signature_rule_list, base_signature_length_list, true);
+                        NonterminalWithRelativeLevel parent = fastParentDictionary.take_any_important_ancestor(sig);
+                        uint64_t position = ManyParentsManager::get_any_occurrence_position(sig, parent, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, true);
 
-                        TemporaryOccurrence q = find_type_2_primary_occurrence_of_signature_using_limited_depth(parent, fastParentDictionary, base_signature_rule_list, base_signature_length_list, max_depth, current_depth + 1);
+                        TemporaryOccurrence q = find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(parent, fastParentDictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, max_depth, current_depth + 1);
                         uint64_t new_pos = position + q.position;
-                        TemporaryOccurrence new_to(q.signature, new_pos);
+                        TemporaryOccurrence new_to(q.nonterminal, new_pos);
                         return new_to;
                     }
                     else
@@ -153,12 +153,12 @@ namespace dynRLSLP
              * @brief Enumerates all leaf occurrence positions by expanding type-1 primary occurrences.
              * @param input Seed temporary occurrences to start enumeration from.
              * @param fastParentDictionary Parent dictionary of the grammar.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @param explicit_nonterminal_length_list Derived string lengths indexed by base nonterminal.
              * @return All absolute occurrence positions.
              */
             static std::vector<uint64_t> faster_get_all_occurrences(const std::vector<TemporaryOccurrence> &input, 
-                const FastParentDictionary &fastParentDictionary, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list)
+                const FastParentDictionary &fastParentDictionary, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list, const std::vector<uint64_t> &explicit_nonterminal_length_list)
             {
 
                 VStack<TemporaryOccurrence> stk;
@@ -176,7 +176,7 @@ namespace dynRLSLP
                     TemporaryOccurrence temporary_occurrence = top;
 
                     uint64_t dif = stk.size();
-                    bool b = fastParentDictionary.get_all_type_1_primary_occurrences_of_signature(temporary_occurrence.signature, temporary_occurrence.position, base_signature_rule_list, base_signature_length_list, stk);
+                    bool b = fastParentDictionary.get_all_type_1_primary_occurrences_of_nonterminal(temporary_occurrence.nonterminal, temporary_occurrence.position, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, stk);
                     uint64_t dif2 = stk.size();
                     if (dif2 - dif <= 1)
                     {
@@ -195,18 +195,18 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Enumerates occurrences level-by-level using extra memory for grouping by signature level.
+             * @brief Enumerates occurrences level-by-level using extra memory for grouping by nonterminal level.
              * @param input Seed temporary occurrences to start enumeration from.
              * @param fastParentDictionary Parent dictionary of the grammar.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @param base_signature_length_list Base-signature length list (L).
-             * @param base_signature_level_list Base-signature level list (H).
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
+             * @param explicit_nonterminal_level_list Base-nonterminal level list (H).
              * @param tree_max_level Maximum level in the derivation forest.
-             * @param occCacheList Optional per-base-signature occurrence cache; nullptr disables the cache.
+             * @param occCacheList Optional per-base-nonterminal occurrence cache; nullptr disables the cache.
              * @return All absolute occurrence positions.
              */
-            static std::vector<uint64_t> faster_get_all_occurrences_using_memory(const std::vector<TemporaryOccurrence> &input, const FastParentDictionary &fastParentDictionary, const std::vector<RLSLPRuleBody> &base_signature_rule_list,
-                                                                                 const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint16_t> &base_signature_level_list, uint64_t tree_max_level, const std::vector<TemporaryOccurrence> *occCacheList)
+            static std::vector<uint64_t> faster_get_all_occurrences_using_memory(const std::vector<TemporaryOccurrence> &input, const FastParentDictionary &fastParentDictionary, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list,
+                                                                                 const std::vector<uint64_t> &explicit_nonterminal_length_list, const std::vector<uint16_t> &explicit_nonterminal_level_list, uint64_t tree_max_level, const std::vector<TemporaryOccurrence> *occCacheList)
             {
                 std::vector<std::vector<TemporaryOccurrence>> level_to_occurrences_map;
                 level_to_occurrences_map.resize(tree_max_level + 1);
@@ -216,7 +216,7 @@ namespace dynRLSLP
 
                 for (uint64_t i = 0; i < input.size(); i++)
                 {
-                    uint64_t level = SignatureFunctions::get_level(input[i].signature, base_signature_level_list);
+                    uint64_t level = NonterminalFunctions::get_level(input[i].nonterminal, explicit_nonterminal_level_list);
                     level_to_occurrences_map[level].push_back(input[i]);
                 }
 
@@ -231,15 +231,15 @@ namespace dynRLSLP
                     {
                         h_temp_occurrences.swap(level_to_occurrences_map[h]);
                         std::sort(h_temp_occurrences.begin(), h_temp_occurrences.end(), [](const TemporaryOccurrence &a, const TemporaryOccurrence &b)
-                                  { return a.signature < b.signature; });
+                                  { return a.nonterminal < b.nonterminal; });
 
                         uint64_t i = 0;
                         while (i < h_temp_occurrences.size())
                         {
-                            TemporaryOccurrence temporary_occurrence(h_temp_occurrences[i].signature, 0);
-                            int64_t p = find_type_2_secondary_occurrences_of_signature(temporary_occurrence.signature, fastParentDictionary, base_signature_rule_list, base_signature_length_list, occCacheList, stk);
+                            TemporaryOccurrence temporary_occurrence(h_temp_occurrences[i].nonterminal, 0);
+                            int64_t p = find_type_2_secondary_occurrences_of_nonterminal(temporary_occurrence.nonterminal, fastParentDictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, occCacheList, stk);
                             uint64_t k = i + 1;
-                            while (k < h_temp_occurrences.size() && h_temp_occurrences[k].signature == temporary_occurrence.signature)
+                            while (k < h_temp_occurrences.size() && h_temp_occurrences[k].nonterminal == temporary_occurrence.nonterminal)
                             {
                                 k++;
                             }
@@ -251,11 +251,11 @@ namespace dynRLSLP
                                 {
                                     auto top = stk.top();
                                     stk.pop();
-                                    uint64_t new_level = SignatureFunctions::get_level(top.signature, base_signature_level_list);
+                                    uint64_t new_level = NonterminalFunctions::get_level(top.nonterminal, explicit_nonterminal_level_list);
                                     assert(new_level >= h);
                                     for (uint64_t j = i; j < k; j++)
                                     {
-                                        level_to_occurrences_map[new_level].push_back(TemporaryOccurrence(top.signature, top.position + h_temp_occurrences[j].position));
+                                        level_to_occurrences_map[new_level].push_back(TemporaryOccurrence(top.nonterminal, top.position + h_temp_occurrences[j].position));
                                     }
                                 }
                             }
@@ -279,14 +279,14 @@ namespace dynRLSLP
              * @param fastParentDictionary Parent dictionary of the grammar.
              * @param rlslp_dictionary Layered RLSLP dictionary providing rule and length tables.
              * @param tree_max_level Maximum level in the derivation forest.
-             * @param occCacheList Optional per-base-signature occurrence cache; nullptr disables the cache.
+             * @param occCacheList Optional per-base-nonterminal occurrence cache; nullptr disables the cache.
              * @return All absolute occurrence positions.
              */
             static std::vector<uint64_t> faster_get_all_occurrences_using_low_memory(const std::vector<TemporaryOccurrence> &input, const FastParentDictionary &fastParentDictionary, const DictionaryForLayeredRLSLP &rlslp_dictionary, uint64_t tree_max_level, const std::vector<TemporaryOccurrence> *occCacheList)
             {
-                const std::vector<RLSLPRuleBody> &base_signature_rule_list = rlslp_dictionary.get_base_signature_rule_list();
-                const std::vector<uint64_t> &base_signature_length_list = rlslp_dictionary.get_base_signature_length_list();
-                const std::vector<uint16_t> &base_signature_level_list = rlslp_dictionary.get_base_signature_level_list();
+                const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = rlslp_dictionary.get_explicit_nonterminal_rule_list();
+                const std::vector<uint64_t> &explicit_nonterminal_length_list = rlslp_dictionary.get_explicit_nonterminal_length_list();
+                const std::vector<uint16_t> &explicit_nonterminal_level_list = rlslp_dictionary.get_explicit_nonterminal_level_list();
 
                 std::vector<TemporaryOccurrence> copy_input(input);
                 std::vector<OccurrenceNode> occurrence_nodes;
@@ -300,8 +300,8 @@ namespace dynRLSLP
 
                 for (uint64_t i = 0; i < input.size(); i++)
                 {
-                    uint64_t level = SignatureFunctions::get_level(input[i].signature, base_signature_level_list);
-                    level_to_occurrences_map[level].push_back(OccurrencePointer(input[i].signature, UINT64_MAX, input[i].position));
+                    uint64_t level = NonterminalFunctions::get_level(input[i].nonterminal, explicit_nonterminal_level_list);
+                    level_to_occurrences_map[level].push_back(OccurrencePointer(input[i].nonterminal, UINT64_MAX, input[i].position));
                 }
 
                 uint64_t h = 0;
@@ -316,18 +316,18 @@ namespace dynRLSLP
                     {
                         h_temp_occurrences.swap(level_to_occurrences_map[h]);
                         std::sort(h_temp_occurrences.begin(), h_temp_occurrences.end(), [](const OccurrencePointer &a, const OccurrencePointer &b)
-                                  { return a.signature < b.signature; });
+                                  { return a.nonterminal < b.nonterminal; });
 
                         uint64_t i = 0;
                         while (i < h_temp_occurrences.size())
                         {
-                            SignatureWithRelativeLevel sig = h_temp_occurrences[i].signature;
-                            int64_t p = find_type_2_secondary_occurrences_of_signature(sig, fastParentDictionary, base_signature_rule_list, base_signature_length_list, occCacheList, stk);
+                            NonterminalWithRelativeLevel sig = h_temp_occurrences[i].nonterminal;
+                            int64_t p = find_type_2_secondary_occurrences_of_nonterminal(sig, fastParentDictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, occCacheList, stk);
                             uint64_t k = i;
                             uint64_t x = occurrence_nodes.size();
                             uint64_t children_start_index = children_range_list.size();
                             uint64_t occ = 0;
-                            while (k < h_temp_occurrences.size() && h_temp_occurrences[k].signature == sig)
+                            while (k < h_temp_occurrences.size() && h_temp_occurrences[k].nonterminal == sig)
                             {
                                 uint64_t pointer = h_temp_occurrences[k].pointer;
                                 uint64_t positionOffset = h_temp_occurrences[k].positionOffset;
@@ -362,8 +362,8 @@ namespace dynRLSLP
                                 {
                                     auto top = stk.top();
                                     stk.pop();
-                                    uint64_t new_level = SignatureFunctions::get_level(top.signature, base_signature_level_list);
-                                    level_to_occurrences_map[new_level].push_back(OccurrencePointer(top.signature, x, top.position));
+                                    uint64_t new_level = NonterminalFunctions::get_level(top.nonterminal, explicit_nonterminal_level_list);
+                                    level_to_occurrences_map[new_level].push_back(OccurrencePointer(top.nonterminal, x, top.position));
                                     assert(new_level >= h);
                                 }
                             }

@@ -17,24 +17,24 @@ namespace dynRLSLP
 
         public:
             /**
-             * @brief Compiles a run-rule vector into a single root signature.
-             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @brief Compiles a run-rule vector into a single root nonterminal.
+             * @tparam CALLBACK Callback type invoked when new nonterminals are added.
              * @param seq Input run-rule vector to compile.
              * @param dic Dynamic grammar updated during compilation.
-             * @param callback_for_added_signatures Callback invoked for each added signature.
+             * @param callback_for_added_nonterminals Callback invoked for each added nonterminal.
              * @param message_paragraph Indentation level for progress messages.
-             * @return Root signature of the compiled derivation.
+             * @return Root nonterminal of the compiled derivation.
              */
             template <typename CALLBACK = decltype(no_callback)>
-            static SignatureWithRelativeLevel single_compile(RunRuleVector &seq, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signatures, int message_paragraph = stool::Message::SHOW_MESSAGE)
+            static NonterminalWithRelativeLevel single_compile(RunRuleVector &seq, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_nonterminals, int message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 if(seq.is_empty()){
                     throw std::runtime_error("Error in single_compile: seq is empty");
                 }
                 //std::cout << stool::Message::get_paragraph_string(message_paragraph) << "single_compile: seq.size() = " << seq.size() << std::endl;
 
-                CommonSequenceCompiler::left_side_semi_compile(seq, dic, callback_for_added_signatures, stool::Message::increment_paragraph_level(message_paragraph));
-                CommonSequenceCompiler::right_side_semi_compile(seq, dic, callback_for_added_signatures, stool::Message::increment_paragraph_level(message_paragraph));
+                CommonSequenceCompiler::left_side_semi_compile(seq, dic, callback_for_added_nonterminals, stool::Message::increment_paragraph_level(message_paragraph));
+                CommonSequenceCompiler::right_side_semi_compile(seq, dic, callback_for_added_nonterminals, stool::Message::increment_paragraph_level(message_paragraph));
 
 
                 std::deque<RunRuleBody> current_seq;
@@ -43,17 +43,17 @@ namespace dynRLSLP
                 for(auto it : tmp){
                     current_seq.push_back(it);
                 }
-                RunRuleBody::merge_same_signatures(current_seq);
+                RunRuleBody::merge_same_nonterminals(current_seq);
 
                 std::vector<RunRuleBody> empty_left_line;
                 std::vector<RunRuleBody> empty_right_line;
 
                 assert(RunRuleBody::verify_vector(current_seq));
 
-                while (!RunRuleBody::is_single_signature(current_seq))
+                while (!RunRuleBody::is_single_nonterminal(current_seq))
                 {
                     assert(current_seq.size() > 0);
-                    std::deque<RunRuleBody> new_seq = ShrinkAndPow::center_line_compile(empty_left_line, current_seq, empty_right_line, level, dic, callback_for_added_signatures, stool::Message::increment_paragraph_level(message_paragraph));
+                    std::deque<RunRuleBody> new_seq = ShrinkAndPow::center_line_compile(empty_left_line, current_seq, empty_right_line, level, dic, callback_for_added_nonterminals, stool::Message::increment_paragraph_level(message_paragraph));
                     current_seq.swap(new_seq);
                     level++;
                 }
@@ -63,16 +63,16 @@ namespace dynRLSLP
 
             /**
              * @brief Compiles the concatenation of left and right run-rule vectors.
-             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @tparam CALLBACK Callback type invoked when new nonterminals are added.
              * @param left Left run-rule vector.
              * @param right Right run-rule vector.
              * @param dic Dynamic grammar updated during compilation.
-             * @param callback_for_added_signature Callback invoked for each added signature.
+             * @param callback_for_added_nonterminal Callback invoked for each added nonterminal.
              * @param message_paragraph Indentation level for progress messages.
-             * @return Root signature of the concatenated derivation.
+             * @return Root nonterminal of the concatenated derivation.
              */
             template <typename CALLBACK = decltype(no_callback)>
-            static SignatureWithRelativeLevel LR_compile(RunRuleVector &left, RunRuleVector &right, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signature, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
+            static NonterminalWithRelativeLevel LR_compile(RunRuleVector &left, RunRuleVector &right, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_nonterminal, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
 
 // debug
@@ -81,20 +81,20 @@ namespace dynRLSLP
                 int64_t rightLen = right.get_string_length();
 #endif
 
-                CommonSequenceCompiler::left_side_semi_compile(left, dic, callback_for_added_signature, stool::Message::increment_paragraph_level(message_paragraph));
+                CommonSequenceCompiler::left_side_semi_compile(left, dic, callback_for_added_nonterminal, stool::Message::increment_paragraph_level(message_paragraph));
 #ifdef DEBUG
                 assert(left.get_string_length() == leftLen);
 #endif
 
-                CommonSequenceCompiler::right_side_semi_compile(right, dic, callback_for_added_signature, stool::Message::increment_paragraph_level(message_paragraph));
+                CommonSequenceCompiler::right_side_semi_compile(right, dic, callback_for_added_nonterminal, stool::Message::increment_paragraph_level(message_paragraph));
 #ifdef DEBUG
                 assert(right.get_string_length() == rightLen);
 #endif
 
-                SignatureWithRelativeLevel r = CommonSequenceCompiler::center_compile(left, right, dic, callback_for_added_signature, stool::Message::increment_paragraph_level(message_paragraph));
+                NonterminalWithRelativeLevel r = CommonSequenceCompiler::center_compile(left, right, dic, callback_for_added_nonterminal, stool::Message::increment_paragraph_level(message_paragraph));
 #ifdef DEBUG
-                const std::vector<uint64_t>& base_signature_length_list = dic.get_base_signature_length_list();
-                int64_t resultLen = SignatureFunctions::get_length(r, base_signature_length_list);
+                const std::vector<uint64_t>& explicit_nonterminal_length_list = dic.get_explicit_nonterminal_length_list();
+                int64_t resultLen = NonterminalFunctions::get_length(r, explicit_nonterminal_length_list);
                 if (resultLen != leftLen + rightLen)
                 {
                     std::cout << "ERROR in LR_compile: resultLen != leftLen + rightLen" << std::endl;
@@ -106,24 +106,24 @@ namespace dynRLSLP
                 return r;
             }
             /**
-             * @brief Builds a common sequence from text and compiles it to one signature.
+             * @brief Builds a common sequence from text and compiles it to one nonterminal.
              * @tparam C Character type of the input text.
-             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @tparam CALLBACK Callback type invoked when new nonterminals are added.
              * @param text Input character sequence.
              * @param dic Dynamic grammar updated during compilation.
-             * @param callback_for_added_signatures Callback invoked for each added signature.
+             * @param callback_for_added_nonterminals Callback invoked for each added nonterminal.
              * @param message_paragraph Indentation level for progress messages.
-             * @return Root signature of the compiled text.
+             * @return Root nonterminal of the compiled text.
              */
             template <typename C, typename CALLBACK = decltype(no_callback)>
-            static SignatureWithRelativeLevel direct_compile_from_text(const std::vector<C> &text, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signatures, int message_paragraph = stool::Message::SHOW_MESSAGE)
+            static NonterminalWithRelativeLevel direct_compile_from_text(const std::vector<C> &text, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_nonterminals, int message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 if(text.size() == 0){
                     throw std::runtime_error("Error in direct_compile_from_text: text is empty");
                 }
-                RunRuleVector seq = build_common_sequence_from_text(dic, text, callback_for_added_signatures, message_paragraph);
+                RunRuleVector seq = build_common_sequence_from_text(dic, text, callback_for_added_nonterminals, message_paragraph);
                 assert(seq.is_empty() == false);
-                return single_compile(seq, dic, callback_for_added_signatures, message_paragraph);
+                return single_compile(seq, dic, callback_for_added_nonterminals, message_paragraph);
             }
 
 
@@ -131,21 +131,21 @@ namespace dynRLSLP
             /**
              * @brief Constructs a layered run-rule vector from plain text.
              * @tparam C Character type of the input text.
-             * @tparam CALLBACK Callback type invoked when new signatures are added.
-             * @param dic Dynamic grammar used to allocate signatures.
+             * @tparam CALLBACK Callback type invoked when new nonterminals are added.
+             * @param dic Dynamic grammar used to allocate nonterminals.
              * @param text Input character sequence.
-             * @param callback_for_added_signature Callback invoked for each added signature.
+             * @param callback_for_added_nonterminal Callback invoked for each added nonterminal.
              * @param message_paragraph Indentation level for progress messages.
              * @return Run-rule vector representing the derivation tree of the text.
              */
             template <typename C, typename CALLBACK = decltype(no_callback)>
-            static RunRuleVector build_common_sequence_from_text(DynamicGrammarForLayeredRLSLP &dic, const std::vector<C> &text, CALLBACK &callback_for_added_signature = no_callback, int message_paragraph = stool::Message::SHOW_MESSAGE)
+            static RunRuleVector build_common_sequence_from_text(DynamicGrammarForLayeredRLSLP &dic, const std::vector<C> &text, CALLBACK &callback_for_added_nonterminal = no_callback, int message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 if(text.size() == 0){
                     throw std::runtime_error("Error in build_common_sequence_from_text: text is empty");
                 }
                 FastCommonSequenceBuilder::initialize(dic.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression);
-                std::deque<RunRuleBody> current_seq = ShrinkAndPow::shrink_char(text, dic, callback_for_added_signature, stool::Message::increment_paragraph_level(message_paragraph));
+                std::deque<RunRuleBody> current_seq = ShrinkAndPow::shrink_char(text, dic, callback_for_added_nonterminal, stool::Message::increment_paragraph_level(message_paragraph));
                 uint64_t level = 0;
 
                 const DictionaryForLayeredRLSLP &small_dic = dic.get_dictionary();
@@ -182,7 +182,7 @@ namespace dynRLSLP
                     }
                     if (current_seq.size() >= 1)
                     {
-                        std::deque<RunRuleBody> new_seq = ShrinkAndPow::center_line_compile(tmp_left_line, current_seq, tmp_right_line, level, dic, callback_for_added_signature, stool::Message::increment_paragraph_level(message_paragraph));
+                        std::deque<RunRuleBody> new_seq = ShrinkAndPow::center_line_compile(tmp_left_line, current_seq, tmp_right_line, level, dic, callback_for_added_nonterminal, stool::Message::increment_paragraph_level(message_paragraph));
                         current_seq.swap(new_seq);
                     }
 
@@ -204,13 +204,13 @@ namespace dynRLSLP
 
         private:
             /**
-             * @brief Verifies that a signature matches recompilation from its decompressed text.
-             * @param sig Signature to verify.
+             * @brief Verifies that a nonterminal matches recompilation from its decompressed text.
+             * @param sig Nonterminal to verify.
              * @param dic Dynamic grammar used for recompilation.
              * @param message_paragraph Indentation level for debug output.
-             * @return True if the signature is consistent with recompilation.
+             * @return True if the nonterminal is consistent with recompilation.
              */
-            static bool verify(SignatureWithRelativeLevel sig, DynamicGrammarForLayeredRLSLP &dic, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
+            static bool verify(NonterminalWithRelativeLevel sig, DynamicGrammarForLayeredRLSLP &dic, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 
                 const DictionaryForLayeredRLSLP &small_dic = dic.get_dictionary();
@@ -224,14 +224,14 @@ namespace dynRLSLP
                 std::vector<RunRuleBody> tmp_left_line;
                 std::vector<RunRuleBody> tmp_right_line;
                 uint64_t level = 0;
-                while (!RunRuleBody::is_single_signature(current_seq))
+                while (!RunRuleBody::is_single_nonterminal(current_seq))
                 {
                     assert(current_seq.size() > 0);
                     std::deque<RunRuleBody> new_seq = ShrinkAndPow::center_line_compile(tmp_left_line, current_seq, tmp_right_line, level, dic, dynRLSLP::no_callback, stool::Message::increment_paragraph_level(message_paragraph));
                     current_seq.swap(new_seq);
                     level++;
                 }
-                SignatureWithRelativeLevel correct_sig = current_seq[0].number;
+                NonterminalWithRelativeLevel correct_sig = current_seq[0].number;
 
                 if (sig != correct_sig)
                 {
@@ -251,18 +251,18 @@ namespace dynRLSLP
 
             /**
              * @brief Semi-compiles the center line using left and right run-rule vectors at level @p h.
-             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @tparam CALLBACK Callback type invoked when new nonterminals are added.
              * @param left Left run-rule vector.
              * @param center Center deque updated in place and then compiled.
              * @param right Right run-rule vector.
              * @param h Current hierarchy level.
              * @param dic Dynamic grammar updated during compilation.
-             * @param callback_for_added_signature Callback invoked for each added signature.
+             * @param callback_for_added_nonterminal Callback invoked for each added nonterminal.
              * @param message_paragraph Indentation level for progress messages.
              * @return Compiled center sequence at the next level.
              */
             template <typename CALLBACK = decltype(no_callback)>
-            static std::deque<RunRuleBody> LCR_semi_compile(RunRuleVector &left, std::deque<RunRuleBody> &center, RunRuleVector &right, int64_t h, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signature, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
+            static std::deque<RunRuleBody> LCR_semi_compile(RunRuleVector &left, std::deque<RunRuleBody> &center, RunRuleVector &right, int64_t h, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_nonterminal, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 assert(left.verify());
                 assert(right.verify());
@@ -273,8 +273,8 @@ namespace dynRLSLP
 #ifdef DEBUG
                 int64_t prevLeftLen = left.get_string_length();
                 int64_t prevRightLen = right.get_string_length();
-                const std::vector<uint64_t>& base_signature_length_list = dic.get_base_signature_length_list();
-                int64_t prevCenterLen = RunRuleBody::compute_string_length(center, base_signature_length_list);
+                const std::vector<uint64_t>& explicit_nonterminal_length_list = dic.get_explicit_nonterminal_length_list();
+                int64_t prevCenterLen = RunRuleBody::compute_string_length(center, explicit_nonterminal_length_list);
 #endif
 
                 std::vector<RunRuleBody> tmp_left_items;
@@ -305,7 +305,7 @@ namespace dynRLSLP
                     center.push_back(tmp_right_items[i]);
                 }
                 assert(center.size() > 0);
-                RunRuleBody::merge_same_signatures(center);
+                RunRuleBody::merge_same_nonterminals(center);
 
                 std::vector<RunRuleBody> leftItems;
                 std::vector<RunRuleBody> rightItems;
@@ -325,15 +325,15 @@ namespace dynRLSLP
                 //assert(center.size() > 0);
 
 
-                std::deque<RunRuleBody> r = ShrinkAndPow::center_line_compile(leftItems, center, rightItems, h, dic, callback_for_added_signature, stool::Message::increment_paragraph_level(message_paragraph));
+                std::deque<RunRuleBody> r = ShrinkAndPow::center_line_compile(leftItems, center, rightItems, h, dic, callback_for_added_nonterminal, stool::Message::increment_paragraph_level(message_paragraph));
                 // RunRuleBody::print_vector(r, "r", stool::Message::increment_paragraph_level(message_paragraph));
                 assert(RunRuleBody::verify_vector(r));
 
 #ifdef DEBUG
-                int64_t centerLen = RunRuleBody::compute_string_length(center, base_signature_length_list);
+                int64_t centerLen = RunRuleBody::compute_string_length(center, explicit_nonterminal_length_list);
                 int64_t leftLen = left.get_string_length();
                 int64_t rightLen = right.get_string_length();
-                int64_t rLen = RunRuleBody::compute_string_length(r, base_signature_length_list);
+                int64_t rLen = RunRuleBody::compute_string_length(r, explicit_nonterminal_length_list);
                 if (prevLeftLen + prevCenterLen + prevRightLen != leftLen + centerLen + rightLen)
                 {
                     std::cout << "ERROR in LCR_semi_compile: prevLeftLen + prevCenterLen + prevRightLen != leftLen + centerLen + rightLen" << std::endl;
@@ -349,13 +349,13 @@ namespace dynRLSLP
 
                     std::cout << "center: " << std::endl;
                     for(auto it : center){
-                        std::cout << it.to_string() << "_" << SignatureFunctions::get_length(it.number, base_signature_length_list) << " ";
+                        std::cout << it.to_string() << "_" << NonterminalFunctions::get_length(it.number, explicit_nonterminal_length_list) << " ";
                     }
                     std::cout << std::endl;
 
                     std::cout << "r: " << std::endl;
                     for(auto it : r){
-                        std::cout << it.to_string() << "_" << SignatureFunctions::get_length(it.number, base_signature_length_list) << " ";
+                        std::cout << it.to_string() << "_" << NonterminalFunctions::get_length(it.number, explicit_nonterminal_length_list) << " ";
                     }
                     std::cout << std::endl;
                     throw std::runtime_error("ERROR in LCR_semi_compile2: centerLen != rLen");
@@ -367,14 +367,14 @@ namespace dynRLSLP
             }
             /**
              * @brief Semi-compiles the left side of a run-rule vector level by level.
-             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @tparam CALLBACK Callback type invoked when new nonterminals are added.
              * @param item Run-rule vector whose left side is semi-compiled in place.
              * @param dic Dynamic grammar updated during compilation.
-             * @param callback_for_added_signatures Callback invoked for each added signature.
+             * @param callback_for_added_nonterminals Callback invoked for each added nonterminal.
              * @param message_paragraph Indentation level for progress messages.
              */
             template <typename CALLBACK = decltype(no_callback)>
-            static void left_side_semi_compile(RunRuleVector &item, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signatures, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
+            static void left_side_semi_compile(RunRuleVector &item, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_nonterminals, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 //std::cout << stool::Message::get_paragraph_string(message_paragraph) << "left_side_semi_compile: item.get_max_level() = " << item.get_max_level() << std::endl;
 
@@ -391,12 +391,12 @@ namespace dynRLSLP
                 std::deque<RunRuleBody> center;
                 for (int64_t i = 0; i < item.get_max_level(); i++)
                 {
-                    std::deque<RunRuleBody> new_center = CommonSequenceCompiler::LCR_semi_compile(empty_left, center, item, h++, dic, callback_for_added_signatures, stool::Message::increment_paragraph_level(message_paragraph));
+                    std::deque<RunRuleBody> new_center = CommonSequenceCompiler::LCR_semi_compile(empty_left, center, item, h++, dic, callback_for_added_nonterminals, stool::Message::increment_paragraph_level(message_paragraph));
                     center.swap(new_center);
 
 #ifdef DEBUG
                     int64_t midRightLen = item.get_string_length();
-                    int64_t midCenterLen = RunRuleBody::compute_string_length(center, dic.get_base_signature_length_list());
+                    int64_t midCenterLen = RunRuleBody::compute_string_length(center, dic.get_explicit_nonterminal_length_list());
                     if (prevLen != midCenterLen + midRightLen)
                     {
                         std::cout << "ERROR in left_side_semi_compile: prevLen != midCenterLen + midRightLen" << std::endl;
@@ -435,14 +435,14 @@ namespace dynRLSLP
             }
             /**
              * @brief Semi-compiles the right side of a run-rule vector level by level.
-             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @tparam CALLBACK Callback type invoked when new nonterminals are added.
              * @param item Run-rule vector whose right side is semi-compiled in place.
              * @param dic Dynamic grammar updated during compilation.
-             * @param callback_for_added_signature Callback invoked for each added signature.
+             * @param callback_for_added_nonterminal Callback invoked for each added nonterminal.
              * @param message_paragraph Indentation level for progress messages.
              */
             template <typename CALLBACK = decltype(no_callback)>
-            static void right_side_semi_compile(RunRuleVector &item, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signature, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
+            static void right_side_semi_compile(RunRuleVector &item, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_nonterminal, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 //std::cout << stool::Message::get_paragraph_string(message_paragraph) << "right_side_semi_compile: item.get_max_level() = " << item.get_max_level() << std::endl;
 
@@ -454,7 +454,7 @@ namespace dynRLSLP
                 std::deque<RunRuleBody> center;
                 for (int64_t i = 0; i < h; i++)
                 {
-                    std::deque<RunRuleBody> new_center = CommonSequenceCompiler::LCR_semi_compile(item, center, right, i, dic, callback_for_added_signature, stool::Message::increment_paragraph_level(message_paragraph));
+                    std::deque<RunRuleBody> new_center = CommonSequenceCompiler::LCR_semi_compile(item, center, right, i, dic, callback_for_added_nonterminal, stool::Message::increment_paragraph_level(message_paragraph));
                     center.swap(new_center);
                 }
                 while (center.size() > 0)
@@ -465,16 +465,16 @@ namespace dynRLSLP
             }
             /**
              * @brief Compiles the center region after left and right semi-compilation.
-             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @tparam CALLBACK Callback type invoked when new nonterminals are added.
              * @param left Left run-rule vector consumed during compilation.
              * @param right Right run-rule vector consumed during compilation.
              * @param dic Dynamic grammar updated during compilation.
-             * @param callback_for_added_signature Callback invoked for each added signature.
+             * @param callback_for_added_nonterminal Callback invoked for each added nonterminal.
              * @param message_paragraph Indentation level for progress messages.
-             * @return Root signature of the merged center derivation.
+             * @return Root nonterminal of the merged center derivation.
              */
             template <typename CALLBACK = decltype(no_callback)>
-            static SignatureWithRelativeLevel center_compile(RunRuleVector &left, RunRuleVector &right, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signature, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
+            static NonterminalWithRelativeLevel center_compile(RunRuleVector &left, RunRuleVector &right, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_nonterminal, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 /*
                 std::cout << stool::Message::get_paragraph_string(message_paragraph) << "left: " << std::endl;
@@ -491,9 +491,9 @@ namespace dynRLSLP
                     {
                         throw std::runtime_error("ERROR in center_compile: counter > 10000");
                     }
-                    std::deque<RunRuleBody> new_center = CommonSequenceCompiler::LCR_semi_compile(left, center, right, t++, dic, callback_for_added_signature, stool::Message::increment_paragraph_level(message_paragraph));
+                    std::deque<RunRuleBody> new_center = CommonSequenceCompiler::LCR_semi_compile(left, center, right, t++, dic, callback_for_added_nonterminal, stool::Message::increment_paragraph_level(message_paragraph));
                     center.swap(new_center);
-                    if (RunRuleBody::is_single_signature(center) && left.is_empty() && right.is_empty())
+                    if (RunRuleBody::is_single_nonterminal(center) && left.is_empty() && right.is_empty())
                         break;
                 }
                 return center[0].number;

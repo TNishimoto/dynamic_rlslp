@@ -26,12 +26,12 @@ namespace dynRLSLP
                 std::vector<int8_t> factor_flags;
                 factor_flags.resize(items.size(), -2);
                 const RandomBitDictionary &random_bit_dictionary = dic.get_random_bit_dictionary();
-                const std::vector<uint64_t>& base_signature_length_list = dic.get_base_signature_length_list();
+                const std::vector<uint64_t>& explicit_nonterminal_length_list = dic.get_explicit_nonterminal_length_list();
 
                 for (int64_t i = 0; i < (int64_t)items.size(); i++)
                 {
 
-                    uint64_t baseLen = SignatureFunctions::get_length(items[i].number, base_signature_length_list);
+                    uint64_t baseLen = NonterminalFunctions::get_length(items[i].number, explicit_nonterminal_length_list);
                     if (baseLen <= dynRLSLP::Mu::MU_FLOOR[current_level + 1])
                     {
                         factor_flags[i] = random_bit_dictionary.get_random_bit(items[i].number) ? 1 : 0;
@@ -46,15 +46,15 @@ namespace dynRLSLP
             /**
              * @brief Builds the level-0 run-rule sequence from plain text.
              * @tparam C Character type of the input text.
-             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @tparam CALLBACK Callback type invoked when new nonterminals are added.
              * @param text Input character sequence.
-             * @param dic Dynamic grammar used to allocate character signatures.
-             * @param callback_for_added_signature Callback invoked for each added signature.
+             * @param dic Dynamic grammar used to allocate character nonterminals.
+             * @param callback_for_added_nonterminal Callback invoked for each added nonterminal.
              * @param message_paragraph Indentation level for progress messages.
              * @return Level-0 deque of run-rule bodies.
              */
             template <typename C, typename CALLBACK = decltype(no_callback)>
-            static std::deque<RunRuleBody> shrink_char(const std::vector<C> &text, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signature, int message_paragraph = stool::Message::SHOW_MESSAGE)
+            static std::deque<RunRuleBody> shrink_char(const std::vector<C> &text, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_nonterminal, int message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 int64_t MB = 1000000;
                 int64_t counter = MB;
@@ -68,13 +68,13 @@ namespace dynRLSLP
                 }
                 std::deque<RunRuleBody> r;
                 RLSLPRuleBody first_char_body = RLSLPRuleBody::create_char_item(text[0]);
-                SignatureWithRelativeLevel first_sig = (int64_t)dic.get_or_add_signature(first_char_body, BSignatureBottomLevel, callback_for_added_signature);
+                NonterminalWithRelativeLevel first_sig = (int64_t)dic.get_or_add_nonterminal(first_char_body, BNonterminalBottomLevel, callback_for_added_nonterminal);
                 RunRuleBody current_run = RunRuleBody(first_sig, 1);
 
                 for (uint64_t i = 1; i < text.size(); i++)
                 {
                     RLSLPRuleBody char_body = RLSLPRuleBody::create_char_item(text[i]);
-                    SignatureWithRelativeLevel char_sig = (int64_t)dic.get_or_add_signature(char_body, BSignatureBottomLevel, callback_for_added_signature);
+                    NonterminalWithRelativeLevel char_sig = (int64_t)dic.get_or_add_nonterminal(char_body, BNonterminalBottomLevel, callback_for_added_nonterminal);
                     if (char_sig == (int64_t)current_run.number)
                     {
                         current_run.power++;
@@ -172,7 +172,7 @@ namespace dynRLSLP
                         }
                         else
                         {
-                            std::vector<SignatureWithRelativeLevel> tmp;
+                            std::vector<NonterminalWithRelativeLevel> tmp;
                             for (RunRuleBody it : text)
                             {
                                 tmp.push_back(it.number);
@@ -200,19 +200,19 @@ namespace dynRLSLP
 
             /**
              * @brief Applies one shrink or pow step to the center line with optional context.
-             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @tparam CALLBACK Callback type invoked when new nonterminals are added.
              * @param left_context Left context run-rule bodies.
              * @param center Center run-rule deque to compile.
              * @param right_context Right context run-rule bodies.
              * @param current_level Current hierarchy level.
              * @param dic Dynamic grammar updated during compilation.
-             * @param callback_for_added_signatures Callback invoked for each added signature.
+             * @param callback_for_added_nonterminals Callback invoked for each added nonterminal.
              * @param message_paragraph Indentation level for progress messages.
              * @return Compiled center sequence at the next level.
              */
             template <typename CALLBACK = decltype(no_callback)>
             static std::deque<RunRuleBody> center_line_compile(const std::vector<RunRuleBody> &left_context, const std::deque<RunRuleBody> &center, const std::vector<RunRuleBody> &right_context,
-                                                               uint64_t current_level, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signatures, [[maybe_unused]] int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
+                                                               uint64_t current_level, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_nonterminals, [[maybe_unused]] int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 // std::cout << stool::Message::get_paragraph_string(message_paragraph) << "center_line_compile: current_level = " << (int)current_level << std::endl;
                 if (center.size() == 0)
@@ -226,13 +226,13 @@ namespace dynRLSLP
                 {
                     if (current_level % 2 == 0)
                     {
-                        auto tmp_seq = ShrinkAndPow::pow(center, current_level, dic, callback_for_added_signatures);
+                        auto tmp_seq = ShrinkAndPow::pow(center, current_level, dic, callback_for_added_nonterminals);
                         r.swap(tmp_seq);
                         assert(RunRuleBody::verify_vector(r));
                     }
                     else
                     {
-                        auto tmp_seq = ShrinkAndPow::shrink_with_context(left_context, center, right_context, current_level, dic, callback_for_added_signatures, stool::Message::increment_paragraph_level(message_paragraph));
+                        auto tmp_seq = ShrinkAndPow::shrink_with_context(left_context, center, right_context, current_level, dic, callback_for_added_nonterminals, stool::Message::increment_paragraph_level(message_paragraph));
                         r.swap(tmp_seq);
                         assert(RunRuleBody::verify_vector(r));
                     }
@@ -241,13 +241,13 @@ namespace dynRLSLP
                 {
                     if (current_level % 2 == 0)
                     {
-                        auto tmp_seq = ShrinkAndPow::restricted_pow(center, current_level, dic, callback_for_added_signatures);
+                        auto tmp_seq = ShrinkAndPow::restricted_pow(center, current_level, dic, callback_for_added_nonterminals);
                         r.swap(tmp_seq);
                         assert(RunRuleBody::verify_vector(r));
                     }
                     else
                     {
-                        auto tmp_seq = ShrinkAndPow::restricted_shrink(center, current_level, dic, callback_for_added_signatures, stool::Message::increment_paragraph_level(message_paragraph));
+                        auto tmp_seq = ShrinkAndPow::restricted_shrink(center, current_level, dic, callback_for_added_nonterminals, stool::Message::increment_paragraph_level(message_paragraph));
                         r.swap(tmp_seq);
                         assert(RunRuleBody::verify_vector(r));
                     }
@@ -262,28 +262,28 @@ namespace dynRLSLP
 
         private:
             /**
-             * @brief Lifts run-rule bodies to the next level via signature encoding (pow step).
-             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @brief Lifts run-rule bodies to the next level via nonterminal encoding (pow step).
+             * @tparam CALLBACK Callback type invoked when new nonterminals are added.
              * @param items Input run-rule bodies.
              * @param current_level Current hierarchy level.
              * @param dic Dynamic grammar updated during compilation.
-             * @param callback_for_added_signature Callback invoked for each added signature.
+             * @param callback_for_added_nonterminal Callback invoked for each added nonterminal.
              * @return Run-rule bodies at level @p current_level + 1.
              */
             template <typename CALLBACK = decltype(no_callback)>
-            static std::deque<RunRuleBody> pow(const std::deque<RunRuleBody> &items, uint16_t current_level, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signature)
+            static std::deque<RunRuleBody> pow(const std::deque<RunRuleBody> &items, uint16_t current_level, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_nonterminal)
             {
                 std::deque<RunRuleBody> output;
                 for (uint64_t i = 0; i < items.size(); i++)
                 {
                     if (items[i].power > 1)
                     {
-                        SignatureWithRelativeLevel sig = dic.get_or_add_signature(RLSLPRuleBody::create_run_rule_body(items[i].number, items[i].power), current_level + 1, callback_for_added_signature);
+                        NonterminalWithRelativeLevel sig = dic.get_or_add_nonterminal(RLSLPRuleBody::create_run_rule_body(items[i].number, items[i].power), current_level + 1, callback_for_added_nonterminal);
                         output.push_back(RunRuleBody(sig, 1));
                     }
                     else if (items[i].power == 1)
                     {
-                        SignatureWithRelativeLevel sig = dic.get_or_add_signature(RLSLPRuleBody::create_signature_item(items[i].number), current_level + 1, callback_for_added_signature);
+                        NonterminalWithRelativeLevel sig = dic.get_or_add_nonterminal(RLSLPRuleBody::create_nonterminal_item(items[i].number), current_level + 1, callback_for_added_nonterminal);
                         output.push_back(RunRuleBody(sig, 1));
                         // output.push_back(items[i]);
                     }
@@ -297,32 +297,32 @@ namespace dynRLSLP
 
             /**
              * @brief Lifts run-rule bodies under restricted block compression (pow step).
-             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @tparam CALLBACK Callback type invoked when new nonterminals are added.
              * @param items Input run-rule bodies.
              * @param current_level Current hierarchy level.
              * @param dic Dynamic grammar updated during compilation.
-             * @param callback_for_added_signature Callback invoked for each added signature.
+             * @param callback_for_added_nonterminal Callback invoked for each added nonterminal.
              * @return Run-rule bodies at level @p current_level + 1.
              */
             template <typename CALLBACK = decltype(no_callback)>
-            static std::deque<RunRuleBody> restricted_pow(const std::deque<RunRuleBody> &items, uint16_t current_level, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signature)
+            static std::deque<RunRuleBody> restricted_pow(const std::deque<RunRuleBody> &items, uint16_t current_level, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_nonterminal)
             {
                 assert(current_level < LEVEL_LIMIT);
                 std::deque<RunRuleBody> output;
-                const std::vector<uint64_t>& base_signature_length_list = dic.get_base_signature_length_list();
+                const std::vector<uint64_t>& explicit_nonterminal_length_list = dic.get_explicit_nonterminal_length_list();
                 for (uint64_t i = 0; i < items.size(); i++)
                 {
-                    uint64_t baseLen = SignatureFunctions::get_length(items[i].number, base_signature_length_list);
+                    uint64_t baseLen = NonterminalFunctions::get_length(items[i].number, explicit_nonterminal_length_list);
                     if (baseLen <= dynRLSLP::Mu::MU_FLOOR[current_level + 1] && items[i].power > 1)
                     {
-                        SignatureWithRelativeLevel sig = dic.get_or_add_signature(RLSLPRuleBody::create_run_rule_body(items[i].number, items[i].power), current_level + 1, callback_for_added_signature);
+                        NonterminalWithRelativeLevel sig = dic.get_or_add_nonterminal(RLSLPRuleBody::create_run_rule_body(items[i].number, items[i].power), current_level + 1, callback_for_added_nonterminal);
                         output.push_back(RunRuleBody(sig, 1));
                     }
                     else
                     {
-                        RLSLPRuleBody newBody = RLSLPRuleBody::create_signature_item(items[i].number);
-                        SignatureWithRelativeLevel newSignature = (int64_t)dic.get_or_add_signature(newBody, current_level + 1, callback_for_added_signature);
-                        output.push_back(RunRuleBody(newSignature, items[i].power));
+                        RLSLPRuleBody newBody = RLSLPRuleBody::create_nonterminal_item(items[i].number);
+                        NonterminalWithRelativeLevel newNonterminal = (int64_t)dic.get_or_add_nonterminal(newBody, current_level + 1, callback_for_added_nonterminal);
+                        output.push_back(RunRuleBody(newNonterminal, items[i].power));
                     }
                 }
                 return output;
@@ -330,26 +330,26 @@ namespace dynRLSLP
 
             /**
              * @brief Shrinks the center line using locally consistent factor bits and context.
-             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @tparam CALLBACK Callback type invoked when new nonterminals are added.
              * @param left_context Left context run-rule bodies.
              * @param center Center run-rule deque to shrink.
              * @param right_context Right context run-rule bodies.
              * @param current_level Current hierarchy level.
              * @param dic Dynamic grammar updated during compilation.
-             * @param callback_for_added_signatures Callback invoked for each added signature.
+             * @param callback_for_added_nonterminals Callback invoked for each added nonterminal.
              * @param message_paragraph Indentation level for progress messages.
              * @return Shrunk center sequence at the next level.
              */
             template <typename CALLBACK = decltype(no_callback)>
             static std::deque<RunRuleBody> shrink_with_context(const std::vector<RunRuleBody> &left_context, const std::deque<RunRuleBody> &center, const std::vector<RunRuleBody> &right_context,
-                                                               uint64_t current_level, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_signatures, [[maybe_unused]] int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
+                                                               uint64_t current_level, DynamicGrammarForLayeredRLSLP &dic, CALLBACK &callback_for_added_nonterminals, [[maybe_unused]] int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
                 if (center.size() == 0)
                 {
                     throw std::runtime_error("ERROR in shrink_with_context: center.size() == 0");
                 }
 
-                std::vector<SignatureWithRelativeLevel> tmp;
+                std::vector<NonterminalWithRelativeLevel> tmp;
 
                 for (RunRuleBody it : left_context)
                     tmp.push_back(it.number);
@@ -374,14 +374,14 @@ namespace dynRLSLP
                     throw std::runtime_error("ERROR in center_line_compile: center_bools[0] is false");
                 }
 #endif
-                std::deque<RunRuleBody> shrink_seq = ShrinkAndPow::shrink(center, center_bools, current_level, dic, callback_for_added_signatures);
+                std::deque<RunRuleBody> shrink_seq = ShrinkAndPow::shrink(center, center_bools, current_level, dic, callback_for_added_nonterminals);
                 assert(RunRuleBody::verify_vector(shrink_seq));
 
 #ifdef DEBUG
-const std::vector<uint64_t>& base_signature_length_list = dic.get_base_signature_length_list();
+const std::vector<uint64_t>& explicit_nonterminal_length_list = dic.get_explicit_nonterminal_length_list();
 
-                int64_t centerLen = RunRuleBody::compute_string_length(center, base_signature_length_list);
-                int64_t rLen = RunRuleBody::compute_string_length(shrink_seq, base_signature_length_list);
+                int64_t centerLen = RunRuleBody::compute_string_length(center, explicit_nonterminal_length_list);
+                int64_t rLen = RunRuleBody::compute_string_length(shrink_seq, explicit_nonterminal_length_list);
                 if (rLen != centerLen)
                 {
                     std::cout << "ERROR in center_line_compile: rLen != centerLen" << std::endl;
@@ -394,12 +394,12 @@ const std::vector<uint64_t>& base_signature_length_list = dic.get_base_signature
 
             /**
              * @brief Shrinks a run-rule sequence according to factor bits.
-             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @tparam CALLBACK Callback type invoked when new nonterminals are added.
              * @param items Input run-rule bodies.
              * @param bools Factor bits marking block boundaries.
              * @param current_level Current hierarchy level.
              * @param dic Dynamic grammar updated during compilation.
-             * @param preprocessor Callback invoked for each added signature.
+             * @param preprocessor Callback invoked for each added nonterminal.
              * @return Shrunk run-rule deque at the next level.
              */
             template <typename CALLBACK = decltype(no_callback)>
@@ -414,7 +414,7 @@ const std::vector<uint64_t>& base_signature_length_list = dic.get_base_signature
                 assert(items.size() == bools.size());
                 assert(bools[0]);
 
-                SignatureWithRelativeLevel tmp = items[0].number;
+                NonterminalWithRelativeLevel tmp = items[0].number;
                 int64_t pairLength = 1;
                 for (int64_t i = 1; i < (int64_t)items.size(); i++)
                 {
@@ -428,8 +428,8 @@ const std::vector<uint64_t>& base_signature_length_list = dic.get_base_signature
                     else
                     {
                         RLSLPRuleBody newItem = RLSLPRuleBody::create_pair_item(tmp, items[i].number);
-                        SignatureWithRelativeLevel newSignature = (int64_t)dic.get_or_add_signature(newItem, current_level + 1, preprocessor);
-                        tmp = newSignature;
+                        NonterminalWithRelativeLevel newNonterminal = (int64_t)dic.get_or_add_nonterminal(newItem, current_level + 1, preprocessor);
+                        tmp = newNonterminal;
                         pairLength++;
                     }
                 }
@@ -438,17 +438,17 @@ const std::vector<uint64_t>& base_signature_length_list = dic.get_base_signature
                 output.push_back(RunRuleBody(tmp, 1));
                 tmp = -1;
                 pairLength = 1;
-                RunRuleBody::merge_same_signatures(output);
+                RunRuleBody::merge_same_nonterminals(output);
                 return output;
             }
 
             /**
              * @brief Shrinks a run-rule sequence under restricted block compression.
-             * @tparam CALLBACK Callback type invoked when new signatures are added.
+             * @tparam CALLBACK Callback type invoked when new nonterminals are added.
              * @param items Input run-rule bodies.
              * @param current_level Current hierarchy level.
              * @param dic Dynamic grammar updated during compilation.
-             * @param preprocessor Callback invoked for each added signature.
+             * @param preprocessor Callback invoked for each added nonterminal.
              * @param message_paragraph Indentation level for progress messages.
              * @return Shrunk run-rule deque at the next level.
              */
@@ -471,29 +471,29 @@ const std::vector<uint64_t>& base_signature_length_list = dic.get_base_signature
                     if (i + 1 < vec_size && factor_flags[i] == 1 && factor_flags[i + 1] == 0)
                     {
                         RLSLPRuleBody newItem = RLSLPRuleBody::create_pair_item(items[i].number, items[i + 1].number);
-                        SignatureWithRelativeLevel newSignature = (int64_t)dic.get_or_add_signature(newItem, current_level + 1, preprocessor);
-                        output.push_back(RunRuleBody(newSignature, 1));
+                        NonterminalWithRelativeLevel newNonterminal = (int64_t)dic.get_or_add_nonterminal(newItem, current_level + 1, preprocessor);
+                        output.push_back(RunRuleBody(newNonterminal, 1));
                         i += 2;
                     }
                     else
                     {
                         if (factor_flags[i] != -1)
                         {
-                            RLSLPRuleBody newItem = RLSLPRuleBody::create_signature_item(items[i].number);
-                            SignatureWithRelativeLevel newSignature = (int64_t)dic.get_or_add_signature(newItem, current_level + 1, preprocessor);
-                            output.push_back(RunRuleBody(newSignature, 1));
+                            RLSLPRuleBody newItem = RLSLPRuleBody::create_nonterminal_item(items[i].number);
+                            NonterminalWithRelativeLevel newNonterminal = (int64_t)dic.get_or_add_nonterminal(newItem, current_level + 1, preprocessor);
+                            output.push_back(RunRuleBody(newNonterminal, 1));
                         }
                         else
                         {
-                            RLSLPRuleBody newBody = RLSLPRuleBody::create_signature_item(items[i].number);
-                            SignatureWithRelativeLevel newSignature = (int64_t)dic.get_or_add_signature(newBody, current_level + 1, preprocessor);
-                            output.push_back(RunRuleBody(newSignature, items[i].power));
+                            RLSLPRuleBody newBody = RLSLPRuleBody::create_nonterminal_item(items[i].number);
+                            NonterminalWithRelativeLevel newNonterminal = (int64_t)dic.get_or_add_nonterminal(newBody, current_level + 1, preprocessor);
+                            output.push_back(RunRuleBody(newNonterminal, items[i].power));
                         }
 
                         i++;
                     }
                 }
-                RunRuleBody::merge_same_signatures(output);
+                RunRuleBody::merge_same_nonterminals(output);
                 return output;
             }
         };

@@ -20,12 +20,12 @@ namespace dynRLSLP
         {
 
         private:
-            static int64_t remove_common_power(VStack<RunRuleBody> &item1, VStack<RunRuleBody> &item2, const std::vector<uint64_t>& base_signature_length_list)
+            static int64_t remove_common_power(VStack<RunRuleBody> &item1, VStack<RunRuleBody> &item2, const std::vector<uint64_t>& explicit_nonterminal_length_list)
             {
                 auto top1 = item1.top();
                 auto top2 = item2.top();
                 auto min = top1.power > top2.power ? top2.power : top1.power;
-                auto matchedLen = SignatureFunctions::get_length(top1.number, base_signature_length_list) * min;
+                auto matchedLen = NonterminalFunctions::get_length(top1.number, explicit_nonterminal_length_list) * min;
 
                 if (min < top1.power)
                 {
@@ -54,9 +54,9 @@ namespace dynRLSLP
              * @brief Expand the front run on a stack by one derivation step.
              * @param item Rule body item.
              * @param is_reverse Whether expansion proceeds from the string end.
-             * @param base_signature_rule_list Base-signature rule list (D).
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
              */
-            static void break_front(VStack<RunRuleBody> &item, bool is_reverse, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
+            static void break_front(VStack<RunRuleBody> &item, bool is_reverse, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list)
             {
                 RunRuleBody top = item.top();
                 item.pop();
@@ -65,7 +65,7 @@ namespace dynRLSLP
                 {
                     item.push(RunRuleBody(top.number, top.power - 1));
                 }
-                RLSLPRuleBody rule = RLSLPRuleBody::decode_rule(top.number, base_signature_rule_list);
+                RLSLPRuleBody rule = RLSLPRuleBody::decode_rule(top.number, explicit_nonterminal_rule_list);
                 if (rule.get_type() == RLSLPRuleType::Pair)
                 {
                     if (is_reverse)
@@ -83,14 +83,14 @@ namespace dynRLSLP
                 {
                     item.push(RunRuleBody(rule.A, rule.B));
                 }
-                else if (rule.get_type() == RLSLPRuleType::Signature)
+                else if (rule.get_type() == RLSLPRuleType::Nonterminal)
                 {
-                    SignatureWithRelativeLevel base_signature = SignatureFunctions::get_base_signature(top.number);
-                    item.push(RunRuleBody(base_signature, 1));
+                    NonterminalWithRelativeLevel explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(top.number);
+                    item.push(RunRuleBody(explicit_nonterminal, 1));
                 }
                 else
                 {
-                    throw std::runtime_error("Error in break_front: rule.get_type() is not Pair, Power, or Signature");
+                    throw std::runtime_error("Error in break_front: rule.get_type() is not Pair, Power, or Nonterminal");
                 }
             }
 
@@ -122,9 +122,9 @@ namespace dynRLSLP
                 auto start = std::chrono::steady_clock::now();
                 #endif
 
-                const std::vector<uint64_t>& base_signature_length_list = small_dic.get_base_signature_length_list();
-                ShortStringInfo short_string1 = ShortString::get_left_short_string(body1, alphabet_bit_size, base_signature_length_list, leftShortStringList);
-                ShortStringInfo short_string2 = ShortString::get_left_short_string(body2, alphabet_bit_size, base_signature_length_list, leftShortStringList);
+                const std::vector<uint64_t>& explicit_nonterminal_length_list = small_dic.get_explicit_nonterminal_length_list();
+                ShortStringInfo short_string1 = ShortString::get_left_short_string(body1, alphabet_bit_size, explicit_nonterminal_length_list, leftShortStringList);
+                ShortStringInfo short_string2 = ShortString::get_left_short_string(body2, alphabet_bit_size, explicit_nonterminal_length_list, leftShortStringList);
                 std::pair<uint64_t, int8_t> result = ShortString::short_lce(short_string1, short_string2, alphabet_bit_size);
 
                 #ifdef TIME_DEBUG
@@ -187,9 +187,9 @@ namespace dynRLSLP
                 auto start = std::chrono::steady_clock::now();
                 #endif
 
-                const std::vector<uint64_t>& base_signature_length_list = small_dic.get_base_signature_length_list();
+                const std::vector<uint64_t>& explicit_nonterminal_length_list = small_dic.get_explicit_nonterminal_length_list();
 
-                ShortStringInfo short_string1 = ShortString::get_left_short_string(body1, alphabet_bit_size, base_signature_length_list, leftShortStringList);
+                ShortStringInfo short_string1 = ShortString::get_left_short_string(body1, alphabet_bit_size, explicit_nonterminal_length_list, leftShortStringList);
                 std::pair<uint64_t, int8_t> result = ShortString::short_lce(short_string1, short_string2, alphabet_bit_size);
                 #ifdef TIME_DEBUG
                 auto end = std::chrono::steady_clock::now();
@@ -275,9 +275,9 @@ namespace dynRLSLP
                 #ifdef TIME_DEBUG
                 auto start = std::chrono::steady_clock::now();
                 #endif
-                const std::vector<uint64_t>& base_signature_length_list = small_dic.get_base_signature_length_list();
-                ShortStringInfo short_string1 = ShortString::get_left_short_string(item1, alphabet_bit_size, base_signature_length_list, leftShortStringList);
-                ShortStringInfo short_string2 = ShortString::get_left_short_string(item2, alphabet_bit_size, base_signature_length_list, leftShortStringList);
+                const std::vector<uint64_t>& explicit_nonterminal_length_list = small_dic.get_explicit_nonterminal_length_list();
+                ShortStringInfo short_string1 = ShortString::get_left_short_string(item1, alphabet_bit_size, explicit_nonterminal_length_list, leftShortStringList);
+                ShortStringInfo short_string2 = ShortString::get_left_short_string(item2, alphabet_bit_size, explicit_nonterminal_length_list, leftShortStringList);
                 std::pair<uint64_t, int8_t> result = ShortString::short_lce(short_string1, short_string2, alphabet_bit_size);
 
                 #ifdef TIME_DEBUG
@@ -321,10 +321,10 @@ namespace dynRLSLP
                 #ifdef TIME_DEBUG
                 auto start = std::chrono::steady_clock::now();
                 #endif
-                const std::vector<uint64_t>& base_signature_length_list = small_dic.get_base_signature_length_list();
+                const std::vector<uint64_t>& explicit_nonterminal_length_list = small_dic.get_explicit_nonterminal_length_list();
 
 
-                ShortStringInfo short_string1 = ShortString::get_right_short_string(body1, alphabet_bit_size, base_signature_length_list, rightShortStringList);
+                ShortStringInfo short_string1 = ShortString::get_right_short_string(body1, alphabet_bit_size, explicit_nonterminal_length_list, rightShortStringList);
                 std::pair<uint64_t, int8_t> result = ShortString::short_reverse_lce(short_string1, short_string2, alphabet_bit_size);
 
                 #ifdef TIME_DEBUG
@@ -360,8 +360,8 @@ namespace dynRLSLP
                     VStack<RunRuleBody> item2 = LevelSequenceFunction::create_stack(body2);
 
                     /*
-                    std::string x_short_string1 = ShortString::get_right_short_string_as_string(item1, alphabet_bit_size, base_signature_length_list, rightShortStringList);
-                    std::string x_short_string2 = ShortString::get_right_short_string_as_string(item2, alphabet_bit_size, base_signature_length_list, rightShortStringList);
+                    std::string x_short_string1 = ShortString::get_right_short_string_as_string(item1, alphabet_bit_size, explicit_nonterminal_length_list, rightShortStringList);
+                    std::string x_short_string2 = ShortString::get_right_short_string_as_string(item2, alphabet_bit_size, explicit_nonterminal_length_list, rightShortStringList);
                     std::string x_short_string3 = ShortString::get_short_string_as_string(short_string2.first, short_string2.second / alphabet_bit_size, alphabet_bit_size);
                     std::cout << "x_short_string1: " << x_short_string1 << std::endl;
                     std::cout << "x_short_string2: " << x_short_string2 << std::endl;
@@ -400,10 +400,10 @@ namespace dynRLSLP
                 #ifdef TIME_DEBUG
                 auto start = std::chrono::steady_clock::now();
                 #endif
-                const std::vector<uint64_t>& base_signature_length_list = small_dic.get_base_signature_length_list();
+                const std::vector<uint64_t>& explicit_nonterminal_length_list = small_dic.get_explicit_nonterminal_length_list();
 
-                ShortStringInfo short_string1 = ShortString::get_right_short_string(body1, alphabet_bit_size, base_signature_length_list, rightShortStringList);
-                ShortStringInfo short_string2 = ShortString::get_right_short_string(body2, alphabet_bit_size, base_signature_length_list, rightShortStringList);
+                ShortStringInfo short_string1 = ShortString::get_right_short_string(body1, alphabet_bit_size, explicit_nonterminal_length_list, rightShortStringList);
+                ShortStringInfo short_string2 = ShortString::get_right_short_string(body2, alphabet_bit_size, explicit_nonterminal_length_list, rightShortStringList);
                 std::pair<uint64_t, int8_t> result = ShortString::short_reverse_lce(short_string1, short_string2, alphabet_bit_size);
 
                 #ifdef TIME_DEBUG
@@ -472,11 +472,11 @@ namespace dynRLSLP
                 #ifdef TIME_DEBUG
                 auto start = std::chrono::steady_clock::now();
                 #endif
-                const std::vector<uint64_t>& base_signature_length_list = small_dic.get_base_signature_length_list();
+                const std::vector<uint64_t>& explicit_nonterminal_length_list = small_dic.get_explicit_nonterminal_length_list();
 
 
-                std::pair<uint64_t, uint8_t> str1 = ShortString::get_right_short_string(item1, alphabet_bit_size, base_signature_length_list, rightShortStringList);
-                std::pair<uint64_t, uint8_t> str2 = ShortString::get_right_short_string(item2, alphabet_bit_size, base_signature_length_list, rightShortStringList);
+                std::pair<uint64_t, uint8_t> str1 = ShortString::get_right_short_string(item1, alphabet_bit_size, explicit_nonterminal_length_list, rightShortStringList);
+                std::pair<uint64_t, uint8_t> str2 = ShortString::get_right_short_string(item2, alphabet_bit_size, explicit_nonterminal_length_list, rightShortStringList);
                 std::pair<uint64_t, int8_t> result = ShortString::short_reverse_lce(str1, str2, alphabet_bit_size);
 
                 #ifdef TIME_DEBUG
@@ -518,9 +518,9 @@ namespace dynRLSLP
                 uint64_t matchedLength = 0;
                 int8_t comp = 0;
 
-                const std::vector<uint64_t>& base_signature_length_list = small_dic.get_base_signature_length_list();
-                const std::vector<uint16_t>& base_signature_level_list = small_dic.get_base_signature_level_list();
-                const std::vector<RLSLPRuleBody> &base_signature_rule_list = small_dic.get_base_signature_rule_list();
+                const std::vector<uint64_t>& explicit_nonterminal_length_list = small_dic.get_explicit_nonterminal_length_list();
+                const std::vector<uint16_t>& explicit_nonterminal_level_list = small_dic.get_explicit_nonterminal_level_list();
+                const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = small_dic.get_explicit_nonterminal_rule_list();
 
                 #ifdef TIME_DEBUG
                 auto start = std::chrono::steady_clock::now();
@@ -531,21 +531,21 @@ namespace dynRLSLP
                     RunRuleBody top1 = item1.top();
                     RunRuleBody top2 = item2.top();
 
-                    auto h1 = SignatureFunctions::get_level(top1.number, base_signature_level_list);
-                    auto h2 = SignatureFunctions::get_level(top2.number, base_signature_level_list);
+                    auto h1 = NonterminalFunctions::get_level(top1.number, explicit_nonterminal_level_list);
+                    auto h2 = NonterminalFunctions::get_level(top2.number, explicit_nonterminal_level_list);
 
                     if (h1 == h2)
                     {
                         if (top1.number == top2.number)
                         {
-                            matchedLength += remove_common_power(item1, item2, base_signature_length_list);
+                            matchedLength += remove_common_power(item1, item2, explicit_nonterminal_length_list);
                         }
                         else
                         {
-                            if (h1 == BSignatureBottomLevel && h2 == BSignatureBottomLevel)
+                            if (h1 == BNonterminalBottomLevel && h2 == BNonterminalBottomLevel)
                             {
-                                RLSLPRuleBody front_item1 = RLSLPRuleBody::decode_rule(top1.number, base_signature_rule_list);
-                                RLSLPRuleBody front_item2 = RLSLPRuleBody::decode_rule(top2.number, base_signature_rule_list);
+                                RLSLPRuleBody front_item1 = RLSLPRuleBody::decode_rule(top1.number, explicit_nonterminal_rule_list);
+                                RLSLPRuleBody front_item2 = RLSLPRuleBody::decode_rule(top2.number, explicit_nonterminal_rule_list);
                                 assert(front_item1.get_type() == RLSLPRuleType::Character);
                                 assert(front_item2.get_type() == RLSLPRuleType::Character);
                                 auto c1 = front_item1.A;
@@ -557,29 +557,29 @@ namespace dynRLSLP
                             }
                             else
                             {
-                                break_front(item1, is_reverse, base_signature_rule_list);
+                                break_front(item1, is_reverse, explicit_nonterminal_rule_list);
                             }
                         }
                     }
                     else if (h1 < h2)
                     {
-                        if (h2 == BSignatureBottomLevel)
+                        if (h2 == BNonterminalBottomLevel)
                         {
                             break;
                         }
                         else
                         {
-                            break_front(item2, is_reverse, base_signature_rule_list);
+                            break_front(item2, is_reverse, explicit_nonterminal_rule_list);
                         }
                     }
                     else
                     {
-                        if (h1 == BSignatureBottomLevel)
+                        if (h1 == BNonterminalBottomLevel)
                         {
                         }
                         else
                         {
-                            break_front(item1, is_reverse, base_signature_rule_list);
+                            break_front(item1, is_reverse, explicit_nonterminal_rule_list);
                         }
                     }
                 }
@@ -628,9 +628,9 @@ namespace dynRLSLP
                 total_lce_count++;
                 bool is_reverse = true;
 
-                const std::vector<uint64_t>& base_signature_length_list = small_dic.get_base_signature_length_list();
-                const std::vector<uint16_t>& base_signature_level_list = small_dic.get_base_signature_level_list();
-                const std::vector<RLSLPRuleBody> &base_signature_rule_list = small_dic.get_base_signature_rule_list();
+                const std::vector<uint64_t>& explicit_nonterminal_length_list = small_dic.get_explicit_nonterminal_length_list();
+                const std::vector<uint16_t>& explicit_nonterminal_level_list = small_dic.get_explicit_nonterminal_level_list();
+                const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = small_dic.get_explicit_nonterminal_rule_list();
 
                 uint64_t matchedLength = 0;
                 int8_t comp = 0;
@@ -644,21 +644,21 @@ namespace dynRLSLP
                     RunRuleBody top1 = item1.top();
                     RunRuleBody top2 = item2.top();
 
-                    auto h1 = SignatureFunctions::get_level(top1.number, base_signature_level_list);
-                    auto h2 = SignatureFunctions::get_level(top2.number, base_signature_level_list);
+                    auto h1 = NonterminalFunctions::get_level(top1.number, explicit_nonterminal_level_list);
+                    auto h2 = NonterminalFunctions::get_level(top2.number, explicit_nonterminal_level_list);
 
                     if (h1 == h2)
                     {
                         if (top1.number == top2.number)
                         {
-                            matchedLength += remove_common_power(item1, item2, base_signature_length_list);
+                            matchedLength += remove_common_power(item1, item2, explicit_nonterminal_length_list);
                         }
                         else
                         {
-                            if (h1 == BSignatureBottomLevel && h2 == BSignatureBottomLevel)
+                            if (h1 == BNonterminalBottomLevel && h2 == BNonterminalBottomLevel)
                             {
-                                RLSLPRuleBody front_item1 = RLSLPRuleBody::decode_rule(top1.number, base_signature_rule_list);
-                                RLSLPRuleBody front_item2 = RLSLPRuleBody::decode_rule(top2.number, base_signature_rule_list);
+                                RLSLPRuleBody front_item1 = RLSLPRuleBody::decode_rule(top1.number, explicit_nonterminal_rule_list);
+                                RLSLPRuleBody front_item2 = RLSLPRuleBody::decode_rule(top2.number, explicit_nonterminal_rule_list);
                                 assert(front_item1.get_type() == RLSLPRuleType::Character);
                                 assert(front_item2.get_type() == RLSLPRuleType::Character);
                                 auto c1 = front_item1.A;
@@ -678,29 +678,29 @@ namespace dynRLSLP
                             }
                             else
                             {
-                                break_front(item1, is_reverse, base_signature_rule_list);
+                                break_front(item1, is_reverse, explicit_nonterminal_rule_list);
                             }
                         }
                     }
                     else if (h1 < h2)
                     {
-                        if (h2 == BSignatureBottomLevel)
+                        if (h2 == BNonterminalBottomLevel)
                         {
                             break;
                         }
                         else
                         {
-                            break_front(item2, is_reverse, base_signature_rule_list);
+                            break_front(item2, is_reverse, explicit_nonterminal_rule_list);
                         }
                     }
                     else
                     {
-                        if (h1 == BSignatureBottomLevel)
+                        if (h1 == BNonterminalBottomLevel)
                         {
                         }
                         else
                         {
-                            break_front(item1, is_reverse, base_signature_rule_list);
+                            break_front(item1, is_reverse, explicit_nonterminal_rule_list);
                         }
                     }
                 }

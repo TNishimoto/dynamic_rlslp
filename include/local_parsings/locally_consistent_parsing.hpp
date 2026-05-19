@@ -72,8 +72,8 @@ namespace dynRLSLP
 
 
             /**
-             * @brief Computes locally consistent factor bits for a signature sequence.
-             * @param items Input sequence of distinct signatures.
+             * @brief Computes locally consistent factor bits for a nonterminal sequence.
+             * @param items Input sequence of distinct nonterminals.
              * @param output Output vector of factor bits (true marks a block boundary).
              */
             static void compute_factor_bits(const std::vector<int64_t> &items, std::vector<bool> &output)
@@ -102,10 +102,10 @@ namespace dynRLSLP
                 verify(output);
             }
             /**
-             * @brief Verifies that no two consecutive signatures are equal.
-             * @param items Input signature sequence.
+             * @brief Verifies that no two consecutive nonterminals are equal.
+             * @param items Input nonterminal sequence.
              * @return True if the sequence is valid.
-             * @throws std::runtime_error if adjacent signatures are equal.
+             * @throws std::runtime_error if adjacent nonterminals are equal.
              */
             static bool verify_input(const std::vector<int64_t> &items){
                 for(int64_t i = 1; i < (int64_t)items.size(); i++){
@@ -290,7 +290,7 @@ namespace dynRLSLP
             }
             /**
              * @brief Computes a six-color labeling of the input sequence.
-             * @param seq Input signature sequence.
+             * @param seq Input nonterminal sequence.
              * @return Six-color sequence of the same length.
              */
             static std::vector<int64_t> compute_six_colors(const std::vector<int64_t> &seq)

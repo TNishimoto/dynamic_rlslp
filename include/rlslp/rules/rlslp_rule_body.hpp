@@ -10,7 +10,7 @@
 #include <set>
 #include <cassert>
 #include "../../types/types.hpp"
-#include "./signature_functions.hpp"
+#include "./nonterminal_functions.hpp"
 
 namespace dynRLSLP
 {
@@ -23,9 +23,9 @@ namespace dynRLSLP
 
 	public:
 		/** @brief First operand of the rule body. */
-		SignatureWithRelativeLevel A;
+		NonterminalWithRelativeLevel A;
 		/** @brief Second operand of the rule body. */
-		SignatureWithRelativeLevel B;
+		NonterminalWithRelativeLevel B;
 
 		/** @brief Type of the rule body. */
 		RLSLPRuleType type;
@@ -37,31 +37,31 @@ namespace dynRLSLP
 		}
 		/**
 		 * @brief Construct a rule body from operands and type.
-		 * @param a First operand (left child, character, or base signature).
+		 * @param a First operand (left child, character, or base nonterminal).
 		 * @param b Second operand (right child, exponent, or sentinel).
 		 * @param type_ Rule type tag.
 		 */
-		RLSLPRuleBody(SignatureWithRelativeLevel a, SignatureWithRelativeLevel b, RLSLPRuleType type_) : A(a), B(b), type(type_)
+		RLSLPRuleBody(NonterminalWithRelativeLevel a, NonterminalWithRelativeLevel b, RLSLPRuleType type_) : A(a), B(b), type(type_)
 		{
 		}
 
 		/**
 		 * @brief Return the string length represented by this rule body.
-		 * @param base_signature_length_list Base-signature length list (L).
+		 * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
 		 */
-		uint64_t get_length(const std::vector<uint64_t> &base_signature_length_list) const
+		uint64_t get_length(const std::vector<uint64_t> &explicit_nonterminal_length_list) const
 		{
 			if (this->get_type() == RLSLPRuleType::Pair)
 			{
-				return base_signature_length_list[SignatureFunctions::get_base_signature(this->A)] + base_signature_length_list[SignatureFunctions::get_base_signature(this->B)];
+				return explicit_nonterminal_length_list[NonterminalFunctions::get_explicit_nonterminal(this->A)] + explicit_nonterminal_length_list[NonterminalFunctions::get_explicit_nonterminal(this->B)];
 			}
 			else if (this->get_type() == RLSLPRuleType::Power)
 			{
-				return base_signature_length_list[SignatureFunctions::get_base_signature(this->A)] * this->B;
+				return explicit_nonterminal_length_list[NonterminalFunctions::get_explicit_nonterminal(this->A)] * this->B;
 			}
-			else if (this->get_type() == RLSLPRuleType::Signature)
+			else if (this->get_type() == RLSLPRuleType::Nonterminal)
 			{
-				return base_signature_length_list[SignatureFunctions::get_base_signature(this->A)];
+				return explicit_nonterminal_length_list[NonterminalFunctions::get_explicit_nonterminal(this->A)];
 			}
 			else if (this->get_type() == RLSLPRuleType::Character)
 			{
@@ -92,7 +92,7 @@ namespace dynRLSLP
 
 		/**
 		 * @brief Split a power rule X^e into left factor X and right factor X^(e-1).
-		 * @param itemList Base-signature rule list (D).
+		 * @param itemList Base-nonterminal rule list (D).
 		 */
 		std::pair<const RLSLPRuleBody, const RLSLPRuleBody> break_power(const std::vector<RLSLPRuleBody> &itemList) const
 		{
@@ -120,27 +120,27 @@ namespace dynRLSLP
 			std::stringstream ss;
 			if (this->get_type() == RLSLPRuleType::Power)
 			{
-				uint64_t base_signature = SignatureFunctions::get_base_signature(this->A);
-				uint64_t level = SignatureFunctions::get_relative_level(this->A);
-				ss << "[" << base_signature << "(H" << level << ")" << "^" << this->B << "]";
+				uint64_t explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(this->A);
+				uint64_t level = NonterminalFunctions::get_relative_level(this->A);
+				ss << "[" << explicit_nonterminal << "(H" << level << ")" << "^" << this->B << "]";
 			}
 			else if (this->get_type() == RLSLPRuleType::Pair)
 			{
-				uint64_t base_signatureA = SignatureFunctions::get_base_signature(this->A);
-				uint64_t levelA = SignatureFunctions::get_relative_level(this->A);
-				uint64_t base_signatureB = SignatureFunctions::get_base_signature(this->B);
-				uint64_t levelB = SignatureFunctions::get_relative_level(this->B);
-				ss << "[" << base_signatureA << "(H" << levelA << ")" << ", " << base_signatureB << "(H" << levelB << ")" << "]";
+				uint64_t explicit_nonterminalA = NonterminalFunctions::get_explicit_nonterminal(this->A);
+				uint64_t levelA = NonterminalFunctions::get_relative_level(this->A);
+				uint64_t explicit_nonterminalB = NonterminalFunctions::get_explicit_nonterminal(this->B);
+				uint64_t levelB = NonterminalFunctions::get_relative_level(this->B);
+				ss << "[" << explicit_nonterminalA << "(H" << levelA << ")" << ", " << explicit_nonterminalB << "(H" << levelB << ")" << "]";
 			}
 			else if (this->get_type() == RLSLPRuleType::Character)
 			{
 				ss << "[" << (char)this->A << "(" << (int64_t)this->A << ")" << "]";
 			}
-			else if (this->get_type() == RLSLPRuleType::Signature)
+			else if (this->get_type() == RLSLPRuleType::Nonterminal)
 			{
-				uint64_t base_signature = SignatureFunctions::get_base_signature(this->A);
-				uint64_t level = SignatureFunctions::get_relative_level(this->A);
-				ss << "[" << base_signature << "(H" << level << ")" << "]";
+				uint64_t explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(this->A);
+				uint64_t level = NonterminalFunctions::get_relative_level(this->A);
+				ss << "[" << explicit_nonterminal << "(H" << level << ")" << "]";
 			}
 			else if (this->get_type() == RLSLPRuleType::Null)
 			{
@@ -154,39 +154,39 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return a detailed string description with base signature and level.
-		 * @param base_signature Base signature index.
+		 * @brief Return a detailed string description with base nonterminal and level.
+		 * @param explicit_nonterminal Base nonterminal index.
 		 * @param level Derivation-tree level.
-		 * @return Detailed rule string including base signature and level.
+		 * @return Detailed rule string including base nonterminal and level.
 		 */
-		std::string get_detailed_info(BaseSignature base_signature, uint64_t level) const
+		std::string get_detailed_info(ExplicitNonterminal explicit_nonterminal, uint64_t level) const
 		{
 			std::stringstream ss;
-			ss << "[" << base_signature << "_" << level << " -> ";
+			ss << "[" << explicit_nonterminal << "_" << level << " -> ";
 
 			if (this->get_type() == RLSLPRuleType::Power)
 			{
-				uint64_t base_signatureA = SignatureFunctions::get_base_signature(this->A);
-				uint64_t levelA = SignatureFunctions::get_relative_level(this->A);
-				ss << base_signatureA << "_" << levelA << "^" << this->B << "]";
+				uint64_t explicit_nonterminalA = NonterminalFunctions::get_explicit_nonterminal(this->A);
+				uint64_t levelA = NonterminalFunctions::get_relative_level(this->A);
+				ss << explicit_nonterminalA << "_" << levelA << "^" << this->B << "]";
 			}
 			else if (this->get_type() == RLSLPRuleType::Pair)
 			{
-				uint64_t base_signatureA = SignatureFunctions::get_base_signature(this->A);
-				uint64_t levelA = SignatureFunctions::get_relative_level(this->A);
-				uint64_t base_signatureB = SignatureFunctions::get_base_signature(this->B);
-				uint64_t levelB = SignatureFunctions::get_relative_level(this->B);
-				ss << base_signatureA << "_" << levelA << ", " << base_signatureB << "_" << levelB << "]";
+				uint64_t explicit_nonterminalA = NonterminalFunctions::get_explicit_nonterminal(this->A);
+				uint64_t levelA = NonterminalFunctions::get_relative_level(this->A);
+				uint64_t explicit_nonterminalB = NonterminalFunctions::get_explicit_nonterminal(this->B);
+				uint64_t levelB = NonterminalFunctions::get_relative_level(this->B);
+				ss << explicit_nonterminalA << "_" << levelA << ", " << explicit_nonterminalB << "_" << levelB << "]";
 			}
 			else if (this->get_type() == RLSLPRuleType::Character)
 			{
 				ss << (char)this->A << "]";
 			}
-			else if (this->get_type() == RLSLPRuleType::Signature)
+			else if (this->get_type() == RLSLPRuleType::Nonterminal)
 			{
-				uint64_t base_signatureA = SignatureFunctions::get_base_signature(this->A);
-				uint64_t levelA = SignatureFunctions::get_relative_level(this->A);
-				ss << base_signatureA << "_" << levelA << "]";
+				uint64_t explicit_nonterminalA = NonterminalFunctions::get_explicit_nonterminal(this->A);
+				uint64_t levelA = NonterminalFunctions::get_relative_level(this->A);
+				ss << explicit_nonterminalA << "_" << levelA << "]";
 			}
 			else if (this->get_type() == RLSLPRuleType::Null)
 			{
@@ -201,7 +201,7 @@ namespace dynRLSLP
 
 		/**
 		 * @brief Return the level of this rule body.
-		 * @param heightList Base-signature level list (H).
+		 * @param heightList Base-nonterminal level list (H).
 		 */
 		uint64_t get_height(const std::vector<uint16_t> &heightList) const
 		{
@@ -213,13 +213,13 @@ namespace dynRLSLP
 			{
 				return heightList[this->A];
 			}
-			else if (this->get_type() == RLSLPRuleType::Signature)
+			else if (this->get_type() == RLSLPRuleType::Nonterminal)
 			{
 				return heightList[this->A] + 1;
 			}
 			else if (this->get_type() == RLSLPRuleType::Character)
 			{
-				return BSignatureBottomLevel;
+				return BNonterminalBottomLevel;
 			}
 			else
 			{
@@ -230,7 +230,7 @@ namespace dynRLSLP
 		/**
 		 * @brief Return the string derived by this rule body.
 		 * @tparam OUTPUT_VEC_TYPE Container type supporting push_back (default std::vector<uint8_t>).
-		 * @param itemList Base-signature rule list (D).
+		 * @param itemList Base-nonterminal rule list (D).
 		 * @param output Output container; expanded bytes are appended in place.
 		 */
 		template <typename OUTPUT_VEC_TYPE = std::vector<uint8_t>>
@@ -242,21 +242,21 @@ namespace dynRLSLP
 			}
 			else if (this->get_type() == RLSLPRuleType::Pair)
 			{
-				assert(SignatureFunctions::get_base_signature(this->A) < itemList.size());
-				assert(SignatureFunctions::get_base_signature(this->B) < itemList.size());
-				itemList[SignatureFunctions::get_base_signature(this->A)].decompress(itemList, output);
-				itemList[SignatureFunctions::get_base_signature(this->B)].decompress(itemList, output);
+				assert(NonterminalFunctions::get_explicit_nonterminal(this->A) < itemList.size());
+				assert(NonterminalFunctions::get_explicit_nonterminal(this->B) < itemList.size());
+				itemList[NonterminalFunctions::get_explicit_nonterminal(this->A)].decompress(itemList, output);
+				itemList[NonterminalFunctions::get_explicit_nonterminal(this->B)].decompress(itemList, output);
 			}
-			else if (this->get_type() == RLSLPRuleType::Signature)
+			else if (this->get_type() == RLSLPRuleType::Nonterminal)
 			{
-				assert(SignatureFunctions::get_base_signature(this->A) < itemList.size());
-				itemList[SignatureFunctions::get_base_signature(this->A)].decompress(itemList, output);
+				assert(NonterminalFunctions::get_explicit_nonterminal(this->A) < itemList.size());
+				itemList[NonterminalFunctions::get_explicit_nonterminal(this->A)].decompress(itemList, output);
 			}
 			else if (this->get_type() == RLSLPRuleType::Power)
 			{
 				std::vector<uint8_t> tmp;
-				assert(SignatureFunctions::get_base_signature(this->A) < itemList.size());
-				itemList[SignatureFunctions::get_base_signature(this->A)].decompress(itemList, tmp);
+				assert(NonterminalFunctions::get_explicit_nonterminal(this->A) < itemList.size());
+				itemList[NonterminalFunctions::get_explicit_nonterminal(this->A)].decompress(itemList, tmp);
 				for (int64_t i = 0; i < this->B; i++)
 				{
 					for (auto it : tmp)
@@ -273,12 +273,12 @@ namespace dynRLSLP
 
 		/**
 		 * @brief Return the string derived by this rule body.
-		 * @param base_signature_rule_list Base-signature rule list (D).
+		 * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
 		 */
-		std::string decompress2(const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
+		std::string decompress2(const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list) const
 		{
 			std::string r;
-			this->decompress(base_signature_rule_list, r);
+			this->decompress(explicit_nonterminal_rule_list, r);
 			return r;
 		}
 
@@ -323,26 +323,26 @@ namespace dynRLSLP
 			return RLSLPRuleBody(c, -1, RLSLPRuleType::Character);
 		}
 		/**
-		 * @brief Create a pair rule body representing a given pair of signatures.
+		 * @brief Create a pair rule body representing a given pair of nonterminals.
 		 */
-		static RLSLPRuleBody create_pair_item(SignatureWithRelativeLevel left, SignatureWithRelativeLevel right)
+		static RLSLPRuleBody create_pair_item(NonterminalWithRelativeLevel left, NonterminalWithRelativeLevel right)
 		{
 			return RLSLPRuleBody(left, right, RLSLPRuleType::Pair);
 		}
 		/**
 		 * @brief Create a run rule body X^k.
 		 */
-		static RLSLPRuleBody create_run_rule_body(SignatureWithRelativeLevel X, SignatureWithRelativeLevel k)
+		static RLSLPRuleBody create_run_rule_body(NonterminalWithRelativeLevel X, NonterminalWithRelativeLevel k)
 		{
 			return RLSLPRuleBody(X, k, RLSLPRuleType::Power);
 		}
 
 		/**
-		 * @brief Create a unary signature representing a given signature.
+		 * @brief Create a unary nonterminal representing a given nonterminal.
 		 */
-		static RLSLPRuleBody create_signature_item(SignatureWithRelativeLevel single)
+		static RLSLPRuleBody create_nonterminal_item(NonterminalWithRelativeLevel single)
 		{
-			return RLSLPRuleBody(single, INT64_MAX, RLSLPRuleType::Signature);
+			return RLSLPRuleBody(single, INT64_MAX, RLSLPRuleType::Nonterminal);
 		}
 
 		/**
@@ -354,30 +354,30 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Return the RLSLP rule body representing a given signature.
-		 * @param base_signature_rule_list Base-signature rule list (D).
+		 * @brief Return the RLSLP rule body representing a given nonterminal.
+		 * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
 		 */
-		static RLSLPRuleBody decode_rule(SignatureWithRelativeLevel sig, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
+		static RLSLPRuleBody decode_rule(NonterminalWithRelativeLevel sig, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list)
 		{
-			int64_t base_sig = SignatureFunctions::get_base_signature(sig);
-			int64_t level = SignatureFunctions::get_relative_level(sig);
+			int64_t base_sig = NonterminalFunctions::get_explicit_nonterminal(sig);
+			int64_t level = NonterminalFunctions::get_relative_level(sig);
 			if (level > 0)
 			{
-				return RLSLPRuleBody::create_signature_item(SignatureFunctions::get_signature(level - 1, base_sig));
+				return RLSLPRuleBody::create_nonterminal_item(NonterminalFunctions::get_nonterminal(level - 1, base_sig));
 			}
 			else
 			{
-				return base_signature_rule_list[base_sig];
+				return explicit_nonterminal_rule_list[base_sig];
 			}
 		}
 
 		/**
-		 * @brief Return a const reference to the rule body of a given base signature.
-		 * @param base_signature_rule_list Base-signature rule list (D).
+		 * @brief Return a const reference to the rule body of a given base nonterminal.
+		 * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
 		 */
-		static const RLSLPRuleBody &refer_body_of_base_signature(BaseSignature sig, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
+		static const RLSLPRuleBody &refer_body_of_explicit_nonterminal(ExplicitNonterminal sig, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list)
 		{
-			return base_signature_rule_list[sig];
+			return explicit_nonterminal_rule_list[sig];
 		}
 
 		/**
@@ -386,7 +386,7 @@ namespace dynRLSLP
 		 */
 		static uint64_t get_byte()
 		{
-			return (2 * sizeof(SignatureWithRelativeLevel)) + sizeof(unsigned char);
+			return (2 * sizeof(NonterminalWithRelativeLevel)) + sizeof(unsigned char);
 		}
 	};
 

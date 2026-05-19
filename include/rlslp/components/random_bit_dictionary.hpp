@@ -11,7 +11,7 @@
 namespace dynRLSLP
 {
     /**
-     * @brief Random-bit storage for restricted block compression.
+     * @brief Random-bit storage for restricted block recompression.
      * @ingroup RLSLPClasses
      */
     class RandomBitDictionary
@@ -22,8 +22,8 @@ namespace dynRLSLP
         std::uniform_int_distribution<uint64_t> dist;
 
         std::vector<uint16_t> shortRandomBits;
-        std::unordered_map<SignatureWithRelativeLevel, uint64_t> middleRandomBits;
-        std::unordered_map<SignatureWithRelativeLevel, std::vector<uint64_t>> longRandomBits;
+        std::unordered_map<NonterminalWithRelativeLevel, uint64_t> middleRandomBits;
+        std::unordered_map<NonterminalWithRelativeLevel, std::vector<uint64_t>> longRandomBits;
 
     public:
         /** @brief Deleted copy constructor. */
@@ -95,14 +95,14 @@ namespace dynRLSLP
         //@{
 
         /**
-         * @brief Return the random bit associated with a signature.
-         * @param signature Encoded signature with relative level.
-         * @return Random bit value at the signature's level.
+         * @brief Return the random bit associated with a nonterminal.
+         * @param nonterminal Encoded nonterminal with relative level.
+         * @return Random bit value at the nonterminal's level.
          */
-        bool get_random_bit(SignatureWithRelativeLevel signature) const
+        bool get_random_bit(NonterminalWithRelativeLevel nonterminal) const
         {
-            int64_t base_sig = SignatureFunctions::get_base_signature(signature);
-            int64_t level = SignatureFunctions::get_relative_level(signature);
+            int64_t base_sig = NonterminalFunctions::get_explicit_nonterminal(nonterminal);
+            int64_t level = NonterminalFunctions::get_relative_level(nonterminal);
             if (level <= 33)
             {
                 int64_t pos = (level / 2) % 16;
@@ -182,14 +182,14 @@ namespace dynRLSLP
             this->longRandomBits.clear();
         }
         /**
-         * @brief Clear random bits for one base signature.
-         * @param base_signature Base signature index.
+         * @brief Clear random bits for one base nonterminal.
+         * @param explicit_nonterminal Base nonterminal index.
          */
-        void clear(SignatureWithRelativeLevel base_signature)
+        void clear(NonterminalWithRelativeLevel explicit_nonterminal)
         {
-            this->shortRandomBits[base_signature] = 0;
-            this->middleRandomBits.erase(base_signature);
-            this->longRandomBits.erase(base_signature);
+            this->shortRandomBits[explicit_nonterminal] = 0;
+            this->middleRandomBits.erase(explicit_nonterminal);
+            this->longRandomBits.erase(explicit_nonterminal);
         }
         /** @brief Append a new short random-bit slot. */
         void add_new_element()
@@ -197,24 +197,24 @@ namespace dynRLSLP
             this->shortRandomBits.push_back(0);
         }
         /**
-         * @brief Remove random bits for a signature.
-         * @param signature Encoded signature with relative level.
+         * @brief Remove random bits for a nonterminal.
+         * @param nonterminal Encoded nonterminal with relative level.
          */
-        void erase_random_bit(SignatureWithRelativeLevel signature)
+        void erase_random_bit(NonterminalWithRelativeLevel nonterminal)
         {
-            uint64_t base_signature = SignatureFunctions::get_base_signature(signature);
-            uint64_t level = SignatureFunctions::get_relative_level(signature);
-            // assert(level == relative_max_level_list[base_signature]);
+            uint64_t explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(nonterminal);
+            uint64_t level = NonterminalFunctions::get_relative_level(nonterminal);
+            // assert(level == relative_max_level_list[explicit_nonterminal]);
             if (level == 0)
             {
-                this->shortRandomBits[base_signature] = 0;
+                this->shortRandomBits[explicit_nonterminal] = 0;
             }
             else if (level >= 34)
             {
                 level -= 34;
                 if (level == 0)
                 {
-                    this->middleRandomBits.erase(base_signature);
+                    this->middleRandomBits.erase(explicit_nonterminal);
                 }
                 else if (level >= 130)
                 {
@@ -223,29 +223,29 @@ namespace dynRLSLP
                     bool b = (level % 2) == 0;
                     if (b && pos == 0)
                     {
-                        this->longRandomBits[base_signature].pop_back();
+                        this->longRandomBits[explicit_nonterminal].pop_back();
 
-                        if (this->longRandomBits[base_signature].size() == 0)
+                        if (this->longRandomBits[explicit_nonterminal].size() == 0)
                         {
-                            this->longRandomBits.erase(base_signature);
+                            this->longRandomBits.erase(explicit_nonterminal);
                         }
                     }
                 }
             }
         }
         /**
-         * @brief Create random bits for a base signature at a given single count.
-         * @param base_signature Base signature index.
-         * @param single_count Relative maximum level (single-signature count).
+         * @brief Create random bits for a base nonterminal at a given single count.
+         * @param explicit_nonterminal Base nonterminal index.
+         * @param single_count Relative maximum level (single-nonterminal count).
          */
-        void create_random_bit(BaseSignature base_signature, uint64_t single_count)
+        void create_random_bit(ExplicitNonterminal explicit_nonterminal, uint64_t single_count)
         {
             assert(this->mt != nullptr);
 
             if (single_count == 0)
             {
                 uint64_t rand_value = this->dist(*this->mt);
-                this->shortRandomBits[base_signature] = rand_value;
+                this->shortRandomBits[explicit_nonterminal] = rand_value;
             }
             else if (single_count >= 34)
             {
@@ -253,7 +253,7 @@ namespace dynRLSLP
                 if (single_count == 0)
                 {
                     uint64_t rand_value = this->dist(*this->mt);
-                    this->middleRandomBits[base_signature] = rand_value;
+                    this->middleRandomBits[explicit_nonterminal] = rand_value;
                 }
                 else if (single_count >= 130)
                 {
@@ -261,8 +261,8 @@ namespace dynRLSLP
                     if (single_count == 0)
                     {
                         uint64_t rand_value = this->dist(*this->mt);
-                        this->longRandomBits[base_signature] = std::vector<uint64_t>();
-                        this->longRandomBits[base_signature].push_back(rand_value);
+                        this->longRandomBits[explicit_nonterminal] = std::vector<uint64_t>();
+                        this->longRandomBits[explicit_nonterminal].push_back(rand_value);
                     }
                     else
                     {
@@ -271,7 +271,7 @@ namespace dynRLSLP
                         if (b && pos == 0)
                         {
                             uint64_t rand_value = this->dist(*this->mt);
-                            this->longRandomBits[base_signature].push_back(rand_value);
+                            this->longRandomBits[explicit_nonterminal].push_back(rand_value);
                         }
                     }
                 }
@@ -381,11 +381,11 @@ namespace dynRLSLP
 
             uint64_t _middleRandomBits_count;
             ifs.read(reinterpret_cast<char *>(&_middleRandomBits_count), sizeof(_middleRandomBits_count));
-            std::vector<SignatureWithRelativeLevel> tmp_vec1;
+            std::vector<NonterminalWithRelativeLevel> tmp_vec1;
             std::vector<uint64_t> tmp_vec2;
             tmp_vec1.resize(_middleRandomBits_count);
             tmp_vec2.resize(_middleRandomBits_count);
-            ifs.read(reinterpret_cast<char *>(tmp_vec1.data()), sizeof(SignatureWithRelativeLevel) * _middleRandomBits_count);
+            ifs.read(reinterpret_cast<char *>(tmp_vec1.data()), sizeof(NonterminalWithRelativeLevel) * _middleRandomBits_count);
             ifs.read(reinterpret_cast<char *>(tmp_vec2.data()), sizeof(uint64_t) * _middleRandomBits_count);
             for (uint64_t i = 0; i < _middleRandomBits_count; i++)
             {
@@ -396,8 +396,8 @@ namespace dynRLSLP
             ifs.read(reinterpret_cast<char *>(&_longRandomBits_count), sizeof(_longRandomBits_count));
             for (uint64_t i = 0; i < _longRandomBits_count; i++)
             {
-                SignatureWithRelativeLevel _sig;
-                ifs.read(reinterpret_cast<char *>(&_sig), sizeof(SignatureWithRelativeLevel));
+                NonterminalWithRelativeLevel _sig;
+                ifs.read(reinterpret_cast<char *>(&_sig), sizeof(NonterminalWithRelativeLevel));
                 uint64_t vec_size;
                 ifs.read(reinterpret_cast<char *>(&vec_size), sizeof(uint64_t));
                 std::vector<uint64_t> tmp_vec;
@@ -421,7 +421,7 @@ namespace dynRLSLP
             uint64_t _middleRandomBits_count = item.middleRandomBits.size();
             os.write(reinterpret_cast<const char *>(&_middleRandomBits_count), sizeof(_middleRandomBits_count));
 
-            std::vector<SignatureWithRelativeLevel> tmp_vec1;
+            std::vector<NonterminalWithRelativeLevel> tmp_vec1;
             std::vector<uint64_t> tmp_vec2;
             uint64_t k = 0;
             tmp_vec1.resize(_middleRandomBits_count);
@@ -432,14 +432,14 @@ namespace dynRLSLP
                 tmp_vec2[k] = value;
                 k++;
             }
-            os.write(reinterpret_cast<const char *>(tmp_vec1.data()), sizeof(SignatureWithRelativeLevel) * _middleRandomBits_count);
+            os.write(reinterpret_cast<const char *>(tmp_vec1.data()), sizeof(NonterminalWithRelativeLevel) * _middleRandomBits_count);
             os.write(reinterpret_cast<const char *>(tmp_vec2.data()), sizeof(uint64_t) * _middleRandomBits_count);
 
             uint64_t _longRandomBits_count = item.longRandomBits.size();
             os.write(reinterpret_cast<const char *>(&_longRandomBits_count), sizeof(_longRandomBits_count));
             for (const auto &[key, value] : item.longRandomBits)
             {
-                os.write(reinterpret_cast<const char *>(&key), sizeof(SignatureWithRelativeLevel));
+                os.write(reinterpret_cast<const char *>(&key), sizeof(NonterminalWithRelativeLevel));
                 uint64_t vec_size = value.size();
                 os.write(reinterpret_cast<const char *>(&vec_size), sizeof(uint64_t));
                 os.write(reinterpret_cast<const char *>(value.data()), sizeof(uint64_t) * vec_size);

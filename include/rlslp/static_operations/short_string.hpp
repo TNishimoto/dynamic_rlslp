@@ -24,27 +24,27 @@ namespace dynRLSLP
 
 			/**
 			 * @brief Build the left short string for a pair rule.
-			 * @param left_signature Left child signature.
-			 * @param right_signature Right child signature.
+			 * @param left_nonterminal Left child nonterminal.
+			 * @param right_nonterminal Right child nonterminal.
 			 * @param char_bit_size Bits per character in the packed representation.
-			 * @param base_signature_length_list Base-signature length list (L).
+			 * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
 			 * @param leftShortStringList Precomputed left short-string table.
 			 * @return Packed 64-bit left short string.
 			 */
-			static uint64_t create_left_short_string_for_pair(SignatureWithRelativeLevel left_signature, SignatureWithRelativeLevel right_signature, 
+			static uint64_t create_left_short_string_for_pair(NonterminalWithRelativeLevel left_nonterminal, NonterminalWithRelativeLevel right_nonterminal, 
                 uint8_t char_bit_size, 
-                const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t>& leftShortStringList) {
-                uint64_t left_length = SignatureFunctions::get_length(left_signature, base_signature_length_list);
+                const std::vector<uint64_t> &explicit_nonterminal_length_list, const std::vector<uint64_t>& leftShortStringList) {
+                uint64_t left_length = NonterminalFunctions::get_length(left_nonterminal, explicit_nonterminal_length_list);
                 uint64_t short_string_length = 64 / char_bit_size;
-                uint64_t base_left_signature = SignatureFunctions::get_base_signature(left_signature);
+                uint64_t base_left_nonterminal = NonterminalFunctions::get_explicit_nonterminal(left_nonterminal);
 
                 if(left_length >= short_string_length){
-                    return leftShortStringList[base_left_signature];
+                    return leftShortStringList[base_left_nonterminal];
                 }else{
-                    uint64_t base_right_signature = SignatureFunctions::get_base_signature(right_signature);
+                    uint64_t base_right_nonterminal = NonterminalFunctions::get_explicit_nonterminal(right_nonterminal);
 
-                    uint64_t leftStr = leftShortStringList[base_left_signature];
-                    uint64_t rightStr = leftShortStringList[base_right_signature];
+                    uint64_t leftStr = leftShortStringList[base_left_nonterminal];
+                    uint64_t rightStr = leftShortStringList[base_right_nonterminal];
 
                     uint64_t result = leftStr | (rightStr >> (left_length * char_bit_size));
 
@@ -54,39 +54,39 @@ namespace dynRLSLP
 			}
 			/**
 			 * @brief Build the right short string for a pair rule.
-			 * @param left_signature Left child signature.
-			 * @param right_signature Right child signature.
+			 * @param left_nonterminal Left child nonterminal.
+			 * @param right_nonterminal Right child nonterminal.
 			 * @param char_bit_size Bits per character in the packed representation.
-			 * @param base_signature_length_list Base-signature length list (L).
+			 * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
 			 * @param rightShortStringList Precomputed right short-string table.
 			 * @return Packed 64-bit right short string.
 			 */
-			static uint64_t create_right_short_string_for_pair(SignatureWithRelativeLevel left_signature, SignatureWithRelativeLevel right_signature, 
+			static uint64_t create_right_short_string_for_pair(NonterminalWithRelativeLevel left_nonterminal, NonterminalWithRelativeLevel right_nonterminal, 
                 uint8_t char_bit_size, 
-                const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t>& rightShortStringList) {
-                return create_left_short_string_for_pair(right_signature, left_signature, char_bit_size, base_signature_length_list, rightShortStringList);
+                const std::vector<uint64_t> &explicit_nonterminal_length_list, const std::vector<uint64_t>& rightShortStringList) {
+                return create_left_short_string_for_pair(right_nonterminal, left_nonterminal, char_bit_size, explicit_nonterminal_length_list, rightShortStringList);
 			}
 
 			/**
 			 * @brief Build the left short string for a power rule.
-			 * @param child_signature Child signature repeated in the power rule.
+			 * @param child_nonterminal Child nonterminal repeated in the power rule.
 			 * @param power Repetition count.
 			 * @param char_bit_size Bits per character in the packed representation.
-			 * @param base_signature_length_list Base-signature length list (L).
+			 * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
 			 * @param leftShortStringList Precomputed left short-string table.
 			 * @return Packed 64-bit left short string.
 			 */
-			static uint64_t create_left_short_string_for_power(SignatureWithRelativeLevel child_signature, uint64_t power, 
+			static uint64_t create_left_short_string_for_power(NonterminalWithRelativeLevel child_nonterminal, uint64_t power, 
                 uint8_t char_bit_size, 
-                const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t>& leftShortStringList) {
-                uint64_t child_length = SignatureFunctions::get_length(child_signature, base_signature_length_list);
+                const std::vector<uint64_t> &explicit_nonterminal_length_list, const std::vector<uint64_t>& leftShortStringList) {
+                uint64_t child_length = NonterminalFunctions::get_length(child_nonterminal, explicit_nonterminal_length_list);
                 uint64_t short_string_length = 64 / char_bit_size;
-                uint64_t base_child_signature = SignatureFunctions::get_base_signature(child_signature);
+                uint64_t base_child_nonterminal = NonterminalFunctions::get_explicit_nonterminal(child_nonterminal);
 
                 if(child_length >= short_string_length){
-                    return leftShortStringList[base_child_signature];
+                    return leftShortStringList[base_child_nonterminal];
                 }else{
-                    uint64_t childStr = leftShortStringList[base_child_signature];
+                    uint64_t childStr = leftShortStringList[base_child_nonterminal];
                     uint64_t result = 0;
                     uint64_t childStrLen = 0;
 
@@ -103,17 +103,17 @@ namespace dynRLSLP
 			}
 			/**
 			 * @brief Build the right short string for a power rule.
-			 * @param child_signature Child signature repeated in the power rule.
+			 * @param child_nonterminal Child nonterminal repeated in the power rule.
 			 * @param power Repetition count.
 			 * @param char_bit_size Bits per character in the packed representation.
-			 * @param base_signature_length_list Base-signature length list (L).
+			 * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
 			 * @param rightShortStringList Precomputed right short-string table.
 			 * @return Packed 64-bit right short string.
 			 */
-			static uint64_t create_right_short_string_for_power(SignatureWithRelativeLevel child_signature, uint64_t power, 
+			static uint64_t create_right_short_string_for_power(NonterminalWithRelativeLevel child_nonterminal, uint64_t power, 
                 uint8_t char_bit_size, 
-                const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t>& rightShortStringList) {
-                return create_left_short_string_for_power(child_signature, power, char_bit_size, base_signature_length_list, rightShortStringList);
+                const std::vector<uint64_t> &explicit_nonterminal_length_list, const std::vector<uint64_t>& rightShortStringList) {
+                return create_left_short_string_for_power(child_nonterminal, power, char_bit_size, explicit_nonterminal_length_list, rightShortStringList);
 			}
 
 
@@ -171,14 +171,14 @@ namespace dynRLSLP
              * @brief Return the left short string of a run stack as text.
              * @param item1 Run stack (modified temporarily during the call).
              * @param alphabet_bit_size Bits per alphabet symbol.
-             * @param base_signature_length_list Base-signature length list (L).
+             * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
              * @param leftShortStringList Precomputed left short-string table.
              * @param character_id_map Map from characters to alphabet identifiers.
              * @return Decoded left prefix string.
              */
-            static std::string get_left_short_string_as_string(VStack<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &base_signature_length_list, 
+            static std::string get_left_short_string_as_string(VStack<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &explicit_nonterminal_length_list, 
                 const std::vector<uint64_t> &leftShortStringList, const std::unordered_map<int64_t, uint64_t> &character_id_map){
-                std::pair<uint64_t, uint8_t> result = get_left_short_string(item1, alphabet_bit_size, base_signature_length_list, leftShortStringList);
+                std::pair<uint64_t, uint8_t> result = get_left_short_string(item1, alphabet_bit_size, explicit_nonterminal_length_list, leftShortStringList);
                 return get_short_string_as_string(result.first, result.second / alphabet_bit_size, alphabet_bit_size, character_id_map);
             }
 
@@ -186,14 +186,14 @@ namespace dynRLSLP
              * @brief Return the right short string of a run stack as text.
              * @param item1 Run stack (modified temporarily during the call).
              * @param alphabet_bit_size Bits per alphabet symbol.
-             * @param base_signature_length_list Base-signature length list (L).
+             * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
              * @param rightShortStringList Precomputed right short-string table.
              * @param character_id_map Map from characters to alphabet identifiers.
              * @return Decoded right prefix string.
              */
-            static std::string get_right_short_string_as_string(VStack<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &base_signature_length_list, 
+            static std::string get_right_short_string_as_string(VStack<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &explicit_nonterminal_length_list, 
                 const std::vector<uint64_t> &rightShortStringList, const std::unordered_map<int64_t, uint64_t> &character_id_map){
-                std::pair<uint64_t, uint8_t> result = get_right_short_string(item1, alphabet_bit_size, base_signature_length_list, rightShortStringList);
+                std::pair<uint64_t, uint8_t> result = get_right_short_string(item1, alphabet_bit_size, explicit_nonterminal_length_list, rightShortStringList);
                 return get_short_string_as_string(result.first, result.second / alphabet_bit_size, alphabet_bit_size, character_id_map);
             }
 
@@ -201,11 +201,11 @@ namespace dynRLSLP
              * @brief Return the packed left short string and bit length for a run stack.
              * @param item1 Run stack (restored after the call).
              * @param alphabet_bit_size Bits per alphabet symbol.
-             * @param base_signature_length_list Base-signature length list (L).
+             * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
              * @param leftShortStringList Precomputed left short-string table.
              * @return Pair of (packed string, length in bits).
              */
-            static ShortStringInfo get_left_short_string(VStack<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t> &leftShortStringList){
+            static ShortStringInfo get_left_short_string(VStack<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &explicit_nonterminal_length_list, const std::vector<uint64_t> &leftShortStringList){
                 VStack<RunRuleBody> tmp;
                 uint64_t len = 0;
                 uint64_t short_string = 0;
@@ -214,14 +214,14 @@ namespace dynRLSLP
                     RunRuleBody top = item1.top();
                     item1.pop();
                     tmp.push(top);
-                    uint64_t base_child = SignatureFunctions::get_base_signature(top.number);
-                    uint64_t base_child_len = SignatureFunctions::get_length(base_child, base_signature_length_list);
+                    uint64_t base_child = NonterminalFunctions::get_explicit_nonterminal(top.number);
+                    uint64_t base_child_len = NonterminalFunctions::get_length(base_child, explicit_nonterminal_length_list);
                     if(base_child_len * alphabet_bit_size >= (64 - len)){
                         short_string = short_string | (leftShortStringList[base_child] >> len);
                         len = 64;
                     }else{
                         uint64_t pow_len = base_child_len * top.power;
-                        uint64_t pow_str = ShortString::create_left_short_string_for_power(base_child, top.power, alphabet_bit_size, base_signature_length_list, leftShortStringList);
+                        uint64_t pow_str = ShortString::create_left_short_string_for_power(base_child, top.power, alphabet_bit_size, explicit_nonterminal_length_list, leftShortStringList);
                         if(pow_len * alphabet_bit_size >= (64 - len)){
                             short_string = short_string | (pow_str >> len);
                             len = 64;
@@ -243,26 +243,26 @@ namespace dynRLSLP
              * @brief Return the packed left short string and bit length for a run vector.
              * @param item1 Sequence of runs (left to right).
              * @param alphabet_bit_size Bits per alphabet symbol.
-             * @param base_signature_length_list Base-signature length list (L).
+             * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
              * @param leftShortStringList Precomputed left short-string table.
              * @return Pair of (packed string, length in bits).
              */
-            static ShortStringInfo get_left_short_string(const std::vector<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t> &leftShortStringList){
+            static ShortStringInfo get_left_short_string(const std::vector<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &explicit_nonterminal_length_list, const std::vector<uint64_t> &leftShortStringList){
                 uint64_t len = 0;
                 uint64_t short_string = 0;
                 //uint64_t short_string_length = 64 / alphabet_bit_size;
 
                 for(uint64_t i = 0; i < item1.size(); i++){
                     RunRuleBody top = item1[i];
-                    uint64_t base_child = SignatureFunctions::get_base_signature(top.number);
-                    uint64_t base_child_len = SignatureFunctions::get_length(base_child, base_signature_length_list);
+                    uint64_t base_child = NonterminalFunctions::get_explicit_nonterminal(top.number);
+                    uint64_t base_child_len = NonterminalFunctions::get_length(base_child, explicit_nonterminal_length_list);
                     if(base_child_len * alphabet_bit_size >= (64 - len)){
                         short_string = short_string | (leftShortStringList[base_child] >> len);
                         len = 64;
                         break;
                     }else{
                         uint64_t pow_len = base_child_len * top.power;
-                        uint64_t pow_str = ShortString::create_left_short_string_for_power(base_child, top.power, alphabet_bit_size, base_signature_length_list, leftShortStringList);
+                        uint64_t pow_str = ShortString::create_left_short_string_for_power(base_child, top.power, alphabet_bit_size, explicit_nonterminal_length_list, leftShortStringList);
                         if(pow_len * alphabet_bit_size >= (64 - len)){
                             short_string = short_string | (pow_str >> len);
                             len = 64;
@@ -281,38 +281,38 @@ namespace dynRLSLP
              * @brief Return the packed right short string and bit length for a run stack.
              * @param item1 Run stack.
              * @param alphabet_bit_size Bits per alphabet symbol.
-             * @param base_signature_length_list Base-signature length list (L).
+             * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
              * @param rightShortStringList Precomputed right short-string table.
              * @return Pair of (packed string, length in bits).
              */
-            static ShortStringInfo get_right_short_string(VStack<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t> &rightShortStringList){
-                return get_left_short_string(item1, alphabet_bit_size, base_signature_length_list, rightShortStringList);
+            static ShortStringInfo get_right_short_string(VStack<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &explicit_nonterminal_length_list, const std::vector<uint64_t> &rightShortStringList){
+                return get_left_short_string(item1, alphabet_bit_size, explicit_nonterminal_length_list, rightShortStringList);
             }
             /**
              * @brief Return the packed right short string and bit length for a run vector.
              * @param item1 Sequence of runs (left to right).
              * @param alphabet_bit_size Bits per alphabet symbol.
-             * @param base_signature_length_list Base-signature length list (L).
+             * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
              * @param rightShortStringList Precomputed right short-string table.
              * @return Pair of (packed string, length in bits).
              */
-            static ShortStringInfo get_right_short_string(const std::vector<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t> &rightShortStringList){
-                return get_left_short_string(item1, alphabet_bit_size, base_signature_length_list, rightShortStringList);
+            static ShortStringInfo get_right_short_string(const std::vector<RunRuleBody> &item1, uint8_t alphabet_bit_size, const std::vector<uint64_t> &explicit_nonterminal_length_list, const std::vector<uint64_t> &rightShortStringList){
+                return get_left_short_string(item1, alphabet_bit_size, explicit_nonterminal_length_list, rightShortStringList);
             }
 
             /**
              * @brief Return the packed left short string for a single run rule body.
              * @param body Run rule body.
              * @param char_bit_size Bits per character in the packed representation.
-             * @param base_signature_length_list Base-signature length list (L).
+             * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
              * @param leftShortStringList Precomputed left short-string table.
              * @return Pair of (packed string, length in bits).
              */
             static ShortStringInfo get_left_short_string(const RunRuleBody &body, 
                 uint8_t char_bit_size, 
-                const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t>& leftShortStringList) {
-                    uint64_t len = SignatureFunctions::get_length(body.number, base_signature_length_list) * body.power;
-                    uint64_t short_string = create_left_short_string_for_power(body.number, body.power, char_bit_size, base_signature_length_list, leftShortStringList);
+                const std::vector<uint64_t> &explicit_nonterminal_length_list, const std::vector<uint64_t>& leftShortStringList) {
+                    uint64_t len = NonterminalFunctions::get_length(body.number, explicit_nonterminal_length_list) * body.power;
+                    uint64_t short_string = create_left_short_string_for_power(body.number, body.power, char_bit_size, explicit_nonterminal_length_list, leftShortStringList);
                     return std::make_pair(short_string, std::min<uint64_t>(len, 64ULL / char_bit_size) * char_bit_size);
 
                 }
@@ -320,15 +320,15 @@ namespace dynRLSLP
              * @brief Return the packed right short string for a single run rule body.
              * @param body Run rule body.
              * @param char_bit_size Bits per character in the packed representation.
-             * @param base_signature_length_list Base-signature length list (L).
+             * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
              * @param rightShortStringList Precomputed right short-string table.
              * @return Pair of (packed string, length in bits).
              */
             static ShortStringInfo get_right_short_string(const RunRuleBody &body, 
                 uint8_t char_bit_size, 
-                const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t>& rightShortStringList) {
-                    uint64_t len = SignatureFunctions::get_length(body.number, base_signature_length_list) * body.power;
-                    uint64_t short_string = create_left_short_string_for_power(body.number, body.power, char_bit_size, base_signature_length_list, rightShortStringList);
+                const std::vector<uint64_t> &explicit_nonterminal_length_list, const std::vector<uint64_t>& rightShortStringList) {
+                    uint64_t len = NonterminalFunctions::get_length(body.number, explicit_nonterminal_length_list) * body.power;
+                    uint64_t short_string = create_left_short_string_for_power(body.number, body.power, char_bit_size, explicit_nonterminal_length_list, rightShortStringList);
                     return std::make_pair(short_string, std::min<uint64_t>(len, 64ULL / char_bit_size) * char_bit_size);   
                 }
 
@@ -343,8 +343,8 @@ namespace dynRLSLP
                 //uint64_t short_string_length = 64 / char_bit_size;
 
 
-                //uint64_t base_str1 = SignatureFunctions::get_base_signature(str1.first);
-                //uint64_t base_str2 = SignatureFunctions::get_base_signature(str2.first);                
+                //uint64_t base_str1 = NonterminalFunctions::get_explicit_nonterminal(str1.first);
+                //uint64_t base_str2 = NonterminalFunctions::get_explicit_nonterminal(str2.first);                
                 uint64_t len1 = str1.second;
                 uint64_t len2 = str2.second;
                 uint64_t minLen = std::min<uint64_t>(len1, len2);
@@ -395,23 +395,23 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Verify a left short string against the decompressed prefix of a signature.
-             * @param signature Signature to check.
+             * @brief Verify a left short string against the decompressed prefix of a nonterminal.
+             * @param nonterminal Nonterminal to check.
              * @param alphabet_bit_size Bits per alphabet symbol.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @param base_signature_length_list Base-signature length list (L).
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
              * @param leftShortStringList Precomputed left short-string table.
              * @param character_id_map Map from characters to alphabet identifiers.
              * @return True if the short string matches the text prefix.
              */
-            static bool verify_left_short_string(SignatureWithRelativeLevel signature, uint8_t alphabet_bit_size, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list, const std::vector<uint64_t> &leftShortStringList, 
+            static bool verify_left_short_string(NonterminalWithRelativeLevel nonterminal, uint8_t alphabet_bit_size, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list, const std::vector<uint64_t> &explicit_nonterminal_length_list, const std::vector<uint64_t> &leftShortStringList, 
                 const std::unordered_map<int64_t, uint64_t> &character_id_map){
-                RLSLPRuleBody item = RLSLPRuleBody::decode_rule(signature, base_signature_rule_list);
-                std::string original_string = item.decompress2(base_signature_rule_list);
-                uint64_t length = SignatureFunctions::get_length(signature, base_signature_length_list);
+                RLSLPRuleBody item = RLSLPRuleBody::decode_rule(nonterminal, explicit_nonterminal_rule_list);
+                std::string original_string = item.decompress2(explicit_nonterminal_rule_list);
+                uint64_t length = NonterminalFunctions::get_length(nonterminal, explicit_nonterminal_length_list);
                 uint64_t minLen = std::min<uint64_t>(length, 64ULL / alphabet_bit_size);
 
-                uint64_t short_string = leftShortStringList[SignatureFunctions::get_base_signature(signature)];
+                uint64_t short_string = leftShortStringList[NonterminalFunctions::get_explicit_nonterminal(nonterminal)];
                 std::string short_string_str = get_short_string_as_string(short_string, minLen, alphabet_bit_size, character_id_map);
                 assert(short_string_str.size() == minLen);
 
@@ -419,16 +419,16 @@ namespace dynRLSLP
                 
                 if(short_string_str != prefix){
                     std::cout << std::endl;
-                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(signature, base_signature_rule_list);
+                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(nonterminal, explicit_nonterminal_rule_list);
                     if(item.get_type() == RLSLPRuleType::Pair){
-                        SignatureWithRelativeLevel left_signature = item.A;
-                        SignatureWithRelativeLevel right_signature = item.B;
-                        BaseSignature left_base_signature = SignatureFunctions::get_base_signature(left_signature);
-                        BaseSignature right_base_signature = SignatureFunctions::get_base_signature(right_signature);
-                        uint64_t left_short_string = leftShortStringList[left_base_signature];
-                        uint64_t right_short_string = leftShortStringList[right_base_signature];
-                        uint64_t left_short_string_len = SignatureFunctions::get_length(left_signature, base_signature_length_list);
-                        uint64_t right_short_string_len = SignatureFunctions::get_length(right_signature, base_signature_length_list);
+                        NonterminalWithRelativeLevel left_nonterminal = item.A;
+                        NonterminalWithRelativeLevel right_nonterminal = item.B;
+                        ExplicitNonterminal left_explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(left_nonterminal);
+                        ExplicitNonterminal right_explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(right_nonterminal);
+                        uint64_t left_short_string = leftShortStringList[left_explicit_nonterminal];
+                        uint64_t right_short_string = leftShortStringList[right_explicit_nonterminal];
+                        uint64_t left_short_string_len = NonterminalFunctions::get_length(left_nonterminal, explicit_nonterminal_length_list);
+                        uint64_t right_short_string_len = NonterminalFunctions::get_length(right_nonterminal, explicit_nonterminal_length_list);
                         uint64_t left_min_length = std::min<uint64_t>(left_short_string_len, 64ULL / alphabet_bit_size);
                         uint64_t right_min_length = std::min<uint64_t>(right_short_string_len, 64ULL / alphabet_bit_size);
                         std::string left_short_string_str = get_short_string_as_string(left_short_string, left_min_length, alphabet_bit_size, character_id_map);
@@ -436,7 +436,7 @@ namespace dynRLSLP
                         std::cout << "left_short_string_str: " << left_short_string_str << std::endl;
                         std::cout << "right_short_string_str: " << right_short_string_str << std::endl;
                     }
-                    std::cout << "signature: " << signature << std::endl;
+                    std::cout << "nonterminal: " << nonterminal << std::endl;
                     std::cout << "item: " << item.get_info() << std::endl;
                     std::cout << "original_string: " << original_string << std::endl;
                     std::cout << "short_string_str: " << short_string_str << std::endl;

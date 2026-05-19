@@ -1,6 +1,6 @@
 #pragma once
 
-/// \defgroup DynamicDictionaryClasses Classes for updating dynamic signature dictionaries
+/// \defgroup DynamicDictionaryClasses Classes for updating dynamic nonterminal dictionaries
 /// @{
 /// @}
 /// \defgroup LocalParsingClasses Classes for locally consistent parsing

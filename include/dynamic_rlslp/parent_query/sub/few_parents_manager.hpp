@@ -12,7 +12,7 @@ namespace dynRLSLP
         {
         private:
             std::vector<uint16_t> level_diff_list_;
-            std::vector<SignatureWithRelativeLevel> secondary_parent_list_;
+            std::vector<NonterminalWithRelativeLevel> secondary_parent_list_;
             ManyParentsManager *many_parents_manager_ = nullptr;
             uint64_t count_ = 0;
 
@@ -71,7 +71,7 @@ namespace dynRLSLP
             }
 
             /*
-            bool has_single_parent(const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
+            bool has_single_parent(const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list) const
             {
                 if (this->secondary_parent_list_.size() >= 2)
                 {
@@ -79,8 +79,8 @@ namespace dynRLSLP
                 }
                 else if (this->secondary_parent_list_.size() == 1)
                 {
-                    SignatureWithRelativeLevel parent = this->secondary_parent_list_[0];
-                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, base_signature_rule_list);
+                    NonterminalWithRelativeLevel parent = this->secondary_parent_list_[0];
+                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, explicit_nonterminal_rule_list);
                     if (parent_item.get_type() == RLSLPRuleType::Pair)
                     {
                         return this->many_parents_manager_ == nullptr;
@@ -107,24 +107,24 @@ namespace dynRLSLP
 
             /**
              * @brief Pushes type-1 primary occurrences for all parents onto the stack.
-             * @param sig Base signature of the queried nonterminal.
+             * @param sig Base nonterminal of the queried nonterminal.
              * @param position_offset Position offset of the occurrence within its parent.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @param explicit_nonterminal_length_list Derived string lengths indexed by base nonterminal.
              * @param output Stack receiving temporary occurrences to expand further.
              * @return True if at least one parent occurrence was pushed.
              */
-            bool get_all_type_1_primary_occurrences_of_signature(BaseSignature sig, int64_t position_offset, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list, VStack<TemporaryOccurrence> &output) const
+            bool get_all_type_1_primary_occurrences_of_nonterminal(ExplicitNonterminal sig, int64_t position_offset, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list, const std::vector<uint64_t> &explicit_nonterminal_length_list, VStack<TemporaryOccurrence> &output) const
             {
                 bool b = this->secondary_parent_list_.size() > 0;
                 for (auto parent : this->secondary_parent_list_)
                 {
-                    ManyParentsManager::get_all_type_1_primary_occurrences_of_signature_sub(sig, position_offset, parent, base_signature_rule_list, base_signature_length_list, output);
+                    ManyParentsManager::get_all_type_1_primary_occurrences_of_nonterminal_sub(sig, position_offset, parent, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, output);
                 }
 
                 if (this->many_parents_manager_ != nullptr)
                 {
-                    this->many_parents_manager_->get_all_type_1_primary_occurrences_of_signature(sig, position_offset, base_signature_rule_list, base_signature_length_list, output);
+                    this->many_parents_manager_->get_all_type_1_primary_occurrences_of_nonterminal(sig, position_offset, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, output);
                 }
                 return b;
             }
@@ -149,54 +149,54 @@ namespace dynRLSLP
 
             /**
              * @brief Looks up a pair parent with the given children at the child's relative level.
-             * @param left_sig Left child signature.
-             * @param right_sig Right child signature.
+             * @param left_sig Left child nonterminal.
+             * @param right_sig Right child nonterminal.
              * @param quaternary_key Quaternary lookup key for overflow parents.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @return Parent signature if found, otherwise -1.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @return Parent nonterminal if found, otherwise -1.
              */
-            int64_t get_pair_signature(SignatureWithRelativeLevel left_sig, SignatureWithRelativeLevel right_sig, QuaternaryKey quaternary_key, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
+            int64_t get_pair_nonterminal(NonterminalWithRelativeLevel left_sig, NonterminalWithRelativeLevel right_sig, QuaternaryKey quaternary_key, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list) const
             {
-                uint64_t level_diff = SignatureFunctions::get_relative_level(left_sig);
+                uint64_t level_diff = NonterminalFunctions::get_relative_level(left_sig);
                 int16_t secondary_index = this->find_secondary_list_index(level_diff);
                 if (secondary_index != -1)
                 {
                     int64_t parent = this->secondary_parent_list_[secondary_index];
-                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, base_signature_rule_list);
+                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, explicit_nonterminal_rule_list);
                     if (parent_item.get_type() == RLSLPRuleType::Pair && parent_item.A == left_sig && parent_item.B == right_sig)
                     {
                         return parent;
                     }
                     else if (this->many_parents_manager_ != nullptr)
                     {
-                        return this->many_parents_manager_->get_pair_signature(level_diff, this->secondary_parent_list_.size(), left_sig, right_sig, quaternary_key, this->level_diff_list_, base_signature_rule_list);
+                        return this->many_parents_manager_->get_pair_nonterminal(level_diff, this->secondary_parent_list_.size(), left_sig, right_sig, quaternary_key, this->level_diff_list_, explicit_nonterminal_rule_list);
                     }
                 }
                 return -1;
             }
             /**
              * @brief Looks up a power parent with the given child and exponent at the child's relative level.
-             * @param child_sig Child signature.
+             * @param child_sig Child nonterminal.
              * @param power Exponent of the power rule.
              * @param quaternary_key Quaternary lookup key for overflow parents.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @return Parent signature if found, otherwise -1.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @return Parent nonterminal if found, otherwise -1.
              */
-            int64_t get_power_signature(SignatureWithRelativeLevel child_sig, uint64_t power, QuaternaryKey quaternary_key, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
+            int64_t get_power_nonterminal(NonterminalWithRelativeLevel child_sig, uint64_t power, QuaternaryKey quaternary_key, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list) const
             {
-                uint64_t level_diff = SignatureFunctions::get_relative_level(child_sig);
+                uint64_t level_diff = NonterminalFunctions::get_relative_level(child_sig);
                 int16_t secondary_index = this->find_secondary_list_index(level_diff);
                 if (secondary_index != -1)
                 {
                     int64_t parent = this->secondary_parent_list_[secondary_index];
-                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, base_signature_rule_list);
+                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, explicit_nonterminal_rule_list);
                     if (parent_item.get_type() == RLSLPRuleType::Power && parent_item.A == child_sig && (uint64_t)parent_item.B == power)
                     {
                         return parent;
                     }
                     else if (this->many_parents_manager_ != nullptr)
                     {
-                        return this->many_parents_manager_->get_power_signature(level_diff, this->secondary_parent_list_.size(), child_sig, power, quaternary_key, this->level_diff_list_, base_signature_rule_list);
+                        return this->many_parents_manager_->get_power_nonterminal(level_diff, this->secondary_parent_list_.size(), child_sig, power, quaternary_key, this->level_diff_list_, explicit_nonterminal_rule_list);
                     }
                 }
                 return -1;
@@ -204,29 +204,29 @@ namespace dynRLSLP
 
 
             /**
-             * @brief Returns all (relative level, parent signature) pairs stored in this manager.
+             * @brief Returns all (relative level, parent nonterminal) pairs stored in this manager.
              * @return Combined list from secondary and overflow tiers.
              */
-            std::vector<std::pair<uint16_t, SignatureWithRelativeLevel>> get_all_elements() const
+            std::vector<std::pair<uint16_t, NonterminalWithRelativeLevel>> get_all_elements() const
             {
-                std::vector<std::pair<uint16_t, SignatureWithRelativeLevel>> output;
+                std::vector<std::pair<uint16_t, NonterminalWithRelativeLevel>> output;
                 for (uint16_t i = 0; i < this->secondary_parent_list_.size(); i++)
                 {
                     output.push_back({this->level_diff_list_[i], this->secondary_parent_list_[i]});
                 }
                 if (this->many_parents_manager_ != nullptr)
                 {
-                    std::vector<std::pair<uint16_t, SignatureWithRelativeLevel>> many_parents = this->many_parents_manager_->get_all_elements(this->secondary_parent_list_.size(), this->level_diff_list_);
+                    std::vector<std::pair<uint16_t, NonterminalWithRelativeLevel>> many_parents = this->many_parents_manager_->get_all_elements(this->secondary_parent_list_.size(), this->level_diff_list_);
                     output.insert(output.end(), many_parents.begin(), many_parents.end());
                 }
                 return output;
             }
 
             /**
-             * @brief Appends all parent signatures stored in this manager to the output vector.
-             * @param output Vector receiving parent signatures.
+             * @brief Appends all parent nonterminals stored in this manager to the output vector.
+             * @param output Vector receiving parent nonterminals.
              */
-            void get_all_important_ancestors(std::vector<SignatureWithRelativeLevel> &output) const{
+            void get_all_important_ancestors(std::vector<NonterminalWithRelativeLevel> &output) const{
                 for(auto parent : this->secondary_parent_list_){
                     output.push_back(parent);
                 }
@@ -250,7 +250,7 @@ namespace dynRLSLP
                 uint64_t total = 0;
                 // Size used by secondary_parent_list_
                 total += sizeof(this->secondary_parent_list_);
-                total += sizeof(SignatureWithRelativeLevel) * this->secondary_parent_list_.size();
+                total += sizeof(NonterminalWithRelativeLevel) * this->secondary_parent_list_.size();
 
                 // Size used by level_diff_list_
                 total += sizeof(this->level_diff_list_);
@@ -268,13 +268,13 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Prints all parents managed for one base signature.
-             * @param base_signature Base signature used to reconstruct child signatures for display.
+             * @brief Prints all parents managed for one base nonterminal.
+             * @param explicit_nonterminal Base nonterminal used to reconstruct child nonterminals for display.
              * @param message_paragraph Indentation depth for log output.
              */
-            void print_tree(uint64_t base_signature, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
+            void print_tree(uint64_t explicit_nonterminal, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
             {
-                std::vector<std::pair<uint16_t, SignatureWithRelativeLevel>> all_elements;
+                std::vector<std::pair<uint16_t, NonterminalWithRelativeLevel>> all_elements;
                 for (uint16_t i = 0; i < this->secondary_parent_list_.size(); i++)
                 {
                     all_elements.push_back({this->level_diff_list_[i], this->secondary_parent_list_[i]});
@@ -282,12 +282,12 @@ namespace dynRLSLP
                 for (size_t i = 0; i < all_elements.size(); i++)
                 {
                     uint64_t h = all_elements[i].first;
-                    SignatureWithRelativeLevel sig = SignatureFunctions::get_signature(h, base_signature);
-                    std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << SignatureFunctions::to_string(sig) << ": " << SignatureFunctions::to_string(all_elements[i].second) << std::endl;
+                    NonterminalWithRelativeLevel sig = NonterminalFunctions::get_nonterminal(h, explicit_nonterminal);
+                    std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << NonterminalFunctions::to_string(sig) << ": " << NonterminalFunctions::to_string(all_elements[i].second) << std::endl;
                 }
                 if (this->many_parents_manager_ != nullptr)
                 {
-                    this->many_parents_manager_->print_tree(base_signature, this->secondary_parent_list_.size(), this->level_diff_list_, message_paragraph + 1);
+                    this->many_parents_manager_->print_tree(explicit_nonterminal, this->secondary_parent_list_.size(), this->level_diff_list_, message_paragraph + 1);
                 }
             }
             /**
@@ -297,7 +297,7 @@ namespace dynRLSLP
              */
             bool verify() const
             {
-                std::set<SignatureWithRelativeLevel> diff_set;
+                std::set<NonterminalWithRelativeLevel> diff_set;
                 for (uint16_t i = 0; i < this->secondary_parent_list_.size(); i++)
                 {
                     uint64_t diff = this->level_diff_list_[i];
@@ -365,18 +365,18 @@ namespace dynRLSLP
             //@{
 
             /**
-             * @brief Populates this manager from a vector of parent signatures.
-             * @param descendant Base signature of the child nonterminal.
-             * @param parents Initial parent signatures to register.
-             * @param base_signature_rule_list Base-signature rule list (D).
+             * @brief Populates this manager from a vector of parent nonterminals.
+             * @param descendant Base nonterminal of the child nonterminal.
+             * @param parents Initial parent nonterminals to register.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
              * @param is_restricted_recompression_mode True when restricted block compression is active.
              */
-            void initialize(BaseSignature descendant, const std::vector<SignatureWithRelativeLevel> &parents, const std::vector<RLSLPRuleBody> &base_signature_rule_list, bool is_restricted_recompression_mode) {
+            void initialize(ExplicitNonterminal descendant, const std::vector<NonterminalWithRelativeLevel> &parents, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list, bool is_restricted_recompression_mode) {
                 for(auto parent : parents){
-                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, base_signature_rule_list);
+                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, explicit_nonterminal_rule_list);
                     assert(parent_item.get_type() == RLSLPRuleType::Pair || parent_item.get_type() == RLSLPRuleType::Power);
-                    ChildType child_type = ManyParentsManager::get_child_type(descendant, parent, base_signature_rule_list, true);
-                    SignatureWithRelativeLevel child;
+                    ChildType child_type = ManyParentsManager::get_child_type(descendant, parent, explicit_nonterminal_rule_list, true);
+                    NonterminalWithRelativeLevel child;
 
                     if(child_type == ChildType::LeftChild || child_type == ChildType::PowerChild){
                         child = parent_item.A;
@@ -386,7 +386,7 @@ namespace dynRLSLP
                         throw std::runtime_error("initialize: unknown child type");
                     }
                     QuaternaryKey quaternary_key = ManyParentsManager::get_quaternary_key(child, parent_item, is_restricted_recompression_mode);
-                    uint64_t level_diff = SignatureFunctions::get_relative_level(child);
+                    uint64_t level_diff = NonterminalFunctions::get_relative_level(child);
                     this->insert(level_diff, parent, quaternary_key);    
                 }
 
@@ -420,15 +420,15 @@ namespace dynRLSLP
             /**
              * @brief Removes and returns one parent at the given relative level.
              * @param level_diff Relative level of the parent to take.
-             * @return Removed parent signature, or EMPTY_FLAG if none exists at that level.
+             * @return Removed parent nonterminal, or EMPTY_FLAG if none exists at that level.
              */
-            SignatureWithRelativeLevel take_any_parent(uint16_t level_diff)
+            NonterminalWithRelativeLevel take_any_parent(uint16_t level_diff)
             {
                 int16_t secondary_index = this->find_secondary_list_index(level_diff);
                 if (secondary_index != -1)
                 {
-                    SignatureWithRelativeLevel last_parent = this->secondary_parent_list_[secondary_index];
-                    SignatureWithRelativeLevel next_parent = this->take_any_parent_from_many_parents_manager(level_diff);
+                    NonterminalWithRelativeLevel last_parent = this->secondary_parent_list_[secondary_index];
+                    NonterminalWithRelativeLevel next_parent = this->take_any_parent_from_many_parents_manager(level_diff);
                     if (next_parent != ManyParentsManager::EMPTY_FLAG)
                     {
                         this->secondary_parent_list_[secondary_index] = next_parent;
@@ -448,7 +448,7 @@ namespace dynRLSLP
             }
 
             /*
-            std::pair<uint16_t, SignatureWithRelativeLevel> take_any_parent_with_diff_level()
+            std::pair<uint16_t, NonterminalWithRelativeLevel> take_any_parent_with_diff_level()
             {
                 if (this->is_empty())
                 {
@@ -458,7 +458,7 @@ namespace dynRLSLP
                 {
                     uint64_t size = this->secondary_parent_list_.size();
                     int16_t last_level = this->level_diff_list_[size - 1];
-                    SignatureWithRelativeLevel any_parent = this->take_any_parent(last_level);
+                    NonterminalWithRelativeLevel any_parent = this->take_any_parent(last_level);
                     return {last_level, any_parent};
                 }
             }
@@ -467,17 +467,17 @@ namespace dynRLSLP
             /**
              * @brief Removes one parent at the given relative level.
              * @param level_diff Relative level of the parent to erase.
-             * @param parent Parent signature to remove.
+             * @param parent Parent nonterminal to remove.
              * @param quaternary_key Quaternary lookup key for overflow parents.
              */
-            void erase(uint16_t level_diff, SignatureWithRelativeLevel parent, uint64_t quaternary_key)
+            void erase(uint16_t level_diff, NonterminalWithRelativeLevel parent, uint64_t quaternary_key)
             {
                 int16_t secondary_index = this->find_secondary_list_index(level_diff);
                 if (secondary_index != -1)
                 {
                     if (this->secondary_parent_list_[secondary_index] == parent)
                     {
-                        SignatureWithRelativeLevel next_parent = this->take_any_parent_from_many_parents_manager(level_diff);
+                        NonterminalWithRelativeLevel next_parent = this->take_any_parent_from_many_parents_manager(level_diff);
                         if (next_parent != ManyParentsManager::EMPTY_FLAG)
                         {
                             this->secondary_parent_list_[secondary_index] = next_parent;
@@ -512,10 +512,10 @@ namespace dynRLSLP
             /**
              * @brief Inserts a parent at the given relative level, creating overflow storage when needed.
              * @param level_diff Relative level of the child within the parent rule.
-             * @param parent Parent signature to register.
+             * @param parent Parent nonterminal to register.
              * @param quaternary_key Quaternary lookup key for overflow parents.
              */
-            void insert(uint16_t level_diff, SignatureWithRelativeLevel parent, QuaternaryKey quaternary_key)
+            void insert(uint16_t level_diff, NonterminalWithRelativeLevel parent, QuaternaryKey quaternary_key)
             {
                 int16_t secondary_index = this->find_secondary_list_index(level_diff);
                 if (secondary_index != -1)
@@ -571,7 +571,7 @@ namespace dynRLSLP
                 r.secondary_parent_list_.resize(_secondary_parent_list_size);
                 if (_secondary_parent_list_size > 0)
                 {
-                    ifs.read(reinterpret_cast<char *>(r.secondary_parent_list_.data()), sizeof(SignatureWithRelativeLevel) * _secondary_parent_list_size);
+                    ifs.read(reinterpret_cast<char *>(r.secondary_parent_list_.data()), sizeof(NonterminalWithRelativeLevel) * _secondary_parent_list_size);
                 }
 
                 uint8_t many_parents_manager_flag;
@@ -602,7 +602,7 @@ namespace dynRLSLP
                 os.write(reinterpret_cast<const char *>(item.level_diff_list_.data()), sizeof(uint16_t) * _level_diff_list_size);
                 uint64_t _secondary_parent_list_size = item.secondary_parent_list_.size();
                 os.write(reinterpret_cast<const char *>(&_secondary_parent_list_size), sizeof(_secondary_parent_list_size));
-                os.write(reinterpret_cast<const char *>(item.secondary_parent_list_.data()), sizeof(SignatureWithRelativeLevel) * _secondary_parent_list_size);
+                os.write(reinterpret_cast<const char *>(item.secondary_parent_list_.data()), sizeof(NonterminalWithRelativeLevel) * _secondary_parent_list_size);
 
                 uint8_t many_parents_manager_flag = item.many_parents_manager_ != nullptr ? 1 : 0;
                 os.write(reinterpret_cast<const char *>(&many_parents_manager_flag), sizeof(uint8_t));
@@ -617,13 +617,13 @@ namespace dynRLSLP
             /**
              * @brief Removes one parent from the overflow manager at the given relative level.
              * @param level_diff Relative level of the parent to take.
-             * @return Removed parent signature, or EMPTY_FLAG if the overflow manager is absent or empty.
+             * @return Removed parent nonterminal, or EMPTY_FLAG if the overflow manager is absent or empty.
              */
-            SignatureWithRelativeLevel take_any_parent_from_many_parents_manager(uint16_t level_diff)
+            NonterminalWithRelativeLevel take_any_parent_from_many_parents_manager(uint16_t level_diff)
             {
                 if (this->many_parents_manager_ != nullptr)
                 {
-                    SignatureWithRelativeLevel next_parent = this->many_parents_manager_->take_any_parent(level_diff, this->secondary_parent_list_.size(), this->level_diff_list_);
+                    NonterminalWithRelativeLevel next_parent = this->many_parents_manager_->take_any_parent(level_diff, this->secondary_parent_list_.size(), this->level_diff_list_);
                     if (this->many_parents_manager_->is_empty())
                     {
                         delete this->many_parents_manager_;

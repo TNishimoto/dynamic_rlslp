@@ -14,7 +14,7 @@ namespace dynRLSLP
         class FastParentDictionary
         {
         private:
-            std::vector<SignatureWithRelativeLevel> primaryParents;
+            std::vector<NonterminalWithRelativeLevel> primaryParents;
             std::vector<void *> sub_pointer;
             std::vector<ManagerFlag> sub_pointer_status_;
             bool is_restricted_recompression_mode = false;
@@ -26,8 +26,8 @@ namespace dynRLSLP
             static inline uint64_t NOT_MUDA_COUNT = 0;
             bool USE_CACHE = false;
 
-            static inline std::unordered_map<BaseSignature, TemporaryOccurrence> muda_signature_map;
-            static inline std::unordered_map<BaseSignature, uint64_t> muda_signature_map2;
+            static inline std::unordered_map<ExplicitNonterminal, TemporaryOccurrence> muda_nonterminal_map;
+            static inline std::unordered_map<ExplicitNonterminal, uint64_t> muda_nonterminal_map2;
 
             ////////////////////////////////////////////////////////////////////////////////
             ///   @name Lightweight functions for accessing to properties of this class
@@ -41,32 +41,32 @@ namespace dynRLSLP
             //@{
 
             /**
-             * @brief Counts all registered parents of a base signature across storage tiers [Debug function].
-             * @param base_signature Base signature whose parents are counted.
+             * @brief Counts all registered parents of a base nonterminal across storage tiers [Debug function].
+             * @param explicit_nonterminal Base nonterminal whose parents are counted.
              * @return Total number of registered parents.
              */
-            uint64_t count_registed_parents(uint64_t base_signature) const
+            uint64_t count_registed_parents(uint64_t explicit_nonterminal) const
             {
-                if (base_signature >= this->primaryParents.size())
+                if (explicit_nonterminal >= this->primaryParents.size())
                 {
                     return 0;
                 }
                 uint64_t parent_count = 0;
-                if (this->primaryParents[base_signature] != EMPTY_FLAG)
+                if (this->primaryParents[explicit_nonterminal] != EMPTY_FLAG)
                 {
                     parent_count++;
                 }
-                ManagerFlag manager_flag = this->sub_pointer_status_[base_signature];
+                ManagerFlag manager_flag = this->sub_pointer_status_[explicit_nonterminal];
                 if (manager_flag == ManagerFlag::Single)
                 {
                     parent_count++;
                 }
                 else if (manager_flag == ManagerFlag::FewParentsManager)
                 {
-                    FewParentsManager *few_parents_manager = (FewParentsManager *)this->sub_pointer[base_signature];
+                    FewParentsManager *few_parents_manager = (FewParentsManager *)this->sub_pointer[explicit_nonterminal];
                     parent_count += few_parents_manager->size();
                 }else if (manager_flag == ManagerFlag::Vector){
-                    const std::vector<SignatureWithRelativeLevel> *vec = (std::vector<SignatureWithRelativeLevel> *)this->sub_pointer[base_signature];
+                    const std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[explicit_nonterminal];
                     parent_count += vec->size();
                 }
 
@@ -74,54 +74,54 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Pushes type-1 primary occurrences of a signature onto the stack.
-             * @param sig Base signature to enumerate.
+             * @brief Pushes type-1 primary occurrences of a nonterminal onto the stack.
+             * @param sig Base nonterminal to enumerate.
              * @param position_offset Position offset of the occurrence within its parent.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @param explicit_nonterminal_length_list Derived string lengths indexed by base nonterminal.
              * @param output Stack receiving temporary occurrences to expand further.
              * @return True if at least one parent occurrence was pushed.
              */
-            bool get_all_type_1_primary_occurrences_of_signature(BaseSignature sig, int64_t position_offset, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list, VStack<TemporaryOccurrence> &output) const
+            bool get_all_type_1_primary_occurrences_of_nonterminal(ExplicitNonterminal sig, int64_t position_offset, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list, const std::vector<uint64_t> &explicit_nonterminal_length_list, VStack<TemporaryOccurrence> &output) const
             {
                 bool b = false;
 
                 if (this->primaryParents[sig] != EMPTY_FLAG)
                 {
-                    ManyParentsManager::get_all_type_1_primary_occurrences_of_signature_sub(sig, position_offset, this->primaryParents[sig], base_signature_rule_list, base_signature_length_list, output);
+                    ManyParentsManager::get_all_type_1_primary_occurrences_of_nonterminal_sub(sig, position_offset, this->primaryParents[sig], explicit_nonterminal_rule_list, explicit_nonterminal_length_list, output);
                     b = true;
                 }
 
                 ManagerFlag manager_flag = this->sub_pointer_status_[sig];
                 if (manager_flag == ManagerFlag::Single)
                 {
-                    std::pair<SignatureWithRelativeLevel, bool> special_parent = this->get_special_secondary_parent(sig);
+                    std::pair<NonterminalWithRelativeLevel, bool> special_parent = this->get_special_secondary_parent(sig);
 
-                    ManyParentsManager::get_all_type_1_primary_occurrences_of_signature_sub(sig, position_offset, special_parent.first, base_signature_rule_list, base_signature_length_list, output);
+                    ManyParentsManager::get_all_type_1_primary_occurrences_of_nonterminal_sub(sig, position_offset, special_parent.first, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, output);
                     b = true;
                 }
                 else if (manager_flag == ManagerFlag::Vector){
-                    const std::vector<SignatureWithRelativeLevel> *vec = (std::vector<SignatureWithRelativeLevel> *)this->sub_pointer[sig];                   
-                    ParentVectorManager::get_all_type_1_primary_occurrences_of_signature_sub(sig, position_offset, *vec, base_signature_rule_list, base_signature_length_list, output);
+                    const std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[sig];                   
+                    ParentVectorManager::get_all_type_1_primary_occurrences_of_nonterminal_sub(sig, position_offset, *vec, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, output);
                     b = true;
                 }
                 else if (manager_flag == ManagerFlag::FewParentsManager)
                 {
                     assert(this->sub_pointer[sig] != nullptr);
                     FewParentsManager *few_parents_manager = (FewParentsManager *)this->sub_pointer[sig];
-                    bool b1 = few_parents_manager->get_all_type_1_primary_occurrences_of_signature(sig, position_offset, base_signature_rule_list, base_signature_length_list, output);
+                    bool b1 = few_parents_manager->get_all_type_1_primary_occurrences_of_nonterminal(sig, position_offset, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, output);
                     b = b || b1;
                 }
                 return b;
             }
 
             /**
-             * @brief Returns the primary parent of a base signature.
-             * @param descendant Base signature whose primary parent is requested.
-             * @return Primary parent signature.
+             * @brief Returns the primary parent of a base nonterminal.
+             * @param descendant Base nonterminal whose primary parent is requested.
+             * @return Primary parent nonterminal.
              * @throws std::runtime_error if no primary parent is registered.
              */
-            SignatureWithRelativeLevel take_any_important_ancestor(BaseSignature descendant) const
+            NonterminalWithRelativeLevel take_any_important_ancestor(ExplicitNonterminal descendant) const
             {
                 if(this->primaryParents[descendant] != EMPTY_FLAG){
                     return this->primaryParents[descendant];
@@ -130,11 +130,11 @@ namespace dynRLSLP
                 }
             }
             /**
-             * @brief Appends all important ancestors of a base signature to the output vector.
-             * @param descendant Base signature whose ancestors are collected.
-             * @param output Vector receiving ancestor signatures.
+             * @brief Appends all important ancestors of a base nonterminal to the output vector.
+             * @param descendant Base nonterminal whose ancestors are collected.
+             * @param output Vector receiving ancestor nonterminals.
              */
-            void get_all_important_ancestors(BaseSignature descendant, std::vector<SignatureWithRelativeLevel> &output) const{
+            void get_all_important_ancestors(ExplicitNonterminal descendant, std::vector<NonterminalWithRelativeLevel> &output) const{
 
                 if(this->primaryParents[descendant] != EMPTY_FLAG){
                     output.push_back(this->primaryParents[descendant]);
@@ -146,7 +146,7 @@ namespace dynRLSLP
                         FewParentsManager *few_parents_manager = (FewParentsManager *)this->sub_pointer[descendant];
                         few_parents_manager->get_all_important_ancestors(output);
                     }else if(manager_flag == ManagerFlag::Vector){
-                        const std::vector<SignatureWithRelativeLevel> *vec = (std::vector<SignatureWithRelativeLevel> *)this->sub_pointer[descendant];
+                        const std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[descendant];
                         for(auto p : *vec){
                             output.push_back(p);
                         }
@@ -157,15 +157,15 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Tests whether a base signature has exactly one pair parent and no secondary parents.
-             * @param descendant Base signature to test.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @return True if the signature has a unique pair parent chain head.
+             * @brief Tests whether a base nonterminal has exactly one pair parent and no secondary parents.
+             * @param descendant Base nonterminal to test.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @return True if the nonterminal has a unique pair parent chain head.
              */
-            bool has_single_ancestor(BaseSignature descendant, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const {
+            bool has_single_ancestor(ExplicitNonterminal descendant, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list) const {
                 if(this->primaryParents[descendant] != EMPTY_FLAG){
-                    SignatureWithRelativeLevel parent = this->primaryParents[descendant];
-                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, base_signature_rule_list);
+                    NonterminalWithRelativeLevel parent = this->primaryParents[descendant];
+                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, explicit_nonterminal_rule_list);
                     if(parent_item.get_type() == RLSLPRuleType::Pair){
                         ManagerFlag manager_flag = this->sub_pointer_status_[descendant];
                         if(manager_flag == ManagerFlag::None){
@@ -181,22 +181,22 @@ namespace dynRLSLP
                 }
             }
             /**
-             * @brief Tests whether a base signature has no registered primary parent.
-             * @param descendant Base signature to test.
+             * @brief Tests whether a base nonterminal has no registered primary parent.
+             * @param descendant Base nonterminal to test.
              * @return True if no primary parent is stored.
              */
-            bool is_empty(BaseSignature descendant) const {
+            bool is_empty(ExplicitNonterminal descendant) const {
                 return this->primaryParents[descendant] == EMPTY_FLAG;
             }
  
 
 
             /**
-             * @brief Counts all important ancestors of a base signature across storage tiers [Debug function].
-             * @param sig Base signature whose ancestors are counted.
+             * @brief Counts all important ancestors of a base nonterminal across storage tiers [Debug function].
+             * @param sig Base nonterminal whose ancestors are counted.
              * @return Total number of important ancestors.
              */
-            uint64_t count_important_ancestors(BaseSignature sig) const
+            uint64_t count_important_ancestors(ExplicitNonterminal sig) const
             {
                 uint64_t occ = 0;
                 if (this->primaryParents[sig] != EMPTY_FLAG)
@@ -214,7 +214,7 @@ namespace dynRLSLP
                     occ += few_parents_manager->size();
                 }
                 else if (manager_flag == ManagerFlag::Vector){
-                    const std::vector<SignatureWithRelativeLevel> *vec = (std::vector<SignatureWithRelativeLevel> *)this->sub_pointer[sig];
+                    const std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[sig];
                     occ += vec->size();
                 }
 
@@ -222,32 +222,32 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Tests whether a signature has any registered or implicit parent.
-             * @param child Child signature to test.
+             * @brief Tests whether a nonterminal has any registered or implicit parent.
+             * @param child Child nonterminal to test.
              * @return True if a parent exists in the dictionary or at a higher relative level.
              */
-            bool has_parent(SignatureWithRelativeLevel child) const{
-                BaseSignature base_signature = SignatureFunctions::get_base_signature(child);
-                if(this->primaryParents[base_signature] != EMPTY_FLAG){
+            bool has_parent(NonterminalWithRelativeLevel child) const{
+                ExplicitNonterminal explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(child);
+                if(this->primaryParents[explicit_nonterminal] != EMPTY_FLAG){
                     return true;
                 }else{
-                    uint64_t level = SignatureFunctions::get_relative_level(child);
-                    return level < (*this->relative_max_level_list_)[base_signature];
+                    uint64_t level = NonterminalFunctions::get_relative_level(child);
+                    return level < (*this->relative_max_level_list_)[explicit_nonterminal];
                 }
             }
             
             /**
-             * @brief Looks up the signature of a pair rule with the given children.
-             * @param left_sig Left child signature.
-             * @param right_sig Right child signature.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @return Parent signature if found, otherwise -1.
+             * @brief Looks up the nonterminal of a pair rule with the given children.
+             * @param left_sig Left child nonterminal.
+             * @param right_sig Right child nonterminal.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @return Parent nonterminal if found, otherwise -1.
              */
-            int64_t get_pair_signature(SignatureWithRelativeLevel left_sig, SignatureWithRelativeLevel right_sig, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
+            int64_t get_pair_nonterminal(NonterminalWithRelativeLevel left_sig, NonterminalWithRelativeLevel right_sig, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list) const
             {
 
-                uint64_t base_left_sig = SignatureFunctions::get_base_signature(left_sig);
-                uint64_t level_left_sig = SignatureFunctions::get_relative_level(left_sig);
+                uint64_t base_left_sig = NonterminalFunctions::get_explicit_nonterminal(left_sig);
+                uint64_t level_left_sig = NonterminalFunctions::get_relative_level(left_sig);
 
                 assert(this->relative_max_level_list_ != nullptr);
                 assert(base_left_sig < (*this->relative_max_level_list_).size());
@@ -255,7 +255,7 @@ namespace dynRLSLP
 
                 if (isTopLevel && this->primaryParents[base_left_sig] != EMPTY_FLAG)
                 {
-                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(this->primaryParents[base_left_sig], base_signature_rule_list);
+                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(this->primaryParents[base_left_sig], explicit_nonterminal_rule_list);
                     if (parent_item.get_type() == RLSLPRuleType::Pair && parent_item.A == left_sig && parent_item.B == right_sig)
                     {
                         return this->primaryParents[base_left_sig];
@@ -265,10 +265,10 @@ namespace dynRLSLP
                 ManagerFlag manager_flag = this->sub_pointer_status_[base_left_sig];
                 if (manager_flag == ManagerFlag::Single)
                 {
-                    std::pair<SignatureWithRelativeLevel, bool> special_parent = this->get_special_secondary_parent(base_left_sig);
-                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(special_parent.first, base_signature_rule_list);
+                    std::pair<NonterminalWithRelativeLevel, bool> special_parent = this->get_special_secondary_parent(base_left_sig);
+                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(special_parent.first, explicit_nonterminal_rule_list);
 
-                    if (parent_item.get_type() == RLSLPRuleType::Pair && (SignatureWithRelativeLevel)parent_item.A == left_sig && (SignatureWithRelativeLevel)parent_item.B == right_sig)
+                    if (parent_item.get_type() == RLSLPRuleType::Pair && (NonterminalWithRelativeLevel)parent_item.A == left_sig && (NonterminalWithRelativeLevel)parent_item.B == right_sig)
                     {
                         return special_parent.first;
                     }
@@ -282,13 +282,13 @@ namespace dynRLSLP
                     assert(this->sub_pointer[base_left_sig] != nullptr);
                     FewParentsManager *few_parents_manager = (FewParentsManager *)this->sub_pointer[base_left_sig];
                     QuaternaryKey quaternary_key = right_sig;
-                    int64_t result = few_parents_manager->get_pair_signature(left_sig, right_sig, quaternary_key, base_signature_rule_list);
+                    int64_t result = few_parents_manager->get_pair_nonterminal(left_sig, right_sig, quaternary_key, explicit_nonterminal_rule_list);
 
                     return result;
                 }
                 else if (manager_flag == ManagerFlag::Vector){
-                    const std::vector<SignatureWithRelativeLevel> *vec = (std::vector<SignatureWithRelativeLevel> *)this->sub_pointer[base_left_sig];
-                    return ParentVectorManager::get_pair_signature(left_sig, right_sig, *vec, base_signature_rule_list);
+                    const std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[base_left_sig];
+                    return ParentVectorManager::get_pair_nonterminal(left_sig, right_sig, *vec, explicit_nonterminal_rule_list);
                 }
                 else
                 {
@@ -297,23 +297,23 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Looks up the signature of a power rule with the given child and exponent.
-             * @param child_sig Child signature.
+             * @brief Looks up the nonterminal of a power rule with the given child and exponent.
+             * @param child_sig Child nonterminal.
              * @param power Exponent of the power rule.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @return Parent signature if found, otherwise -1.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @return Parent nonterminal if found, otherwise -1.
              */
-            int64_t get_power_signature(SignatureWithRelativeLevel child_sig, uint64_t power, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
+            int64_t get_power_nonterminal(NonterminalWithRelativeLevel child_sig, uint64_t power, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list) const
             {
-                uint64_t base_child_sig = SignatureFunctions::get_base_signature(child_sig);
-                uint64_t level_child_sig = SignatureFunctions::get_relative_level(child_sig);
+                uint64_t base_child_sig = NonterminalFunctions::get_explicit_nonterminal(child_sig);
+                uint64_t level_child_sig = NonterminalFunctions::get_relative_level(child_sig);
                 assert(this->relative_max_level_list_ != nullptr);
                 assert(base_child_sig < (*this->relative_max_level_list_).size());
                 bool isTopLevel = level_child_sig == (*this->relative_max_level_list_)[base_child_sig];
 
                 if (isTopLevel && this->primaryParents[base_child_sig] != EMPTY_FLAG)
                 {
-                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(this->primaryParents[base_child_sig], base_signature_rule_list);
+                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(this->primaryParents[base_child_sig], explicit_nonterminal_rule_list);
                     if (parent_item.get_type() == RLSLPRuleType::Power && parent_item.A == child_sig && (uint64_t)parent_item.B == power)
                     {
                         return this->primaryParents[base_child_sig];
@@ -323,9 +323,9 @@ namespace dynRLSLP
                 ManagerFlag manager_flag = this->sub_pointer_status_[base_child_sig];
                 if (manager_flag == ManagerFlag::Single)
                 {
-                    std::pair<SignatureWithRelativeLevel, bool> special_parent = this->get_special_secondary_parent(base_child_sig);
-                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(special_parent.first, base_signature_rule_list);
-                    if (parent_item.get_type() == RLSLPRuleType::Power && (SignatureWithRelativeLevel)parent_item.A == child_sig && (uint64_t)parent_item.B == power)
+                    std::pair<NonterminalWithRelativeLevel, bool> special_parent = this->get_special_secondary_parent(base_child_sig);
+                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(special_parent.first, explicit_nonterminal_rule_list);
+                    if (parent_item.get_type() == RLSLPRuleType::Power && (NonterminalWithRelativeLevel)parent_item.A == child_sig && (uint64_t)parent_item.B == power)
                     {
                         return special_parent.first;
                     }
@@ -345,11 +345,11 @@ namespace dynRLSLP
                         quaternary_key = ((uint64_t)power) | (1ULL << 62);
                     }
 
-                    return few_parents_manager->get_power_signature(child_sig, power, quaternary_key, base_signature_rule_list);
+                    return few_parents_manager->get_power_nonterminal(child_sig, power, quaternary_key, explicit_nonterminal_rule_list);
                 }
                 else if (manager_flag == ManagerFlag::Vector){
-                    const std::vector<SignatureWithRelativeLevel> *vec = (std::vector<SignatureWithRelativeLevel> *)this->sub_pointer[base_child_sig];
-                    return ParentVectorManager::get_power_signature(child_sig, power, *vec, base_signature_rule_list);
+                    const std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[base_child_sig];
+                    return ParentVectorManager::get_power_nonterminal(child_sig, power, *vec, explicit_nonterminal_rule_list);
                 }
                 else
                 {
@@ -368,42 +368,42 @@ namespace dynRLSLP
             ////////////////////////////////////////////////////////////////////////////////
             //@{
             /**
-             * @brief Prints parent information for one base signature.
-             * @param base_signature Base signature to print.
+             * @brief Prints parent information for one base nonterminal.
+             * @param explicit_nonterminal Base nonterminal to print.
              * @param message_paragraph Indentation depth for log output.
              */
-            void print_tree2(uint64_t base_signature, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
+            void print_tree2(uint64_t explicit_nonterminal, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
             {
-                uint64_t h = (*this->relative_max_level_list_)[base_signature];
-                SignatureWithRelativeLevel sig = SignatureFunctions::get_signature(h, base_signature);
+                uint64_t h = (*this->relative_max_level_list_)[explicit_nonterminal];
+                NonterminalWithRelativeLevel sig = NonterminalFunctions::get_nonterminal(h, explicit_nonterminal);
 
-                if (this->primaryParents[base_signature] != EMPTY_FLAG)
+                if (this->primaryParents[explicit_nonterminal] != EMPTY_FLAG)
                 {
-                    std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << SignatureFunctions::to_string(sig) << ": " << SignatureFunctions::to_string(this->primaryParents[base_signature]) << std::endl;
+                    std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << NonterminalFunctions::to_string(sig) << ": " << NonterminalFunctions::to_string(this->primaryParents[explicit_nonterminal]) << std::endl;
                 }
                 else
                 {
-                    std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << SignatureFunctions::to_string(sig) << ": " << "NULL" << std::endl;
+                    std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << NonterminalFunctions::to_string(sig) << ": " << "NULL" << std::endl;
                 }
 
-                ManagerFlag manager_flag = this->sub_pointer_status_[base_signature];
+                ManagerFlag manager_flag = this->sub_pointer_status_[explicit_nonterminal];
                 if (manager_flag == ManagerFlag::Single)
                 {
-                    std::pair<SignatureWithRelativeLevel, bool> special_parent = this->get_special_secondary_parent(base_signature);
-                    std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << SignatureFunctions::to_string(sig) << ": " << SignatureFunctions::to_string(special_parent.first) << std::endl;
+                    std::pair<NonterminalWithRelativeLevel, bool> special_parent = this->get_special_secondary_parent(explicit_nonterminal);
+                    std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << NonterminalFunctions::to_string(sig) << ": " << NonterminalFunctions::to_string(special_parent.first) << std::endl;
                 }
                 else if (manager_flag == ManagerFlag::FewParentsManager)
                 {
-                    FewParentsManager *few_parents_manager = (FewParentsManager *)this->sub_pointer[base_signature];
-                    few_parents_manager->print_tree(base_signature, message_paragraph + 1);
+                    FewParentsManager *few_parents_manager = (FewParentsManager *)this->sub_pointer[explicit_nonterminal];
+                    few_parents_manager->print_tree(explicit_nonterminal, message_paragraph + 1);
                 }else if (manager_flag == ManagerFlag::Vector){
-                    const std::vector<SignatureWithRelativeLevel> *vec = (std::vector<SignatureWithRelativeLevel> *)this->sub_pointer[base_signature];
+                    const std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[explicit_nonterminal];
                     stool::DebugPrinter::print_integers(*vec, "Vector");
                 }
             }
 
             /**
-             * @brief Prints the full parent tree for all base signatures.
+             * @brief Prints the full parent tree for all base nonterminals.
              * @param message_paragraph Indentation depth for log output.
              */
             void print_tree(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
@@ -473,7 +473,7 @@ namespace dynRLSLP
                     }
                     else if (manager_flag == ManagerFlag::Vector){
                         parent_vector_count++;
-                        const std::vector<SignatureWithRelativeLevel> *vec = (std::vector<SignatureWithRelativeLevel> *)this->sub_pointer[i];
+                        const std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[i];
                         parent_vector_size_sum += vec->size();
                         parent_vector_max = std::max<uint64_t>(parent_vector_max, vec->size());
                     }
@@ -578,19 +578,19 @@ namespace dynRLSLP
 
             /**
              * @brief Returns human-readable memory usage lines for this dictionary.
-             * @param signature_count Number of signatures in the owning grammar (for per-signature averages).
+             * @param nonterminal_count Number of nonterminals in the owning grammar (for per-nonterminal averages).
              * @param message_paragraph Indentation depth for log output.
              * @return Lines describing memory usage (may be empty when detailed accounting is disabled).
              */
-            std::vector<std::string> get_memory_usage_info([[maybe_unused]] uint64_t signature_count, [[maybe_unused]] int message_paragraph = stool::Message::SHOW_MESSAGE) const
+            std::vector<std::string> get_memory_usage_info([[maybe_unused]] uint64_t nonterminal_count, [[maybe_unused]] int message_paragraph = stool::Message::SHOW_MESSAGE) const
             {
                 std::vector<std::string> r;
                 /*
-                uint64_t primaryParents_byte_size = sizeof(std::vector<SignatureWithRelativeLevel>) * this->primaryParents.size();
+                uint64_t primaryParents_byte_size = sizeof(std::vector<NonterminalWithRelativeLevel>) * this->primaryParents.size();
                 r.push_back(stool::Message::get_paragraph_string(message_paragraph + 1) + "primaryParents: \t\t\t" + std::to_string(primaryParents_byte_size) + " bytes");
 
 
-                uint64_t secondaryParents_byte_size = sizeof(std::unordered_map<SignatureWithRelativeLevel, SignatureWithRelativeLevel>) * this->secondaryParents.size();
+                uint64_t secondaryParents_byte_size = sizeof(std::unordered_map<NonterminalWithRelativeLevel, NonterminalWithRelativeLevel>) * this->secondaryParents.size();
                 r.push_back(stool::Message::get_paragraph_string(message_paragraph + 1) + "secondaryParents: \t\t\t" + std::to_string(secondaryParents_byte_size) + " bytes");
 
                 uint64_t tertiaryParents_byte_size = 0;
@@ -598,20 +598,20 @@ namespace dynRLSLP
                 for (auto &pair : this->tertiaryParents)
                 {
                     uint64_t _size = pair.second.size();
-                    tertiaryParents_byte_size += ((_size + 1) * (sizeof(SignatureWithRelativeLevel) + 3 * sizeof(void *))) + sizeof(void *);
-                    tertiaryParents_byte_size += sizeof(std::set<SignatureWithRelativeLevel>);
+                    tertiaryParents_byte_size += ((_size + 1) * (sizeof(NonterminalWithRelativeLevel) + 3 * sizeof(void *))) + sizeof(void *);
+                    tertiaryParents_byte_size += sizeof(std::set<NonterminalWithRelativeLevel>);
                 }
-                uint64_t bits_per_tertiaryParents = signature_count > 0 ? ((double)tertiaryParents_byte_size / (double)signature_count) : 0;
-                r.push_back(stool::Message::get_paragraph_string(message_paragraph + 1) + "tertiaryParents: \t\t\t" + std::to_string(tertiaryParents_byte_size) + " bytes" + " (" + std::to_string(bits_per_tertiaryParents) + " bytes per signature)");
+                uint64_t bits_per_tertiaryParents = nonterminal_count > 0 ? ((double)tertiaryParents_byte_size / (double)nonterminal_count) : 0;
+                r.push_back(stool::Message::get_paragraph_string(message_paragraph + 1) + "tertiaryParents: \t\t\t" + std::to_string(tertiaryParents_byte_size) + " bytes" + " (" + std::to_string(bits_per_tertiaryParents) + " bytes per nonterminal)");
 
                 uint64_t quaternaryParents_byte_size = 0;
                 for (auto &pair : this->quaternaryParents)
                 {
                     uint64_t _size = pair.second.size();
-                    quaternaryParents_byte_size += (sizeof(SignatureWithRelativeLevel) * _size) + sizeof(std::set<SignatureWithRelativeLevel>);
+                    quaternaryParents_byte_size += (sizeof(NonterminalWithRelativeLevel) * _size) + sizeof(std::set<NonterminalWithRelativeLevel>);
                 }
-                uint64_t bits_per_quaternaryParents = signature_count > 0 ? ((double)quaternaryParents_byte_size / (double)signature_count) : 0;
-                r.push_back(stool::Message::get_paragraph_string(message_paragraph + 1) + "quaternaryParents: \t\t\t" + std::to_string(quaternaryParents_byte_size) + " bytes" + " (" + std::to_string(bits_per_quaternaryParents) + " bytes per signature)");
+                uint64_t bits_per_quaternaryParents = nonterminal_count > 0 ? ((double)quaternaryParents_byte_size / (double)nonterminal_count) : 0;
+                r.push_back(stool::Message::get_paragraph_string(message_paragraph + 1) + "quaternaryParents: \t\t\t" + std::to_string(quaternaryParents_byte_size) + " bytes" + " (" + std::to_string(bits_per_quaternaryParents) + " bytes per nonterminal)");
                 */
                 return r;
             }
@@ -700,8 +700,8 @@ namespace dynRLSLP
                         }
                     }
                     else if (this->sub_pointer_status_[i] == ManagerFlag::Vector){
-                        const std::vector<SignatureWithRelativeLevel> *vec1 = (std::vector<SignatureWithRelativeLevel> *)this->sub_pointer[i];
-                        const std::vector<SignatureWithRelativeLevel> *vec2 = (std::vector<SignatureWithRelativeLevel> *)other.sub_pointer[i];
+                        const std::vector<NonterminalWithRelativeLevel> *vec1 = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[i];
+                        const std::vector<NonterminalWithRelativeLevel> *vec2 = (std::vector<NonterminalWithRelativeLevel> *)other.sub_pointer[i];
                         if (*vec1 != *vec2){
                             throw std::runtime_error("Error in verify_equal: The sub_pointer must be equal.");
                         }
@@ -719,7 +719,7 @@ namespace dynRLSLP
             //@{
             /**
              * @brief Attaches the relative max-level table and recompression mode flag.
-             * @param relative_max_level_list_ Pointer to per-base-signature max relative levels.
+             * @param relative_max_level_list_ Pointer to per-base-nonterminal max relative levels.
              * @param is_restricted_recompression_mode True when restricted block compression is active.
              */
             void set_pointer(const std::vector<uint16_t> *relative_max_level_list_, bool is_restricted_recompression_mode)
@@ -743,7 +743,7 @@ namespace dynRLSLP
                         delete few_parents_manager;
                     }
                     else if (manager_flag == ManagerFlag::Vector){
-                        std::vector<SignatureWithRelativeLevel> *vec = (std::vector<SignatureWithRelativeLevel> *)this->sub_pointer[i];
+                        std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[i];
                         vec->clear();
                         delete vec;
                     }
@@ -767,7 +767,7 @@ namespace dynRLSLP
                 std::swap(this->is_restricted_recompression_mode, other.is_restricted_recompression_mode);
             }
             /**
-             * @brief Appends an empty parent slot for a new base signature.
+             * @brief Appends an empty parent slot for a new base nonterminal.
              */
             void add_new_element()
             {
@@ -777,42 +777,42 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Promotes the current primary parent when a signature rule gains a new relative level.
-             * @param base_signature Base signature whose level is increasing.
-             * @param base_signature_rule_list Base-signature rule list (D).
+             * @brief Promotes the current primary parent when a nonterminal rule gains a new relative level.
+             * @param explicit_nonterminal Base nonterminal whose level is increasing.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
              */
-            void insert_single_signature(BaseSignature base_signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
+            void insert_single_nonterminal(ExplicitNonterminal explicit_nonterminal, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list)
             {
 
-                uint64_t previous_level_diff = (*this->relative_max_level_list_)[base_signature];
-                SignatureWithRelativeLevel previous_signature = SignatureFunctions::get_signature(previous_level_diff, base_signature);
-                if (this->primaryParents[base_signature] != EMPTY_FLAG)
+                uint64_t previous_level_diff = (*this->relative_max_level_list_)[explicit_nonterminal];
+                NonterminalWithRelativeLevel previous_nonterminal = NonterminalFunctions::get_nonterminal(previous_level_diff, explicit_nonterminal);
+                if (this->primaryParents[explicit_nonterminal] != EMPTY_FLAG)
                 {
 
-                    SignatureWithRelativeLevel moved_parent = this->primaryParents[base_signature];
+                    NonterminalWithRelativeLevel moved_parent = this->primaryParents[explicit_nonterminal];
 
 
-                    this->insert(previous_signature, moved_parent, false, base_signature_rule_list);
-                    this->primaryParents[base_signature] = EMPTY_FLAG;
+                    this->insert(previous_nonterminal, moved_parent, false, explicit_nonterminal_rule_list);
+                    this->primaryParents[explicit_nonterminal] = EMPTY_FLAG;
                 }
 
                 /*
                 if(!this->debug){
-                    (*this->relative_max_level_list_)[base_signature]++;
+                    (*this->relative_max_level_list_)[explicit_nonterminal]++;
                 }
                 */
             }
             /**
-             * @brief Registers a parent for a child signature, upgrading storage tier when needed.
-             * @param child Child signature receiving the parent link.
-             * @param parent Parent signature to register.
+             * @brief Registers a parent for a child nonterminal, upgrading storage tier when needed.
+             * @param child Child nonterminal receiving the parent link.
+             * @param parent Parent nonterminal to register.
              * @param topLevelChild True if the child is at its current max relative level.
-             * @param base_signature_rule_list Base-signature rule list (D).
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
              */
-            void insert(SignatureWithRelativeLevel child, uint64_t parent, bool topLevelChild, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
+            void insert(NonterminalWithRelativeLevel child, uint64_t parent, bool topLevelChild, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list)
             {
 
-                uint64_t base_child_sig = SignatureFunctions::get_base_signature(child);
+                uint64_t base_child_sig = NonterminalFunctions::get_explicit_nonterminal(child);
 
                 if (topLevelChild && this->primaryParents[base_child_sig] == EMPTY_FLAG)
                 {
@@ -824,35 +824,35 @@ namespace dynRLSLP
                     if (manager_flag == ManagerFlag::None)
                     {
                         this->sub_pointer_status_[base_child_sig] = ManagerFlag::Single;
-                        RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, base_signature_rule_list);
+                        RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, explicit_nonterminal_rule_list);
                         assert(parent_item.get_type() == RLSLPRuleType::Pair || parent_item.get_type() == RLSLPRuleType::Power);
-                        uint64_t parent_with_flag = this->get_signature_with_flag(child, parent, parent_item);
+                        uint64_t parent_with_flag = this->get_nonterminal_with_flag(child, parent, parent_item);
                         this->sub_pointer[base_child_sig] = (void *)parent_with_flag;
                     }
                     else if (manager_flag == ManagerFlag::Single)
                     {
-                        std::pair<SignatureWithRelativeLevel, bool> special_parent = this->get_special_secondary_parent(base_child_sig);
-                        this->sub_pointer[base_child_sig] = new std::vector<SignatureWithRelativeLevel>();
+                        std::pair<NonterminalWithRelativeLevel, bool> special_parent = this->get_special_secondary_parent(base_child_sig);
+                        this->sub_pointer[base_child_sig] = new std::vector<NonterminalWithRelativeLevel>();
                         this->sub_pointer_status_[base_child_sig] = ManagerFlag::Vector;
-                        std::vector<SignatureWithRelativeLevel> *vec = (std::vector<SignatureWithRelativeLevel> *)this->sub_pointer[base_child_sig];
-                        ParentVectorManager::insert_signature(special_parent.first, *vec);
-                        ParentVectorManager::insert_signature(parent, *vec);
+                        std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[base_child_sig];
+                        ParentVectorManager::insert_nonterminal(special_parent.first, *vec);
+                        ParentVectorManager::insert_nonterminal(parent, *vec);
 
                     }
                     else if (manager_flag == ManagerFlag::FewParentsManager)
                     {
-                        RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, base_signature_rule_list);
+                        RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, explicit_nonterminal_rule_list);
                         QuaternaryKey quaternary_key = ManyParentsManager::get_quaternary_key(child, parent_item, this->is_restricted_recompression_mode);
-                        uint64_t level_diff = SignatureFunctions::get_relative_level(child);
+                        uint64_t level_diff = NonterminalFunctions::get_relative_level(child);
                         ((FewParentsManager *)this->sub_pointer[base_child_sig])->insert(level_diff, parent, quaternary_key);
                     }
                     else if(manager_flag == ManagerFlag::Vector){
-                        std::vector<SignatureWithRelativeLevel> *vec = (std::vector<SignatureWithRelativeLevel> *)this->sub_pointer[base_child_sig];
-                        ParentVectorManager::insert_signature(parent, *vec);
+                        std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[base_child_sig];
+                        ParentVectorManager::insert_nonterminal(parent, *vec);
 
                         if(vec->size() > ParentVectorManager::VECTOR_MAX_SIZE){
                             FewParentsManager *few_parents_manager = new FewParentsManager();
-                            few_parents_manager->initialize(base_child_sig, *vec, base_signature_rule_list, this->is_restricted_recompression_mode);
+                            few_parents_manager->initialize(base_child_sig, *vec, explicit_nonterminal_rule_list, this->is_restricted_recompression_mode);
                             this->sub_pointer[base_child_sig] = few_parents_manager;
                             this->sub_pointer_status_[base_child_sig] = ManagerFlag::FewParentsManager;
 
@@ -868,25 +868,25 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Removes one parent link for a child signature, downgrading storage tier when needed.
-             * @param child Child signature whose parent is removed.
-             * @param parent Parent signature to erase.
-             * @param base_signature_rule_list Base-signature rule list (D).
+             * @brief Removes one parent link for a child nonterminal, downgrading storage tier when needed.
+             * @param child Child nonterminal whose parent is removed.
+             * @param parent Parent nonterminal to erase.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
              */
-            void erase_signature(SignatureWithRelativeLevel child, SignatureWithRelativeLevel parent, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
+            void erase_nonterminal(NonterminalWithRelativeLevel child, NonterminalWithRelativeLevel parent, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list)
             {
 
-                // uint64_t base_signature = SignatureFunctions::get_base_signature(parent);
-                assert(SignatureFunctions::get_relative_level(parent) == 0);
+                // uint64_t explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(parent);
+                assert(NonterminalFunctions::get_relative_level(parent) == 0);
 
-                uint64_t base_child_sig = SignatureFunctions::get_base_signature(child);
-                uint64_t level_child_sig = SignatureFunctions::get_relative_level(child);
+                uint64_t base_child_sig = NonterminalFunctions::get_explicit_nonterminal(child);
+                uint64_t level_child_sig = NonterminalFunctions::get_relative_level(child);
 
                 bool isTopLevel = level_child_sig == (*this->relative_max_level_list_)[base_child_sig];
 
                 if (isTopLevel && this->primaryParents[base_child_sig] == parent)
                 {
-                    SignatureWithRelativeLevel last_parent = this->take_any_parent_from_few_parents_manager(child, base_signature_rule_list);
+                    NonterminalWithRelativeLevel last_parent = this->take_any_parent_from_few_parents_manager(child, explicit_nonterminal_rule_list);
                     this->primaryParents[base_child_sig] = last_parent;
                 }
                 else
@@ -900,15 +900,15 @@ namespace dynRLSLP
                     }
                     else if (manager_flag == ManagerFlag::FewParentsManager)
                     {
-                        RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, base_signature_rule_list);
+                        RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, explicit_nonterminal_rule_list);
                         QuaternaryKey quaternary_key = ManyParentsManager::get_quaternary_key(child, parent_item, this->is_restricted_recompression_mode);
 
-                        uint64_t level_diff = SignatureFunctions::get_relative_level(child);
+                        uint64_t level_diff = NonterminalFunctions::get_relative_level(child);
                         FewParentsManager *few_parents_manager = (FewParentsManager *)this->sub_pointer[base_child_sig];
                         few_parents_manager->erase(level_diff, parent, quaternary_key);
                         if (few_parents_manager->size() <= ParentVectorManager::VECTOR_MAX_SIZE)
                         {
-                            std::vector<SignatureWithRelativeLevel> *vec = new std::vector<SignatureWithRelativeLevel>();
+                            std::vector<NonterminalWithRelativeLevel> *vec = new std::vector<NonterminalWithRelativeLevel>();
                             few_parents_manager->get_all_important_ancestors(*vec);
                             few_parents_manager->clear();
                             delete few_parents_manager;
@@ -918,16 +918,16 @@ namespace dynRLSLP
                         }
                     }
                     else if (manager_flag == ManagerFlag::Vector){
-                        std::vector<SignatureWithRelativeLevel> *vec = (std::vector<SignatureWithRelativeLevel> *)this->sub_pointer[base_child_sig];
-                        ParentVectorManager::erase_signature(parent, *vec);
+                        std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[base_child_sig];
+                        ParentVectorManager::erase_nonterminal(parent, *vec);
                         assert(vec->size() > 0);
                         if(vec->size() == 1){
-                            SignatureWithRelativeLevel parentX = vec->at(0);
-                            RLSLPRuleBody parentX_item = RLSLPRuleBody::decode_rule(parentX, base_signature_rule_list);
+                            NonterminalWithRelativeLevel parentX = vec->at(0);
+                            RLSLPRuleBody parentX_item = RLSLPRuleBody::decode_rule(parentX, explicit_nonterminal_rule_list);
                             assert(parentX_item.get_type() == RLSLPRuleType::Pair || parentX_item.get_type() == RLSLPRuleType::Power);
 
-                            ChildType childX_type = ManyParentsManager::get_child_type(base_child_sig, parentX, base_signature_rule_list, true);
-                            SignatureWithRelativeLevel childX;
+                            ChildType childX_type = ManyParentsManager::get_child_type(base_child_sig, parentX, explicit_nonterminal_rule_list, true);
+                            NonterminalWithRelativeLevel childX;
         
                             if(childX_type == ChildType::LeftChild || childX_type == ChildType::PowerChild){
                                 childX = parentX_item.A;
@@ -937,31 +937,31 @@ namespace dynRLSLP
                                 throw std::runtime_error("initialize: unknown child type");
                             }
         
-                            uint64_t signature_with_flagX = this->get_signature_with_flag(childX, parentX, parentX_item);
+                            uint64_t nonterminal_with_flagX = this->get_nonterminal_with_flag(childX, parentX, parentX_item);
 
                             delete vec;
-                            this->sub_pointer[base_child_sig] = (void *)signature_with_flagX;
+                            this->sub_pointer[base_child_sig] = (void *)nonterminal_with_flagX;
                             this->sub_pointer_status_[base_child_sig] = ManagerFlag::Single;
                         }
                     }
                     else
                     {
-                        throw std::runtime_error("erase_signature: unknown manager flag");
+                        throw std::runtime_error("erase_nonterminal: unknown manager flag");
                     }
                 }
             }
 
             /**
-             * @brief Restores the primary parent after a signature rule loses its top relative level.
-             * @param base_signature Base signature whose level is decreasing.
-             * @param base_signature_rule_list Base-signature rule list (D).
+             * @brief Restores the primary parent after a nonterminal rule loses its top relative level.
+             * @param explicit_nonterminal Base nonterminal whose level is decreasing.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
              */
-            void erase_signature(BaseSignature base_signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
+            void erase_nonterminal(ExplicitNonterminal explicit_nonterminal, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list)
             {
                 
-                SignatureWithRelativeLevel next_signature = SignatureFunctions::get_signature((*this->relative_max_level_list_)[base_signature] - 1, base_signature);
-                SignatureWithRelativeLevel last_parent_quaternary = this->take_any_parent_from_few_parents_manager(next_signature, base_signature_rule_list);
-                this->primaryParents[base_signature] = last_parent_quaternary;
+                NonterminalWithRelativeLevel next_nonterminal = NonterminalFunctions::get_nonterminal((*this->relative_max_level_list_)[explicit_nonterminal] - 1, explicit_nonterminal);
+                NonterminalWithRelativeLevel last_parent_quaternary = this->take_any_parent_from_few_parents_manager(next_nonterminal, explicit_nonterminal_rule_list);
+                this->primaryParents[explicit_nonterminal] = last_parent_quaternary;
             }
 
             /**
@@ -973,7 +973,7 @@ namespace dynRLSLP
                 uint64_t total = 0;
                 // Size used by primaryParents
                 total += sizeof(this->primaryParents);
-                total += sizeof(SignatureWithRelativeLevel) * this->primaryParents.size();
+                total += sizeof(NonterminalWithRelativeLevel) * this->primaryParents.size();
 
                 // Size used by sub_pointer (pointers, not objects themselves)
                 total += sizeof(this->sub_pointer);
@@ -999,8 +999,8 @@ namespace dynRLSLP
                     }
                     else if (this->sub_pointer_status_[i] == ManagerFlag::Vector && this->sub_pointer[i] != nullptr)
                     {
-                        std::vector<SignatureWithRelativeLevel> *vec = (std::vector<SignatureWithRelativeLevel> *)this->sub_pointer[i];
-                        total += sizeof(SignatureWithRelativeLevel) * vec->size();
+                        std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[i];
+                        total += sizeof(NonterminalWithRelativeLevel) * vec->size();
                     }
                 }
                 return total;
@@ -1014,7 +1014,7 @@ namespace dynRLSLP
         public:
             /**
              * @brief Loads a parent dictionary from a binary input stream.
-             * @param relative_max_level_list_ Pointer to per-base-signature max relative levels.
+             * @param relative_max_level_list_ Pointer to per-base-nonterminal max relative levels.
              * @param ifs Input stream positioned at the dictionary data.
              * @return Restored FastParentDictionary instance.
              */
@@ -1030,7 +1030,7 @@ namespace dynRLSLP
                 uint64_t _primaryParents_size;
                 ifs.read(reinterpret_cast<char *>(&_primaryParents_size), sizeof(_primaryParents_size));
                 r.primaryParents.resize(_primaryParents_size);
-                ifs.read(reinterpret_cast<char *>(r.primaryParents.data()), sizeof(SignatureWithRelativeLevel) * _primaryParents_size);
+                ifs.read(reinterpret_cast<char *>(r.primaryParents.data()), sizeof(NonterminalWithRelativeLevel) * _primaryParents_size);
 
                 // sub_pointerの存在フラグ復元
                 uint64_t few_parents_sub_pointer_status_size;
@@ -1048,9 +1048,9 @@ namespace dynRLSLP
                     ManagerFlag manager_flag = r.sub_pointer_status_[i];
                     if (manager_flag == ManagerFlag::Single)
                     {
-                        uint64_t signature_with_flag;
-                        ifs.read(reinterpret_cast<char *>(&signature_with_flag), sizeof(uint64_t));
-                        r.sub_pointer[i] = (void *)signature_with_flag;
+                        uint64_t nonterminal_with_flag;
+                        ifs.read(reinterpret_cast<char *>(&nonterminal_with_flag), sizeof(uint64_t));
+                        r.sub_pointer[i] = (void *)nonterminal_with_flag;
                     }
                     else if (manager_flag == ManagerFlag::FewParentsManager)
                     {
@@ -1060,9 +1060,9 @@ namespace dynRLSLP
                     {
                         uint64_t vec_size;
                         ifs.read(reinterpret_cast<char *>(&vec_size), sizeof(uint64_t));
-                        std::vector<SignatureWithRelativeLevel> *vec = new std::vector<SignatureWithRelativeLevel>();
+                        std::vector<NonterminalWithRelativeLevel> *vec = new std::vector<NonterminalWithRelativeLevel>();
                         vec->resize(vec_size);
-                        ifs.read(reinterpret_cast<char *>(vec->data()), sizeof(SignatureWithRelativeLevel) * vec_size);
+                        ifs.read(reinterpret_cast<char *>(vec->data()), sizeof(NonterminalWithRelativeLevel) * vec_size);
                         r.sub_pointer[i] = vec;
                     }
                     else
@@ -1086,7 +1086,7 @@ namespace dynRLSLP
 
                 uint64_t _primaryParents_size = item.primaryParents.size();
                 os.write(reinterpret_cast<const char *>(&_primaryParents_size), sizeof(_primaryParents_size));
-                os.write(reinterpret_cast<const char *>(item.primaryParents.data()), sizeof(SignatureWithRelativeLevel) * _primaryParents_size);
+                os.write(reinterpret_cast<const char *>(item.primaryParents.data()), sizeof(NonterminalWithRelativeLevel) * _primaryParents_size);
 
                 uint64_t few_parents_sub_pointer_status_size = item.sub_pointer_status_.size();
                 os.write(reinterpret_cast<const char *>(&few_parents_sub_pointer_status_size), sizeof(uint64_t));
@@ -1097,8 +1097,8 @@ namespace dynRLSLP
                     ManagerFlag manager_flag = item.sub_pointer_status_[i];
                     if (manager_flag == ManagerFlag::Single)
                     {
-                        uint64_t signature_with_flag = (uint64_t)item.sub_pointer[i];
-                        os.write(reinterpret_cast<const char *>(&signature_with_flag), sizeof(uint64_t));
+                        uint64_t nonterminal_with_flag = (uint64_t)item.sub_pointer[i];
+                        os.write(reinterpret_cast<const char *>(&nonterminal_with_flag), sizeof(uint64_t));
                     }
                     else if (manager_flag == ManagerFlag::FewParentsManager)
                     {
@@ -1106,10 +1106,10 @@ namespace dynRLSLP
                     }
                     else if (manager_flag == ManagerFlag::Vector)
                     {
-                        std::vector<SignatureWithRelativeLevel> *vec = (std::vector<SignatureWithRelativeLevel> *)item.sub_pointer[i];
+                        std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)item.sub_pointer[i];
                         uint64_t vec_size = vec->size();
                         os.write(reinterpret_cast<const char *>(&vec_size), sizeof(uint64_t));
-                        os.write(reinterpret_cast<const char *>(vec->data()), sizeof(SignatureWithRelativeLevel) * vec_size);
+                        os.write(reinterpret_cast<const char *>(vec->data()), sizeof(NonterminalWithRelativeLevel) * vec_size);
                     }
                 }
             }
@@ -1118,24 +1118,24 @@ namespace dynRLSLP
         private:
             /**
              * @brief Removes and returns one secondary parent, downgrading storage tier when the list shrinks.
-             * @param child Child signature whose secondary parent is taken.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @return Removed parent signature, or EMPTY_FLAG if none remains.
+             * @param child Child nonterminal whose secondary parent is taken.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @return Removed parent nonterminal, or EMPTY_FLAG if none remains.
              */
-            SignatureWithRelativeLevel take_any_parent_from_few_parents_manager(SignatureWithRelativeLevel child, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
+            NonterminalWithRelativeLevel take_any_parent_from_few_parents_manager(NonterminalWithRelativeLevel child, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list)
             {
-                uint64_t base_signature = SignatureFunctions::get_base_signature(child);
-                uint64_t level_diff = SignatureFunctions::get_relative_level(child);
+                uint64_t explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(child);
+                uint64_t level_diff = NonterminalFunctions::get_relative_level(child);
 
-                ManagerFlag manager_flag = this->sub_pointer_status_[base_signature];
+                ManagerFlag manager_flag = this->sub_pointer_status_[explicit_nonterminal];
                 if (manager_flag == ManagerFlag::Single)
                 {
-                    std::pair<SignatureWithRelativeLevel, bool> special_parent = this->get_special_secondary_parent(base_signature);
-                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(special_parent.first, base_signature_rule_list);
+                    std::pair<NonterminalWithRelativeLevel, bool> special_parent = this->get_special_secondary_parent(explicit_nonterminal);
+                    RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(special_parent.first, explicit_nonterminal_rule_list);
                     if ((special_parent.second && parent_item.B == child) || (!special_parent.second && parent_item.A == child))
                     {
-                        this->sub_pointer[base_signature] = nullptr;
-                        this->sub_pointer_status_[base_signature] = ManagerFlag::None;
+                        this->sub_pointer[explicit_nonterminal] = nullptr;
+                        this->sub_pointer_status_[explicit_nonterminal] = ManagerFlag::None;
                         return special_parent.first;
                     }
                     else
@@ -1145,32 +1145,32 @@ namespace dynRLSLP
                 }
                 else if (manager_flag == ManagerFlag::FewParentsManager)
                 {
-                    FewParentsManager *few_parents_manager = (FewParentsManager *)this->sub_pointer[base_signature];
-                    SignatureWithRelativeLevel next_parent = few_parents_manager->take_any_parent(level_diff);
+                    FewParentsManager *few_parents_manager = (FewParentsManager *)this->sub_pointer[explicit_nonterminal];
+                    NonterminalWithRelativeLevel next_parent = few_parents_manager->take_any_parent(level_diff);
                     if (few_parents_manager->size() <= ParentVectorManager::VECTOR_MAX_SIZE)
                     {
 
-                        std::vector<SignatureWithRelativeLevel> *vec = new std::vector<SignatureWithRelativeLevel>();
+                        std::vector<NonterminalWithRelativeLevel> *vec = new std::vector<NonterminalWithRelativeLevel>();
                         few_parents_manager->get_all_important_ancestors(*vec);
                         few_parents_manager->clear();
                         delete few_parents_manager;
-                        this->sub_pointer[base_signature] = vec;
-                        this->sub_pointer_status_[base_signature] = ManagerFlag::Vector;
+                        this->sub_pointer[explicit_nonterminal] = vec;
+                        this->sub_pointer_status_[explicit_nonterminal] = ManagerFlag::Vector;
 
                     }
                     return next_parent;
                 }
                 else if (manager_flag == ManagerFlag::Vector){
-                    std::vector<SignatureWithRelativeLevel> *vec = (std::vector<SignatureWithRelativeLevel> *)this->sub_pointer[base_signature];
-                    SignatureWithRelativeLevel parent = ParentVectorManager::take_any_parent(child, *vec, base_signature_rule_list);
+                    std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[explicit_nonterminal];
+                    NonterminalWithRelativeLevel parent = ParentVectorManager::take_any_parent(child, *vec, explicit_nonterminal_rule_list);
                     assert(vec->size() > 0);
                     if(vec->size() == 1){
-                        SignatureWithRelativeLevel parentX = vec->at(0);
-                        RLSLPRuleBody parentX_item = RLSLPRuleBody::decode_rule(parentX, base_signature_rule_list);
+                        NonterminalWithRelativeLevel parentX = vec->at(0);
+                        RLSLPRuleBody parentX_item = RLSLPRuleBody::decode_rule(parentX, explicit_nonterminal_rule_list);
                         assert(parentX_item.get_type() == RLSLPRuleType::Pair || parentX_item.get_type() == RLSLPRuleType::Power);
 
-                        ChildType childX_type = ManyParentsManager::get_child_type(base_signature, parentX, base_signature_rule_list, true);
-                        SignatureWithRelativeLevel childX;
+                        ChildType childX_type = ManyParentsManager::get_child_type(explicit_nonterminal, parentX, explicit_nonterminal_rule_list, true);
+                        NonterminalWithRelativeLevel childX;
     
                         if(childX_type == ChildType::LeftChild || childX_type == ChildType::PowerChild){
                             childX = parentX_item.A;
@@ -1180,11 +1180,11 @@ namespace dynRLSLP
                             throw std::runtime_error("initialize: unknown child type");
                         }
     
-                        uint64_t signature_with_flagX = this->get_signature_with_flag(childX, parentX, parentX_item);
+                        uint64_t nonterminal_with_flagX = this->get_nonterminal_with_flag(childX, parentX, parentX_item);
 
                         delete vec;
-                        this->sub_pointer[base_signature] = (void *)signature_with_flagX;
-                        this->sub_pointer_status_[base_signature] = ManagerFlag::Single;
+                        this->sub_pointer[explicit_nonterminal] = (void *)nonterminal_with_flagX;
+                        this->sub_pointer_status_[explicit_nonterminal] = ManagerFlag::Single;
                     }
 
                     return parent;
@@ -1197,24 +1197,24 @@ namespace dynRLSLP
             }
             /**
              * @brief Decodes the single secondary parent stored with an embedded right-child flag.
-             * @param base_signature Base signature whose secondary parent is decoded.
-             * @return Pair of parent signature and whether the child is the right child of a pair rule.
+             * @param explicit_nonterminal Base nonterminal whose secondary parent is decoded.
+             * @return Pair of parent nonterminal and whether the child is the right child of a pair rule.
              */
-            std::pair<SignatureWithRelativeLevel, bool> get_special_secondary_parent(uint64_t base_signature) const
+            std::pair<NonterminalWithRelativeLevel, bool> get_special_secondary_parent(uint64_t explicit_nonterminal) const
             {
-                uint64_t parent_with_flag = (uint64_t)this->sub_pointer[base_signature];
+                uint64_t parent_with_flag = (uint64_t)this->sub_pointer[explicit_nonterminal];
                 bool is_special_pair = (parent_with_flag >> 63) == 1;
-                SignatureWithRelativeLevel parent = (parent_with_flag << 1) >> 1;
+                NonterminalWithRelativeLevel parent = (parent_with_flag << 1) >> 1;
                 return {parent, is_special_pair};
             }
             /**
-             * @brief Encodes a parent signature with a high bit marking a right-child pair parent.
-             * @param child Child signature used to determine which side of a pair rule is stored.
-             * @param parent Parent signature to encode.
+             * @brief Encodes a parent nonterminal with a high bit marking a right-child pair parent.
+             * @param child Child nonterminal used to determine which side of a pair rule is stored.
+             * @param parent Parent nonterminal to encode.
              * @param parent_item Decoded rule body of the parent.
-             * @return Parent signature optionally OR-ed with the right-child flag bit.
+             * @return Parent nonterminal optionally OR-ed with the right-child flag bit.
              */
-            uint64_t get_signature_with_flag(SignatureWithRelativeLevel child, SignatureWithRelativeLevel parent, const RLSLPRuleBody &parent_item) const
+            uint64_t get_nonterminal_with_flag(NonterminalWithRelativeLevel child, NonterminalWithRelativeLevel parent, const RLSLPRuleBody &parent_item) const
             {
                 if (parent_item.get_type() == RLSLPRuleType::Pair && parent_item.B == child)
                 {

@@ -14,11 +14,11 @@ namespace dynRLSLP
         {
             public:
             /**
-             * @brief Attempts to compile a run-rule vector without adding new signatures.
+             * @brief Attempts to compile a run-rule vector without adding new nonterminals.
              * @param seq Input run-rule vector to compile.
              * @param dic Dynamic grammar used for lookup only.
              * @param message_paragraph Indentation level for progress messages.
-             * @return Root signature on success, or -1 if a required signature is missing.
+             * @return Root nonterminal on success, or -1 if a required nonterminal is missing.
              */
             static int64_t try_single_compile(RunRuleVector &seq, const DynamicGrammarForLayeredRLSLP &dic, int message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -43,14 +43,14 @@ namespace dynRLSLP
                 for(auto it : tmp){
                     current_seq.push_back(it);
                 }
-                RunRuleBody::merge_same_signatures(current_seq);
+                RunRuleBody::merge_same_nonterminals(current_seq);
 
                 std::vector<RunRuleBody> empty_left_line;
                 std::vector<RunRuleBody> empty_right_line;
 
                 assert(RunRuleBody::verify_vector(current_seq));
 
-                while (!RunRuleBody::is_single_signature(current_seq))
+                while (!RunRuleBody::is_single_nonterminal(current_seq))
                 {
                     assert(current_seq.size() > 0);
                     std::deque<RunRuleBody> new_seq;
@@ -66,13 +66,13 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Attempts to build a layered run-rule vector from text without adding signatures.
+             * @brief Attempts to build a layered run-rule vector from text without adding nonterminals.
              * @tparam C Character type of the input text.
              * @param dic Dynamic grammar used for lookup only.
              * @param text Input character sequence.
              * @param output Run-rule vector filled on success.
              * @param message_paragraph Indentation level for progress messages.
-             * @return True if the sequence was built entirely from existing signatures.
+             * @return True if the sequence was built entirely from existing nonterminals.
              */
             template <typename C>
             static bool try_build_common_sequence_from_text(const DynamicGrammarForLayeredRLSLP &dic, const std::vector<C> &text, RunRuleVector &output, int message_paragraph = stool::Message::SHOW_MESSAGE)
@@ -144,11 +144,11 @@ namespace dynRLSLP
 
 
             /**
-             * @brief Attempts left-side semi-compilation without adding new signatures.
+             * @brief Attempts left-side semi-compilation without adding new nonterminals.
              * @param item Run-rule vector whose left side is semi-compiled in place.
              * @param dic Dynamic grammar used for lookup only.
              * @param message_paragraph Indentation level for progress messages.
-             * @return True if all required signatures exist.
+             * @return True if all required nonterminals exist.
              */
             static bool try_left_side_semi_compile(RunRuleVector &item, const DynamicGrammarForLayeredRLSLP &dic, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -177,11 +177,11 @@ namespace dynRLSLP
 
             }
             /**
-             * @brief Attempts right-side semi-compilation without adding new signatures.
+             * @brief Attempts right-side semi-compilation without adding new nonterminals.
              * @param item Run-rule vector whose right side is semi-compiled in place.
              * @param dic Dynamic grammar used for lookup only.
              * @param message_paragraph Indentation level for progress messages.
-             * @return True if all required signatures exist.
+             * @return True if all required nonterminals exist.
              */
             static bool try_right_side_semi_compile(RunRuleVector &item, const DynamicGrammarForLayeredRLSLP &dic, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -211,7 +211,7 @@ namespace dynRLSLP
 
 
             /**
-             * @brief Attempts LCR semi-compilation without adding new signatures.
+             * @brief Attempts LCR semi-compilation without adding new nonterminals.
              * @param left Left run-rule vector.
              * @param center Center deque updated in place.
              * @param right Right run-rule vector.
@@ -219,7 +219,7 @@ namespace dynRLSLP
              * @param dic Dynamic grammar used for lookup only.
              * @param output Compiled center sequence on success.
              * @param message_paragraph Indentation level for progress messages.
-             * @return True if all required signatures exist.
+             * @return True if all required nonterminals exist.
              */
             static bool try_LCR_semi_compile(RunRuleVector &left, std::deque<RunRuleBody> &center, RunRuleVector &right, int64_t h, const DynamicGrammarForLayeredRLSLP &dic, std::deque<RunRuleBody> &output, int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -256,7 +256,7 @@ namespace dynRLSLP
                     center.push_back(tmp_right_items[i]);
                 }
                 assert(center.size() > 0);
-                RunRuleBody::merge_same_signatures(center);
+                RunRuleBody::merge_same_nonterminals(center);
 
                 std::vector<RunRuleBody> leftItems;
                 std::vector<RunRuleBody> rightItems;

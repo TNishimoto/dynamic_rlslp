@@ -17,11 +17,11 @@ namespace dynRLSLP
         {
         public:
 
-        static uint64_t get_string_length(const std::vector<RunRuleBody> &sequence, const std::vector<uint64_t>& base_signature_length_list){
+        static uint64_t get_string_length(const std::vector<RunRuleBody> &sequence, const std::vector<uint64_t>& explicit_nonterminal_length_list){
             uint64_t length = 0;
             for (auto it : sequence)
             {
-                length += SignatureFunctions::get_length(it.number, base_signature_length_list) * it.power;
+                length += NonterminalFunctions::get_length(it.number, explicit_nonterminal_length_list) * it.power;
             }
             return length;
         }
@@ -36,14 +36,14 @@ namespace dynRLSLP
 
         
         /**
-         * @brief Build a right-context VStack for a signature.
-         * @param signature Encoded signature with relative level.
-         * @param base_signature_rule_list Base-signature rule list (D).
+         * @brief Build a right-context VStack for a nonterminal.
+         * @param nonterminal Encoded nonterminal with relative level.
+         * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
          * @return Resulting vector.
          */
-        static VStack<RunRuleBody> create_right_sequence(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
+        static VStack<RunRuleBody> create_right_sequence(NonterminalWithRelativeLevel nonterminal, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list)
         {
-            RLSLPRuleBody item = RLSLPRuleBody::decode_rule(signature, base_signature_rule_list);
+            RLSLPRuleBody item = RLSLPRuleBody::decode_rule(nonterminal, explicit_nonterminal_rule_list);
             VStack<RunRuleBody> st;
             if (item.get_type() == RLSLPRuleType::Pair)
             {
@@ -61,14 +61,14 @@ namespace dynRLSLP
             return st;
         }
         /**
-         * @brief Return the rightmost run rule for a signature.
-         * @param signature Encoded signature with relative level.
-         * @param base_signature_rule_list Base-signature rule list (D).
+         * @brief Return the rightmost run rule for a nonterminal.
+         * @param nonterminal Encoded nonterminal with relative level.
+         * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
          * @return Resulting vector.
          */
-        static RunRuleBody create_right_run_rule(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
+        static RunRuleBody create_right_run_rule(NonterminalWithRelativeLevel nonterminal, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list)
         {
-            RLSLPRuleBody item = RLSLPRuleBody::decode_rule(signature, base_signature_rule_list);
+            RLSLPRuleBody item = RLSLPRuleBody::decode_rule(nonterminal, explicit_nonterminal_rule_list);
             if (item.get_type() == RLSLPRuleType::Pair)
             {
                 return RunRuleBody(item.B, 1);
@@ -86,15 +86,15 @@ namespace dynRLSLP
 
 
         /**
-         * @brief Build a left-context VStack for a signature.
-         * @param signature Encoded signature with relative level.
-         * @param base_signature_rule_list Base-signature rule list (D).
+         * @brief Build a left-context VStack for a nonterminal.
+         * @param nonterminal Encoded nonterminal with relative level.
+         * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
          * @return Resulting vector.
          */
-        static VStack<RunRuleBody> create_left_sequence(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
+        static VStack<RunRuleBody> create_left_sequence(NonterminalWithRelativeLevel nonterminal, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list)
         {
 
-            RLSLPRuleBody item = RLSLPRuleBody::decode_rule(signature, base_signature_rule_list);
+            RLSLPRuleBody item = RLSLPRuleBody::decode_rule(nonterminal, explicit_nonterminal_rule_list);
             VStack<RunRuleBody> st;
             if (item.get_type() == RLSLPRuleType::Pair)
             {
@@ -113,15 +113,15 @@ namespace dynRLSLP
         }
 
         /**
-         * @brief Return the leftmost run rule for a signature.
-         * @param signature Encoded signature with relative level.
-         * @param base_signature_rule_list Base-signature rule list (D).
+         * @brief Return the leftmost run rule for a nonterminal.
+         * @param nonterminal Encoded nonterminal with relative level.
+         * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
          * @return Resulting vector.
          */
-        static RunRuleBody create_left_run_rule(SignatureWithRelativeLevel signature, const std::vector<RLSLPRuleBody> &base_signature_rule_list)
+        static RunRuleBody create_left_run_rule(NonterminalWithRelativeLevel nonterminal, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list)
         {
 
-            RLSLPRuleBody item = RLSLPRuleBody::decode_rule(signature, base_signature_rule_list);
+            RLSLPRuleBody item = RLSLPRuleBody::decode_rule(nonterminal, explicit_nonterminal_rule_list);
             if (item.get_type() == RLSLPRuleType::Pair)
             {
                 return RunRuleBody(item.A, 1);
@@ -132,7 +132,7 @@ namespace dynRLSLP
             }
             else
             {
-                std::cout << "Sig: " << signature << std::endl;
+                std::cout << "Sig: " << nonterminal << std::endl;
                 std::cout << item.get_info() << std::endl;
                 throw std::runtime_error("create_left_sequence: Not implemented");
             }
@@ -147,7 +147,7 @@ namespace dynRLSLP
          * @param dic Layered RLSLP dictionary.
          * @return Computed integer value.
          */
-        static std::vector<RunRuleBody> substring(SignatureWithRelativeLevel item, int64_t pos, int64_t len, const DictionaryForLayeredRLSLP &dic)
+        static std::vector<RunRuleBody> substring(NonterminalWithRelativeLevel item, int64_t pos, int64_t len, const DictionaryForLayeredRLSLP &dic)
             {
                 VStack<RunRuleBody> st;
                 st.push(RunRuleBody(RunRuleBody(item, 1)));
@@ -156,7 +156,7 @@ namespace dynRLSLP
                 while (tmp_pos < pos)
                 {
                     RunRuleBody current = st.top();
-                    int64_t baseLen = SignatureFunctions::get_length(current.number, dic.get_base_signature_length_list());
+                    int64_t baseLen = NonterminalFunctions::get_length(current.number, dic.get_explicit_nonterminal_length_list());
                     int64_t totalLen = baseLen * current.power;
 
                     if (tmp_pos + totalLen <= pos)
@@ -179,7 +179,7 @@ namespace dynRLSLP
                             st.push(RunRuleBody(current.number, current.power - 1));
                         }
                         std::vector<RunRuleBody> tmp;
-                        RunRuleBody::y_break(current.number, dic.get_base_signature_rule_list(), dic.get_base_signature_level_list(), tmp);
+                        RunRuleBody::y_break(current.number, dic.get_explicit_nonterminal_rule_list(), dic.get_explicit_nonterminal_level_list(), tmp);
                         for (int64_t i = tmp.size() - 1; i >= 0; i--)
                         {
                             st.push(RunRuleBody(tmp[i].number, tmp[i].power));
@@ -197,12 +197,12 @@ namespace dynRLSLP
                     RunRuleBody current = st.top();
                     st.pop();
                     r.push_back(current);
-                    totalResultLen += SignatureFunctions::get_length(current.number, dic.get_base_signature_length_list()) * current.power;
+                    totalResultLen += NonterminalFunctions::get_length(current.number, dic.get_explicit_nonterminal_length_list()) * current.power;
                 }
                 while (totalResultLen > len)
                 {
                     RunRuleBody current = r.back();
-                    int64_t baseLen = SignatureFunctions::get_length(current.number, dic.get_base_signature_length_list());
+                    int64_t baseLen = NonterminalFunctions::get_length(current.number, dic.get_explicit_nonterminal_length_list());
                     int64_t totalLen = baseLen * current.power;
 
                     if (totalResultLen - totalLen >= len)
@@ -225,7 +225,7 @@ namespace dynRLSLP
                             r.push_back(RunRuleBody(current.number, current.power - 1));
                         }
                         std::vector<RunRuleBody> tmp;
-                        RunRuleBody::y_break(current.number, dic.get_base_signature_rule_list(), dic.get_base_signature_level_list(), tmp);
+                        RunRuleBody::y_break(current.number, dic.get_explicit_nonterminal_rule_list(), dic.get_explicit_nonterminal_level_list(), tmp);
                         for (auto it : tmp)
                         {
                             r.push_back(RunRuleBody(it.number, it.power));
@@ -249,7 +249,7 @@ namespace dynRLSLP
              */
             static std::vector<RunRuleBody> substring(int64_t item, int64_t pos, const DictionaryForLayeredRLSLP &dic)
             {
-                int64_t len = SignatureFunctions::get_length(item, dic.get_base_signature_length_list());
+                int64_t len = NonterminalFunctions::get_length(item, dic.get_explicit_nonterminal_length_list());
                 if (pos >= len)
                 {
                     throw std::runtime_error("Error in create: pos >= len");

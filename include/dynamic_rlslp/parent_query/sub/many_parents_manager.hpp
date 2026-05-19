@@ -12,35 +12,35 @@
 namespace dynRLSLP
 {
         /**
-         * @brief A signature together with a position offset during occurrence enumeration.
+         * @brief A nonterminal together with a position offset during occurrence enumeration.
          * @ingroup ParentClasses
          */
         struct TemporaryOccurrence
         {
-            BaseSignature signature;
+            ExplicitNonterminal nonterminal;
             uint64_t position;
             /**
-             * @brief Constructs a temporary occurrence for a signature at a position offset.
-             * @param signature Base signature of the occurrence.
+             * @brief Constructs a temporary occurrence for a nonterminal at a position offset.
+             * @param nonterminal Base nonterminal of the occurrence.
              * @param position Position offset within the expanded string.
              */
-            TemporaryOccurrence(BaseSignature signature, uint64_t position) : signature(signature), position(position)
+            TemporaryOccurrence(ExplicitNonterminal nonterminal, uint64_t position) : nonterminal(nonterminal), position(position)
             {
             }
             /**
              * @brief Default constructor initializing fields to sentinel maximum values.
              */
-            TemporaryOccurrence() : signature(std::numeric_limits<BaseSignature>::max()), position(std::numeric_limits<uint64_t>::max())
+            TemporaryOccurrence() : nonterminal(std::numeric_limits<ExplicitNonterminal>::max()), position(std::numeric_limits<uint64_t>::max())
             {
             }
 
             /**
              * @brief Creates a null sentinel occurrence.
-             * @return Temporary occurrence with maximum signature and position values.
+             * @return Temporary occurrence with maximum nonterminal and position values.
              */
             static TemporaryOccurrence create_null_occurrence()
             {
-                return TemporaryOccurrence(std::numeric_limits<BaseSignature>::max(), std::numeric_limits<uint64_t>::max());
+                return TemporaryOccurrence(std::numeric_limits<ExplicitNonterminal>::max(), std::numeric_limits<uint64_t>::max());
             }
 
             /**
@@ -49,19 +49,19 @@ namespace dynRLSLP
              */
             bool is_null() const
             {
-                return this->signature == std::numeric_limits<BaseSignature>::max() && this->position == std::numeric_limits<uint64_t>::max();
+                return this->nonterminal == std::numeric_limits<ExplicitNonterminal>::max() && this->position == std::numeric_limits<uint64_t>::max();
             }
         };
 
         /**
-         * @brief Manages large numbers of tertiary and quaternary parents for one base signature.
+         * @brief Manages large numbers of tertiary and quaternary parents for one base nonterminal.
          * @ingroup ParentClasses
          */
         class ManyParentsManager
         {
         private:
-            std::vector<std::vector<SignatureWithRelativeLevel>> tertiary_parent_list_;
-            std::vector<std::unordered_map<QuaternaryKey, SignatureWithRelativeLevel>> quaternary_parent_list_;
+            std::vector<std::vector<NonterminalWithRelativeLevel>> tertiary_parent_list_;
+            std::vector<std::unordered_map<QuaternaryKey, NonterminalWithRelativeLevel>> quaternary_parent_list_;
 
         public:
             inline static const uint64_t PARENT_NUMBER_THRESHOLD = 64;
@@ -211,7 +211,7 @@ namespace dynRLSLP
                 return true;
             }
             /*
-            bool has_single_parent(const std::vector<RLSLPRuleBody> &base_signature_rule_list) const {
+            bool has_single_parent(const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list) const {
                 if(this->tertiary_parent_list_.size() >= 2){
                     return false;
                 }else if (this->tertiary_parent_list_.size() == 1){
@@ -219,8 +219,8 @@ namespace dynRLSLP
                         return false;
                     }else{
                         assert(this->tertiary_parent_list_[0].size() == 1);
-                        SignatureWithRelativeLevel parent = this->tertiary_parent_list_[0][0];
-                        RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, base_signature_rule_list);
+                        NonterminalWithRelativeLevel parent = this->tertiary_parent_list_[0][0];
+                        RLSLPRuleBody parent_item = RLSLPRuleBody::decode_rule(parent, explicit_nonterminal_rule_list);
                         return parent_item.get_type() == RLSLPRuleType::Pair;    
                     }
                 }else{
@@ -237,16 +237,16 @@ namespace dynRLSLP
 
 
             /**
-             * @brief Appends all parent signatures to the output vector.
-             * @param output Vector receiving parent signatures.
+             * @brief Appends all parent nonterminals to the output vector.
+             * @param output Vector receiving parent nonterminals.
              */
-            void get_all_important_ancestors(std::vector<SignatureWithRelativeLevel> &output) const{
-                for(const std::vector<SignatureWithRelativeLevel> &parent : this->tertiary_parent_list_){
+            void get_all_important_ancestors(std::vector<NonterminalWithRelativeLevel> &output) const{
+                for(const std::vector<NonterminalWithRelativeLevel> &parent : this->tertiary_parent_list_){
                     for(auto p : parent){
                         output.push_back(p);
                     }
                 }
-                for(const std::unordered_map<QuaternaryKey, SignatureWithRelativeLevel> &parent : this->quaternary_parent_list_){
+                for(const std::unordered_map<QuaternaryKey, NonterminalWithRelativeLevel> &parent : this->quaternary_parent_list_){
                     for(auto key_value : parent){
                         output.push_back(key_value.second);
                     }
@@ -255,21 +255,21 @@ namespace dynRLSLP
 
             /**
              * @brief Pushes type-1 primary occurrences for all parents onto the stack.
-             * @param sig Base signature of the queried nonterminal.
+             * @param sig Base nonterminal of the queried nonterminal.
              * @param position_offset Position offset of the occurrence within its parent.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @param explicit_nonterminal_length_list Derived string lengths indexed by base nonterminal.
              * @param output Stack receiving temporary occurrences to expand further.
              * @return True if at least one parent occurrence was pushed.
              */
-            bool get_all_type_1_primary_occurrences_of_signature(BaseSignature sig, int64_t position_offset, const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list, VStack<TemporaryOccurrence> &output) const
+            bool get_all_type_1_primary_occurrences_of_nonterminal(ExplicitNonterminal sig, int64_t position_offset, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list, const std::vector<uint64_t> &explicit_nonterminal_length_list, VStack<TemporaryOccurrence> &output) const
             {
                 bool b = this->tertiary_parent_list_.size() > 0;
                 for (const auto &element : this->tertiary_parent_list_)
                 {
                     for (auto parent : element)
                     {
-                        get_all_type_1_primary_occurrences_of_signature_sub(sig, position_offset, parent, base_signature_rule_list, base_signature_length_list, output);
+                        get_all_type_1_primary_occurrences_of_nonterminal_sub(sig, position_offset, parent, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, output);
                     }
                 }
                 for (const auto &element : this->quaternary_parent_list_)
@@ -277,7 +277,7 @@ namespace dynRLSLP
                     for (auto key_value : element)
                     {
                         uint64_t parent = key_value.second;
-                        get_all_type_1_primary_occurrences_of_signature_sub(sig, position_offset, parent, base_signature_rule_list, base_signature_length_list, output);
+                        get_all_type_1_primary_occurrences_of_nonterminal_sub(sig, position_offset, parent, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, output);
                     }
                 }
                 return b;
@@ -328,22 +328,22 @@ namespace dynRLSLP
              * @brief Looks up a pair parent with the given children at a relative level.
              * @param level_diff Relative level of the left child.
              * @param list_offset Offset into the shared level-diff list.
-             * @param left_child Left child signature.
-             * @param right_child Right child signature.
+             * @param left_child Left child nonterminal.
+             * @param right_child Right child nonterminal.
              * @param quaternary_key Quaternary lookup key for hash-map parents.
              * @param level_diff_list_ Shared relative-level index table.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @return Parent signature if found, otherwise -1.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @return Parent nonterminal if found, otherwise -1.
              */
-            int64_t get_pair_signature(uint16_t level_diff, uint16_t list_offset, SignatureWithRelativeLevel left_child, SignatureWithRelativeLevel right_child, QuaternaryKey quaternary_key, 
-                const std::vector<uint16_t> &level_diff_list_, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
+            int64_t get_pair_nonterminal(uint16_t level_diff, uint16_t list_offset, NonterminalWithRelativeLevel left_child, NonterminalWithRelativeLevel right_child, QuaternaryKey quaternary_key, 
+                const std::vector<uint16_t> &level_diff_list_, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list) const
             {
                 int16_t tertiary_index = this->find_tertiary_list_index(level_diff, list_offset, level_diff_list_);
                 if (tertiary_index != -1)
                 {
-                    for (BaseSignature parent : this->tertiary_parent_list_[tertiary_index])
+                    for (ExplicitNonterminal parent : this->tertiary_parent_list_[tertiary_index])
                     {
-                        const RLSLPRuleBody& parent_item = RLSLPRuleBody::refer_body_of_base_signature(parent, base_signature_rule_list);
+                        const RLSLPRuleBody& parent_item = RLSLPRuleBody::refer_body_of_explicit_nonterminal(parent, explicit_nonterminal_rule_list);
                         if (parent_item.get_type() == RLSLPRuleType::Pair && parent_item.A == left_child && parent_item.B == right_child)
                         {
                             return parent;
@@ -369,21 +369,21 @@ namespace dynRLSLP
              * @brief Looks up a power parent with the given child and exponent at a relative level.
              * @param level_diff Relative level of the child.
              * @param list_offset Offset into the shared level-diff list.
-             * @param child Child signature.
+             * @param child Child nonterminal.
              * @param power Exponent of the power rule.
              * @param quaternary_key Quaternary lookup key for hash-map parents.
              * @param level_diff_list_ Shared relative-level index table.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @return Parent signature if found, otherwise -1.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @return Parent nonterminal if found, otherwise -1.
              */
-            int64_t get_power_signature(uint16_t level_diff, uint16_t list_offset, SignatureWithRelativeLevel child, uint64_t power, QuaternaryKey quaternary_key, const std::vector<uint16_t> &level_diff_list_, const std::vector<RLSLPRuleBody> &base_signature_rule_list) const
+            int64_t get_power_nonterminal(uint16_t level_diff, uint16_t list_offset, NonterminalWithRelativeLevel child, uint64_t power, QuaternaryKey quaternary_key, const std::vector<uint16_t> &level_diff_list_, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list) const
             {
                 int16_t tertiary_index = this->find_tertiary_list_index(level_diff, list_offset, level_diff_list_);
                 if (tertiary_index != -1)
                 {
-                    for (BaseSignature parent : this->tertiary_parent_list_[tertiary_index])
+                    for (ExplicitNonterminal parent : this->tertiary_parent_list_[tertiary_index])
                     {
-                        const RLSLPRuleBody& parent_item = RLSLPRuleBody::refer_body_of_base_signature(parent, base_signature_rule_list);
+                        const RLSLPRuleBody& parent_item = RLSLPRuleBody::refer_body_of_explicit_nonterminal(parent, explicit_nonterminal_rule_list);
                         if (parent_item.get_type() == RLSLPRuleType::Power && parent_item.A == child && (uint64_t)parent_item.B == power)
                         {
                             return parent;
@@ -408,18 +408,18 @@ namespace dynRLSLP
 
 
             /**
-             * @brief Returns all (relative level, parent signature) pairs stored in this manager.
+             * @brief Returns all (relative level, parent nonterminal) pairs stored in this manager.
              * @param list_offset Offset into the shared level-diff list.
              * @param level_diff_list_ Shared relative-level index table.
              * @return List of level-parent pairs from tertiary and quaternary tiers.
              */
-            std::vector<std::pair<uint16_t, SignatureWithRelativeLevel>> get_all_elements(uint16_t list_offset, const std::vector<uint16_t> &level_diff_list_) const
+            std::vector<std::pair<uint16_t, NonterminalWithRelativeLevel>> get_all_elements(uint16_t list_offset, const std::vector<uint16_t> &level_diff_list_) const
             {
-                std::vector<std::pair<uint16_t, SignatureWithRelativeLevel>> output;
+                std::vector<std::pair<uint16_t, NonterminalWithRelativeLevel>> output;
                 for (uint16_t i = 0; i < this->tertiary_parent_list_.size(); i++)
                 {
                     uint16_t level_diff = level_diff_list_[i + list_offset];
-                    for (SignatureWithRelativeLevel parent : this->tertiary_parent_list_[i])
+                    for (NonterminalWithRelativeLevel parent : this->tertiary_parent_list_[i])
                     {
                         output.push_back({level_diff, parent});
                     }
@@ -453,7 +453,7 @@ namespace dynRLSLP
                 for (const auto &vec : this->tertiary_parent_list_)
                 {
                     total += sizeof(vec);
-                    total += sizeof(SignatureWithRelativeLevel) * vec.size();
+                    total += sizeof(NonterminalWithRelativeLevel) * vec.size();
                 }
                 // Calculate size used by quaternary_parent_list_
                 total += sizeof(this->quaternary_parent_list_);
@@ -466,21 +466,21 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Prints all parents managed for one base signature.
-             * @param base_signature Base signature used to reconstruct child signatures for display.
+             * @brief Prints all parents managed for one base nonterminal.
+             * @param explicit_nonterminal Base nonterminal used to reconstruct child nonterminals for display.
              * @param list_offset Offset into the shared level-diff list.
              * @param level_diff_list_ Shared relative-level index table.
              * @param message_paragraph Indentation depth for log output.
              */
-            void print_tree(uint64_t base_signature, uint16_t list_offset, const std::vector<uint16_t> &level_diff_list_, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
+            void print_tree(uint64_t explicit_nonterminal, uint16_t list_offset, const std::vector<uint16_t> &level_diff_list_, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
             {
                 for (uint64_t i = 0; i < this->tertiary_parent_list_.size(); i++)
                 {
                     uint64_t diff_level = level_diff_list_[i + list_offset];
-                    SignatureWithRelativeLevel sig = SignatureFunctions::get_signature(diff_level, base_signature);
-                    for (SignatureWithRelativeLevel parent : this->tertiary_parent_list_[i])
+                    NonterminalWithRelativeLevel sig = NonterminalFunctions::get_nonterminal(diff_level, explicit_nonterminal);
+                    for (NonterminalWithRelativeLevel parent : this->tertiary_parent_list_[i])
                     {
-                        std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << SignatureFunctions::to_string(sig) << " <- " << SignatureFunctions::to_string(parent) << std::endl;
+                        std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << NonterminalFunctions::to_string(sig) << " <- " << NonterminalFunctions::to_string(parent) << std::endl;
                     }
                 }
                 for (uint64_t i = 0; i < this->quaternary_parent_list_.size(); i++)
@@ -489,26 +489,26 @@ namespace dynRLSLP
                     for (auto key_value : this->quaternary_parent_list_[i])
                     {
                         bool b = (key_value.first >> 63) == 1;
-                        SignatureWithRelativeLevel key2 = (key_value.first << 1) >> 1;
-                        SignatureWithRelativeLevel sig = SignatureFunctions::get_signature(diff_level, base_signature);
+                        NonterminalWithRelativeLevel key2 = (key_value.first << 1) >> 1;
+                        NonterminalWithRelativeLevel sig = NonterminalFunctions::get_nonterminal(diff_level, explicit_nonterminal);
                         if (b)
                         {
-                            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << SignatureFunctions::to_string(sig) << " <- " << SignatureFunctions::to_string(key_value.second) << ", key: L" << SignatureFunctions::to_string(key2) << std::endl;
+                            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << NonterminalFunctions::to_string(sig) << " <- " << NonterminalFunctions::to_string(key_value.second) << ", key: L" << NonterminalFunctions::to_string(key2) << std::endl;
                         }
                         else
                         {
-                            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << SignatureFunctions::to_string(sig) << " <- " << SignatureFunctions::to_string(key_value.second) << ", key: R" << SignatureFunctions::to_string(key2) << std::endl;
+                            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << NonterminalFunctions::to_string(sig) << " <- " << NonterminalFunctions::to_string(key_value.second) << ", key: R" << NonterminalFunctions::to_string(key2) << std::endl;
                         }
                     }
                 }
 
                 /*
-                std::vector<std::pair<uint16_t, SignatureWithRelativeLevel>> all_elements = this->get_all_elements(list_offset, level_diff_list_);
+                std::vector<std::pair<uint16_t, NonterminalWithRelativeLevel>> all_elements = this->get_all_elements(list_offset, level_diff_list_);
                 for (size_t i = 0; i < all_elements.size(); i++)
                 {
                     uint64_t h = all_elements[i].first;
-                    SignatureWithRelativeLevel sig = SignatureFunctions::get_signature(h, base_signature);
-                    std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << SignatureFunctions::to_string(sig) << ": " << SignatureFunctions::to_string(all_elements[i].second) << std::endl;
+                    NonterminalWithRelativeLevel sig = NonterminalFunctions::get_nonterminal(h, explicit_nonterminal);
+                    std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << NonterminalFunctions::to_string(sig) << ": " << NonterminalFunctions::to_string(all_elements[i].second) << std::endl;
                 }
                 */
             }
@@ -585,10 +585,10 @@ namespace dynRLSLP
              * @param level_diff Relative level of the child within the parent rule.
              * @param list_offset Offset into the shared level-diff list.
              * @param level_diff_list_ Shared relative-level index table to update when new groups are created.
-             * @param parent Parent signature to register.
+             * @param parent Parent nonterminal to register.
              * @param quaternary_key Quaternary lookup key used when the tertiary group overflows.
              */
-            void insert(uint16_t level_diff, uint16_t list_offset, std::vector<uint16_t> &level_diff_list_, SignatureWithRelativeLevel parent, QuaternaryKey quaternary_key)
+            void insert(uint16_t level_diff, uint16_t list_offset, std::vector<uint16_t> &level_diff_list_, NonterminalWithRelativeLevel parent, QuaternaryKey quaternary_key)
             {
                 int16_t tertiary_index = this->find_tertiary_list_index(level_diff, list_offset, level_diff_list_);
                 if (tertiary_index != -1)
@@ -606,7 +606,7 @@ namespace dynRLSLP
                 {
                     uint64_t tertiary_size = this->tertiary_parent_list_.size();
                     level_diff_list_.insert(level_diff_list_.begin() + list_offset + tertiary_size, level_diff);
-                    this->tertiary_parent_list_.push_back(std::vector<SignatureWithRelativeLevel>());
+                    this->tertiary_parent_list_.push_back(std::vector<NonterminalWithRelativeLevel>());
                     this->tertiary_parent_list_[tertiary_size].push_back(parent);
                 }
             }
@@ -616,10 +616,10 @@ namespace dynRLSLP
              * @param level_diff Relative level of the parent to erase.
              * @param list_offset Offset into the shared level-diff list.
              * @param level_diff_list_ Shared relative-level index table to update when groups become empty.
-             * @param parent Parent signature to remove.
+             * @param parent Parent nonterminal to remove.
              * @param quaternary_key Quaternary lookup key for hash-map parents.
              */
-            void erase(uint16_t level_diff, uint16_t list_offset, std::vector<uint16_t> &level_diff_list_, SignatureWithRelativeLevel parent, QuaternaryKey quaternary_key)
+            void erase(uint16_t level_diff, uint16_t list_offset, std::vector<uint16_t> &level_diff_list_, NonterminalWithRelativeLevel parent, QuaternaryKey quaternary_key)
             {
                 int16_t tertiary_index = this->find_tertiary_list_index(level_diff, list_offset, level_diff_list_);
                 if (tertiary_index != -1)
@@ -627,7 +627,7 @@ namespace dynRLSLP
                     auto f1 = std::find(this->tertiary_parent_list_[tertiary_index].begin(), this->tertiary_parent_list_[tertiary_index].end(), parent);
                     if (f1 != this->tertiary_parent_list_[tertiary_index].end())
                     {
-                        SignatureWithRelativeLevel any_element = this->take_any_quaternary(level_diff, list_offset, level_diff_list_);
+                        NonterminalWithRelativeLevel any_element = this->take_any_quaternary(level_diff, list_offset, level_diff_list_);
                         if (any_element != EMPTY_FLAG)
                         {
                             *f1 = any_element;
@@ -658,15 +658,15 @@ namespace dynRLSLP
              * @param level_diff Relative level of the parent to take.
              * @param list_offset Offset into the shared level-diff list.
              * @param level_diff_list_ Shared relative-level index table to update when groups become empty.
-             * @return Removed parent signature, or EMPTY_FLAG if none exists at that level.
+             * @return Removed parent nonterminal, or EMPTY_FLAG if none exists at that level.
              */
-            SignatureWithRelativeLevel take_any_parent(uint16_t level_diff, uint16_t list_offset, std::vector<uint16_t> &level_diff_list_)
+            NonterminalWithRelativeLevel take_any_parent(uint16_t level_diff, uint16_t list_offset, std::vector<uint16_t> &level_diff_list_)
             {
                 int16_t tertiary_index = this->find_tertiary_list_index(level_diff, list_offset, level_diff_list_);
                 if (tertiary_index != -1)
                 {
-                    SignatureWithRelativeLevel last_parent = this->tertiary_parent_list_[tertiary_index].back();
-                    SignatureWithRelativeLevel next_parent = this->take_any_quaternary(level_diff, list_offset, level_diff_list_);
+                    NonterminalWithRelativeLevel last_parent = this->tertiary_parent_list_[tertiary_index].back();
+                    NonterminalWithRelativeLevel next_parent = this->take_any_quaternary(level_diff, list_offset, level_diff_list_);
                     if (next_parent != EMPTY_FLAG)
                     {
                         uint64_t idx = this->tertiary_parent_list_[tertiary_index].size() - 1;
@@ -718,7 +718,7 @@ namespace dynRLSLP
                     r.tertiary_parent_list_[i].resize(size);
                     if (size > 0)
                     {
-                        ifs.read(reinterpret_cast<char *>(r.tertiary_parent_list_[i].data()), sizeof(SignatureWithRelativeLevel) * size);
+                        ifs.read(reinterpret_cast<char *>(r.tertiary_parent_list_[i].data()), sizeof(NonterminalWithRelativeLevel) * size);
                     }
                 }
 
@@ -730,13 +730,13 @@ namespace dynRLSLP
                 {
                     uint64_t size = 0;
                     ifs.read(reinterpret_cast<char *>(&size), sizeof(uint64_t));
-                    std::vector<SignatureWithRelativeLevel> key_vec(size);
-                    std::vector<SignatureWithRelativeLevel> value_vec(size);
+                    std::vector<NonterminalWithRelativeLevel> key_vec(size);
+                    std::vector<NonterminalWithRelativeLevel> value_vec(size);
 
                     if (size > 0)
                     {
-                        ifs.read(reinterpret_cast<char *>(key_vec.data()), sizeof(SignatureWithRelativeLevel) * size);
-                        ifs.read(reinterpret_cast<char *>(value_vec.data()), sizeof(SignatureWithRelativeLevel) * size);
+                        ifs.read(reinterpret_cast<char *>(key_vec.data()), sizeof(NonterminalWithRelativeLevel) * size);
+                        ifs.read(reinterpret_cast<char *>(value_vec.data()), sizeof(NonterminalWithRelativeLevel) * size);
 
                         for (size_t j = 0; j < size; j++)
                         {
@@ -762,7 +762,7 @@ namespace dynRLSLP
                 {
                     uint64_t size = item.tertiary_parent_list_[i].size();
                     os.write(reinterpret_cast<const char *>(&size), sizeof(uint64_t));
-                    os.write(reinterpret_cast<const char *>(item.tertiary_parent_list_[i].data()), sizeof(SignatureWithRelativeLevel) * size);
+                    os.write(reinterpret_cast<const char *>(item.tertiary_parent_list_[i].data()), sizeof(NonterminalWithRelativeLevel) * size);
                 }
 
                 uint64_t _quaternaryParents_count = item.quaternary_parent_list_.size();
@@ -772,27 +772,27 @@ namespace dynRLSLP
                     uint64_t size = item.quaternary_parent_list_[i].size();
                     os.write(reinterpret_cast<const char *>(&size), sizeof(uint64_t));
 
-                    std::vector<SignatureWithRelativeLevel> key_vec;
-                    std::vector<SignatureWithRelativeLevel> value_vec;
+                    std::vector<NonterminalWithRelativeLevel> key_vec;
+                    std::vector<NonterminalWithRelativeLevel> value_vec;
                     for (auto pair : item.quaternary_parent_list_[i])
                     {
                         key_vec.push_back(pair.first);
                         value_vec.push_back(pair.second);
                     }
-                    os.write(reinterpret_cast<const char *>(key_vec.data()), sizeof(SignatureWithRelativeLevel) * size);
-                    os.write(reinterpret_cast<const char *>(value_vec.data()), sizeof(SignatureWithRelativeLevel) * size);
+                    os.write(reinterpret_cast<const char *>(key_vec.data()), sizeof(NonterminalWithRelativeLevel) * size);
+                    os.write(reinterpret_cast<const char *>(value_vec.data()), sizeof(NonterminalWithRelativeLevel) * size);
                 }
             }
             //}@
 
             /**
              * @brief Builds the quaternary lookup key for a parent rule and main child.
-             * @param main_child Child signature used as the lookup anchor.
+             * @param main_child Child nonterminal used as the lookup anchor.
              * @param parent_item Decoded rule body of the parent.
              * @param is_restricted_recompression_mode True when restricted block compression is active.
              * @return Encoded quaternary key distinguishing left/right pair children or power exponents.
              */
-            static QuaternaryKey get_quaternary_key(SignatureWithRelativeLevel main_child, RLSLPRuleBody parent_item, bool is_restricted_recompression_mode)
+            static QuaternaryKey get_quaternary_key(NonterminalWithRelativeLevel main_child, RLSLPRuleBody parent_item, bool is_restricted_recompression_mode)
             {
                 if (parent_item.get_type() == RLSLPRuleType::Pair)
                 {
@@ -822,36 +822,36 @@ namespace dynRLSLP
                 }
                 else
                 {
-                    std::cout << "main_child: " << SignatureFunctions::to_string(main_child) << std::endl;
+                    std::cout << "main_child: " << NonterminalFunctions::to_string(main_child) << std::endl;
                     std::cout << "parent_item: " << parent_item.get_info() << std::endl;
                     throw std::runtime_error("get_quaternary_key: unknown rule type");
                 }
             }
             /**
              * @brief Pushes one type-1 primary occurrence of a child within a parent rule onto the stack.
-             * @param sig Base signature of the child occurrence.
+             * @param sig Base nonterminal of the child occurrence.
              * @param position_offset Position offset of the occurrence within its parent.
-             * @param parent Base signature of the parent rule.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @param base_signature_length_list Derived string lengths indexed by base signature.
+             * @param parent Base nonterminal of the parent rule.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @param explicit_nonterminal_length_list Derived string lengths indexed by base nonterminal.
              * @param output Stack receiving the temporary occurrence.
              */
-            static void get_all_type_1_primary_occurrences_of_signature_sub(BaseSignature sig, int64_t position_offset, BaseSignature parent,
-                                                          const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list, VStack<TemporaryOccurrence> &output)
+            static void get_all_type_1_primary_occurrences_of_nonterminal_sub(ExplicitNonterminal sig, int64_t position_offset, ExplicitNonterminal parent,
+                                                          const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list, const std::vector<uint64_t> &explicit_nonterminal_length_list, VStack<TemporaryOccurrence> &output)
             {
-                const RLSLPRuleBody& parent_item = RLSLPRuleBody::refer_body_of_base_signature(parent, base_signature_rule_list);
+                const RLSLPRuleBody& parent_item = RLSLPRuleBody::refer_body_of_explicit_nonterminal(parent, explicit_nonterminal_rule_list);
                 assert(parent_item.get_type() == RLSLPRuleType::Pair || parent_item.get_type() == RLSLPRuleType::Power);
                 if (parent_item.get_type() == RLSLPRuleType::Pair)
                 {
-                    BaseSignature left_base_signature = SignatureFunctions::get_base_signature(parent_item.A);
-                    uint64_t diff_len = SignatureFunctions::get_length(parent_item.A, base_signature_length_list);
-                    uint64_t new_offset = left_base_signature == sig ? position_offset : position_offset + diff_len;
+                    ExplicitNonterminal left_explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(parent_item.A);
+                    uint64_t diff_len = NonterminalFunctions::get_length(parent_item.A, explicit_nonterminal_length_list);
+                    uint64_t new_offset = left_explicit_nonterminal == sig ? position_offset : position_offset + diff_len;
                     output.push(TemporaryOccurrence(parent, new_offset));
                 }
                 else if (parent_item.get_type() == RLSLPRuleType::Power)
                 {
-                    assert(SignatureFunctions::get_base_signature(parent_item.A) == (uint64_t)sig);
-                    uint64_t base_len = SignatureFunctions::get_length(parent_item.A, base_signature_length_list);
+                    assert(NonterminalFunctions::get_explicit_nonterminal(parent_item.A) == (uint64_t)sig);
+                    uint64_t base_len = NonterminalFunctions::get_length(parent_item.A, explicit_nonterminal_length_list);
                     uint64_t diff_len = 0;
                     for (int64_t i = 0; i < parent_item.B; i++)
                     {
@@ -866,28 +866,28 @@ namespace dynRLSLP
             }
 
             /*
-            static TemporaryOccurrence take_any_important_occurrence_sub(BaseSignature sig, int64_t position_offset, BaseSignature parent,
-                                                          const std::vector<RLSLPRuleBody> &base_signature_rule_list, const std::vector<uint64_t> &base_signature_length_list)
+            static TemporaryOccurrence take_any_important_occurrence_sub(ExplicitNonterminal sig, int64_t position_offset, ExplicitNonterminal parent,
+                                                          const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list, const std::vector<uint64_t> &explicit_nonterminal_length_list)
             {
-                const RLSLPRuleBody& parent_item = RLSLPRuleBody::refer_body_of_base_signature(parent, base_signature_rule_list);
+                const RLSLPRuleBody& parent_item = RLSLPRuleBody::refer_body_of_explicit_nonterminal(parent, explicit_nonterminal_rule_list);
                 assert(parent_item.get_type() == RLSLPRuleType::Pair || parent_item.get_type() == RLSLPRuleType::Power);
                 if (parent_item.get_type() == RLSLPRuleType::Pair)
                 {
-                    BaseSignature left_base_signature = SignatureFunctions::get_base_signature(parent_item.A);
-                    if (left_base_signature == sig)
+                    ExplicitNonterminal left_explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(parent_item.A);
+                    if (left_explicit_nonterminal == sig)
                     {
                         return TemporaryOccurrence(parent, position_offset);
                     }
                     else
                     {
-                        assert(SignatureFunctions::get_base_signature(parent_item.B) == (uint64_t)sig);
-                        uint64_t diff_len = SignatureFunctions::get_length(parent_item.A, base_signature_length_list);
+                        assert(NonterminalFunctions::get_explicit_nonterminal(parent_item.B) == (uint64_t)sig);
+                        uint64_t diff_len = NonterminalFunctions::get_length(parent_item.A, explicit_nonterminal_length_list);
                         return TemporaryOccurrence(parent, position_offset+ diff_len);
                     }
                 }
                 else if (parent_item.get_type() == RLSLPRuleType::Power)
                 {
-                    assert(SignatureFunctions::get_base_signature(parent_item.A) == (uint64_t)sig);
+                    assert(NonterminalFunctions::get_explicit_nonterminal(parent_item.A) == (uint64_t)sig);
                     assert(parent_item.B >= 1);
                     TemporaryOccurrence temp(parent, position_offset);
                     return temp;
@@ -901,15 +901,15 @@ namespace dynRLSLP
 
             /**
              * @brief Determines which child slot of a parent rule contains the given child.
-             * @param child Child signature to locate.
-             * @param parent Base signature of the parent rule.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @param useBaseSignature True to compare base signatures only; false for full signature equality.
-             * @return ChildType indicating left, right, power, signature child, or none.
+             * @param child Child nonterminal to locate.
+             * @param parent Base nonterminal of the parent rule.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @param useExplicitNonterminal True to compare base nonterminals only; false for full nonterminal equality.
+             * @return ChildType indicating left, right, power, nonterminal child, or none.
              */
-            static ChildType get_child_type(SignatureWithRelativeLevel child, BaseSignature parent, const std::vector<RLSLPRuleBody> &base_signature_rule_list, bool useBaseSignature){
-                const RLSLPRuleBody& parent_item = RLSLPRuleBody::refer_body_of_base_signature(parent, base_signature_rule_list);
-                if(!useBaseSignature){
+            static ChildType get_child_type(NonterminalWithRelativeLevel child, ExplicitNonterminal parent, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list, bool useExplicitNonterminal){
+                const RLSLPRuleBody& parent_item = RLSLPRuleBody::refer_body_of_explicit_nonterminal(parent, explicit_nonterminal_rule_list);
+                if(!useExplicitNonterminal){
                     if (parent_item.get_type() == RLSLPRuleType::Pair)
                     {
                         if(parent_item.A == child){
@@ -928,9 +928,9 @@ namespace dynRLSLP
                             return ChildType::None;
                         }
                     }
-                    else if (parent_item.get_type() == RLSLPRuleType::Signature){
+                    else if (parent_item.get_type() == RLSLPRuleType::Nonterminal){
                         if(parent_item.A == child){
-                            return ChildType::SignatureChild;
+                            return ChildType::NonterminalChild;
                         }else{
                             return ChildType::None;
                         }
@@ -938,12 +938,12 @@ namespace dynRLSLP
                         throw std::runtime_error("get_child_type: unknown rule type");
                     }    
                 }else{
-                    BaseSignature base_child = SignatureFunctions::get_base_signature(child);
+                    ExplicitNonterminal base_child = NonterminalFunctions::get_explicit_nonterminal(child);
                     if (parent_item.get_type() == RLSLPRuleType::Pair)
                     {
-                        if(SignatureFunctions::get_base_signature(parent_item.A) == (uint64_t)base_child){
+                        if(NonterminalFunctions::get_explicit_nonterminal(parent_item.A) == (uint64_t)base_child){
                             return ChildType::LeftChild;
-                        }else if (SignatureFunctions::get_base_signature(parent_item.B) == (uint64_t)base_child){
+                        }else if (NonterminalFunctions::get_explicit_nonterminal(parent_item.B) == (uint64_t)base_child){
                             return ChildType::RightChild;
                         }else{
                             return ChildType::None;
@@ -951,15 +951,15 @@ namespace dynRLSLP
                     }
                     else if (parent_item.get_type() == RLSLPRuleType::Power)
                     {
-                        if(SignatureFunctions::get_base_signature(parent_item.A) == (uint64_t)base_child){
+                        if(NonterminalFunctions::get_explicit_nonterminal(parent_item.A) == (uint64_t)base_child){
                             return ChildType::PowerChild;
                         }else{
                             return ChildType::None;
                         }
                     }
-                    else if (parent_item.get_type() == RLSLPRuleType::Signature){
-                        if(SignatureFunctions::get_base_signature(parent_item.A) == (uint64_t)base_child){
-                            return ChildType::SignatureChild;
+                    else if (parent_item.get_type() == RLSLPRuleType::Nonterminal){
+                        if(NonterminalFunctions::get_explicit_nonterminal(parent_item.A) == (uint64_t)base_child){
+                            return ChildType::NonterminalChild;
                         }else{
                             return ChildType::None;
                         }
@@ -970,22 +970,22 @@ namespace dynRLSLP
             }
             /**
              * @brief Returns the start position of a child occurrence within the string derived from a parent.
-             * @param child Child signature to locate.
-             * @param parent Base signature of the parent rule.
-             * @param base_signature_rule_list Base-signature rule list (D).
-             * @param base_signature_length_list Derived string lengths indexed by base signature.
-             * @param useBaseSignature True to compare base signatures only; false for full signature equality.
+             * @param child Child nonterminal to locate.
+             * @param parent Base nonterminal of the parent rule.
+             * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).
+             * @param explicit_nonterminal_length_list Derived string lengths indexed by base nonterminal.
+             * @param useExplicitNonterminal True to compare base nonterminals only; false for full nonterminal equality.
              * @return Position offset of the child within the parent's derived string.
              */
-            static uint64_t get_any_occurrence_position(SignatureWithRelativeLevel child, BaseSignature parent, const std::vector<RLSLPRuleBody> &base_signature_rule_list , const std::vector<uint64_t> &base_signature_length_list, bool useBaseSignature){
-                const RLSLPRuleBody& parent_item = RLSLPRuleBody::refer_body_of_base_signature(parent, base_signature_rule_list);
-                if(!useBaseSignature){
+            static uint64_t get_any_occurrence_position(NonterminalWithRelativeLevel child, ExplicitNonterminal parent, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list , const std::vector<uint64_t> &explicit_nonterminal_length_list, bool useExplicitNonterminal){
+                const RLSLPRuleBody& parent_item = RLSLPRuleBody::refer_body_of_explicit_nonterminal(parent, explicit_nonterminal_rule_list);
+                if(!useExplicitNonterminal){
                     if (parent_item.get_type() == RLSLPRuleType::Pair)
                     {
                         if(parent_item.A == child){
                             return 0;
                         }else if (parent_item.B == child){
-                            return SignatureFunctions::get_length(parent_item.A, base_signature_length_list);
+                            return NonterminalFunctions::get_length(parent_item.A, explicit_nonterminal_length_list);
                         }else{
                             throw std::runtime_error("get_any_occurrence_position: child is not found");
                         }
@@ -998,7 +998,7 @@ namespace dynRLSLP
                             throw std::runtime_error("get_any_occurrence_position: child is not found");
                         }
                     }
-                    else if (parent_item.get_type() == RLSLPRuleType::Signature){
+                    else if (parent_item.get_type() == RLSLPRuleType::Nonterminal){
                         if(parent_item.A == child){
                             return 0;
                         }else{
@@ -1008,27 +1008,27 @@ namespace dynRLSLP
                         throw std::runtime_error("get_any_occurrence_position: unknown rule type");
                     }    
                 }else{
-                    BaseSignature base_child = SignatureFunctions::get_base_signature(child);
+                    ExplicitNonterminal base_child = NonterminalFunctions::get_explicit_nonterminal(child);
                     if (parent_item.get_type() == RLSLPRuleType::Pair)
                     {
-                        if(SignatureFunctions::get_base_signature(parent_item.A) == (uint64_t)base_child){
+                        if(NonterminalFunctions::get_explicit_nonterminal(parent_item.A) == (uint64_t)base_child){
                             return 0;
-                        }else if (SignatureFunctions::get_base_signature(parent_item.B) == (uint64_t)base_child){
-                            return SignatureFunctions::get_length(parent_item.A, base_signature_length_list);
+                        }else if (NonterminalFunctions::get_explicit_nonterminal(parent_item.B) == (uint64_t)base_child){
+                            return NonterminalFunctions::get_length(parent_item.A, explicit_nonterminal_length_list);
                         }else{
                             throw std::runtime_error("get_any_occurrence_position: child is not found");
                         }
                     }
                     else if (parent_item.get_type() == RLSLPRuleType::Power)
                     {
-                        if(SignatureFunctions::get_base_signature(parent_item.A) == (uint64_t)base_child){
+                        if(NonterminalFunctions::get_explicit_nonterminal(parent_item.A) == (uint64_t)base_child){
                             return 0;
                         }else{
                             throw std::runtime_error("get_any_occurrence_position: child is not found");
                         }
                     }
-                    else if (parent_item.get_type() == RLSLPRuleType::Signature){
-                        if(SignatureFunctions::get_base_signature(parent_item.A) == (uint64_t)base_child){
+                    else if (parent_item.get_type() == RLSLPRuleType::Nonterminal){
+                        if(NonterminalFunctions::get_explicit_nonterminal(parent_item.A) == (uint64_t)base_child){
                             return 0;
                         }else{
                             throw std::runtime_error("get_any_occurrence_position: child is not found");
@@ -1045,16 +1045,16 @@ namespace dynRLSLP
              * @param level_diff Relative level of the parent to take.
              * @param list_offset Offset into the shared level-diff list.
              * @param level_diff_list_ Shared relative-level index table to update when a map becomes empty.
-             * @return Removed parent signature, or EMPTY_FLAG if no quaternary group exists.
+             * @return Removed parent nonterminal, or EMPTY_FLAG if no quaternary group exists.
              */
-            SignatureWithRelativeLevel take_any_quaternary(uint16_t level_diff, uint16_t list_offset, std::vector<uint16_t> &level_diff_list_)
+            NonterminalWithRelativeLevel take_any_quaternary(uint16_t level_diff, uint16_t list_offset, std::vector<uint16_t> &level_diff_list_)
             {
                 int16_t quaternary_index = this->find_quaternary_list_index(level_diff, list_offset, level_diff_list_);
                 if (quaternary_index != -1)
                 {
                     assert(this->quaternary_parent_list_[quaternary_index].size() > 0);
                     auto f = this->quaternary_parent_list_[quaternary_index].begin();
-                    SignatureWithRelativeLevel any_parent = f->second;
+                    NonterminalWithRelativeLevel any_parent = f->second;
                     this->quaternary_parent_list_[quaternary_index].erase(f);
                     if (this->quaternary_parent_list_[quaternary_index].size() == 0)
                     {
@@ -1110,9 +1110,9 @@ namespace dynRLSLP
              * @param list_offset Offset into the shared level-diff list.
              * @param level_diff_list_ Shared relative-level index table to extend when a new map is created.
              * @param key Quaternary lookup key for the new entry.
-             * @param new_parent Parent signature to register.
+             * @param new_parent Parent nonterminal to register.
              */
-            void insert_quaternary(uint16_t level_diff, uint16_t list_offset, std::vector<uint16_t> &level_diff_list_, QuaternaryKey key, SignatureWithRelativeLevel new_parent)
+            void insert_quaternary(uint16_t level_diff, uint16_t list_offset, std::vector<uint16_t> &level_diff_list_, QuaternaryKey key, NonterminalWithRelativeLevel new_parent)
             {
                 int16_t quaternary_index = this->find_quaternary_list_index(level_diff, list_offset, level_diff_list_);
                 if (quaternary_index != -1)
@@ -1124,7 +1124,7 @@ namespace dynRLSLP
                 else
                 {
                     uint64_t quaternary_size = this->quaternary_parent_list_.size();
-                    this->quaternary_parent_list_.push_back(std::unordered_map<uint64_t, SignatureWithRelativeLevel>());
+                    this->quaternary_parent_list_.push_back(std::unordered_map<uint64_t, NonterminalWithRelativeLevel>());
                     this->quaternary_parent_list_[quaternary_size][key] = new_parent;
                     level_diff_list_.push_back(level_diff);
                 }

@@ -26,12 +26,12 @@ namespace dynRLSLP
 	{
 	private:
 		GrammarParsingType grammarParsingType = GrammarParsingType::SignatureEncoding;
-		std::unordered_map<SignatureWithRelativeLevel, uint64_t> documentCounter; // M_{doc}
+		std::unordered_map<NonterminalWithRelativeLevel, uint64_t> documentCounter; // M_{doc}
 		RandomBitDictionary random_bit_dictionary;
 		DictionaryForLayeredRLSLP rlslp_dictionary;
 
 	public:
-		inline static const SignatureWithRelativeLevel DOCUMENT_MARK = INT64_MAX - 1;
+		inline static const NonterminalWithRelativeLevel DOCUMENT_MARK = INT64_MAX - 1;
 		/**
 		 * @brief Construct an empty layered RLSLP grammar.
 		 */
@@ -96,15 +96,15 @@ namespace dynRLSLP
 		}
 		/**
 		 * @brief Return the document occurrence counter map.
-		 * @return Map from document-root signature to occurrence count.
+		 * @return Map from document-root nonterminal to occurrence count.
 		 */
-		const std::unordered_map<SignatureWithRelativeLevel, uint64_t> &get_document_counter() const
+		const std::unordered_map<NonterminalWithRelativeLevel, uint64_t> &get_document_counter() const
 		{
 			return this->documentCounter;
 		}
 		/**
 		 * @brief Return the grammar parsing algorithm type.
-		 * @return Active GrammarParsingType (signature encoding or restricted block compression).
+		 * @return Active GrammarParsingType (nonterminal encoding or restricted block compression).
 		 */
 		GrammarParsingType get_grammar_parsing_type() const
 		{
@@ -139,7 +139,7 @@ namespace dynRLSLP
 		{
 			if (this->has_root())
 			{
-				return this->rlslp_dictionary.get_base_signature_level_list()[this->get_root()];
+				return this->rlslp_dictionary.get_explicit_nonterminal_level_list()[this->get_root()];
 			}
 			else
 			{
@@ -155,8 +155,8 @@ namespace dynRLSLP
 			return this->documentCounter.size() == 1;
 		}
 		/**
-		 * @brief Return the base signature index of the unique document root.
-		 * @return Root base signature when exactly one document exists.
+		 * @brief Return the base nonterminal index of the unique document root.
+		 * @return Root base nonterminal when exactly one document exists.
 		 * @throws std::runtime_error if there is no document or multiple documents.
 		 */
 		uint64_t get_root() const
@@ -175,12 +175,12 @@ namespace dynRLSLP
 			}
 		}
 		/**
-		 * @brief Return the total count of single signatures.
-		 * @return Sum of single-signature counts from the internal dictionary.
+		 * @brief Return the total count of single nonterminals.
+		 * @return Sum of single-nonterminal counts from the internal dictionary.
 		 */
-		int64_t count_single_signatures() const
+		int64_t count_single_nonterminals() const
 		{
-			return this->rlslp_dictionary.count_single_signatures(this->grammarParsingType);
+			return this->rlslp_dictionary.count_single_nonterminals(this->grammarParsingType);
 		}
 		/**
 		 * @brief Reset the grammar and select a parsing algorithm.
@@ -201,12 +201,12 @@ namespace dynRLSLP
 			}
 		}
 		/**
-		 * @brief Return the total number of signatures.
-		 * @return Total signature count from the internal dictionary.
+		 * @brief Return the total number of nonterminals.
+		 * @return Total nonterminal count from the internal dictionary.
 		 */
-		uint64_t signature_count() const
+		uint64_t nonterminal_count() const
 		{
-			return this->rlslp_dictionary.signature_count(this->grammarParsingType);
+			return this->rlslp_dictionary.nonterminal_count(this->grammarParsingType);
 		}
 
 		/**
@@ -231,18 +231,18 @@ namespace dynRLSLP
 			this->documentCounter.swap(other.documentCounter);
 		}
 		/**
-		 * @brief Register a document rooted at the given signature.
-		 * @param i Document-root signature (increments counter or inserts new entry).
+		 * @brief Register a document rooted at the given nonterminal.
+		 * @param i Document-root nonterminal (increments counter or inserts new entry).
 		 */
-		void add_document(SignatureWithRelativeLevel i)
+		void add_document(NonterminalWithRelativeLevel i)
 		{
-			NonterminalLessComparer::base_signature_rule_list = &this->rlslp_dictionary.get_base_signature_rule_list();
+			NonterminalLessComparer::explicit_nonterminal_rule_list = &this->rlslp_dictionary.get_explicit_nonterminal_rule_list();
 
 			auto f = this->documentCounter.find(i);
 			if (f == this->documentCounter.end())
 			{
 				this->documentCounter[i] = 1;
-				// this->parentList[signature].insert(DOCUMENT_MARK);
+				// this->parentList[nonterminal].insert(DOCUMENT_MARK);
 			}
 			else
 			{
@@ -250,12 +250,12 @@ namespace dynRLSLP
 			}
 		}
 		/**
-		 * @brief Remove one occurrence of a document rooted at the given signature.
-		 * @param i Signature or base-signature index.
+		 * @brief Remove one occurrence of a document rooted at the given nonterminal.
+		 * @param i Signature or base-nonterminal index.
 		 * @return True after decrementing or removing the document entry.
 		 * @throws std::runtime_error if the document is not found.
 		 */
-		bool remove_document(SignatureWithRelativeLevel i)
+		bool remove_document(NonterminalWithRelativeLevel i)
 		{
 			auto f = this->documentCounter.find(i);
 			if (f == this->documentCounter.end())
@@ -275,13 +275,13 @@ namespace dynRLSLP
 		}
 
 		/**
-		 * @brief Allocate a new base signature slot.
-		 * @return Index of the new base signature (also extends random-bit storage when applicable).
+		 * @brief Allocate a new base nonterminal slot.
+		 * @return Index of the new base nonterminal (also extends random-bit storage when applicable).
 		 */
-		BaseSignature add_new_base_signature()
+		ExplicitNonterminal add_new_explicit_nonterminal()
 		{
 
-			BaseSignature new_number = this->rlslp_dictionary.add_new_base_signature();
+			ExplicitNonterminal new_number = this->rlslp_dictionary.add_new_explicit_nonterminal();
 
 			if (this->grammarParsingType == GrammarParsingType::RestrictedBlockCompression)
 			{
@@ -290,68 +290,68 @@ namespace dynRLSLP
 			return new_number;
 		}
 		/**
-		 * @brief Increment the relative maximum level of a base signature.
-		 * @param base_signature Base signature index.
+		 * @brief Increment the relative maximum level of a base nonterminal.
+		 * @param explicit_nonterminal Base nonterminal index.
 		 */
-		void increase_relative_max_level(BaseSignature base_signature)
+		void increase_relative_max_level(ExplicitNonterminal explicit_nonterminal)
 		{
-			this->rlslp_dictionary.increase_relative_max_level(base_signature);
+			this->rlslp_dictionary.increase_relative_max_level(explicit_nonterminal);
 		}
 		/**
-		 * @brief Decrement the relative maximum level of a base signature.
-		 * @param base_signature Base signature index.
+		 * @brief Decrement the relative maximum level of a base nonterminal.
+		 * @param explicit_nonterminal Base nonterminal index.
 		 */
-		void decrease_relative_max_level(BaseSignature base_signature)
+		void decrease_relative_max_level(ExplicitNonterminal explicit_nonterminal)
 		{
-			this->rlslp_dictionary.decrease_relative_max_level(base_signature);
+			this->rlslp_dictionary.decrease_relative_max_level(explicit_nonterminal);
 		}
 		/**
-		 * @brief Reset a base signature slot to null in the dictionary.
-		 * @param base_signature Base signature index.
+		 * @brief Reset a base nonterminal slot to null in the dictionary.
+		 * @param explicit_nonterminal Base nonterminal index.
 		 */
-		void clear_element(BaseSignature base_signature)
+		void clear_element(ExplicitNonterminal explicit_nonterminal)
 		{
-			this->rlslp_dictionary.clear_element(base_signature);
+			this->rlslp_dictionary.clear_element(explicit_nonterminal);
 		}
 		/**
-		 * @brief Write rule body and metadata for a base signature.
-		 * @param base_signature Base signature index.
+		 * @brief Write rule body and metadata for a base nonterminal.
+		 * @param explicit_nonterminal Base nonterminal index.
 		 * @param rule_body RLSLP rule body to store.
-		 * @param new_level Absolute level of the base signature.
-		 * @param relative_max_level Maximum relative level for the base signature.
-		 * @param base_signature_length_list Base-signature length list (L).
+		 * @param new_level Absolute level of the base nonterminal.
+		 * @param relative_max_level Maximum relative level for the base nonterminal.
+		 * @param explicit_nonterminal_length_list Base-nonterminal length list (L).
 		 */
-		void write_element(BaseSignature base_signature, const RLSLPRuleBody &rule_body, uint16_t new_level, uint16_t relative_max_level, const std::vector<uint64_t> &base_signature_length_list)
+		void write_element(ExplicitNonterminal explicit_nonterminal, const RLSLPRuleBody &rule_body, uint16_t new_level, uint16_t relative_max_level, const std::vector<uint64_t> &explicit_nonterminal_length_list)
 		{
-			this->rlslp_dictionary.write_element(base_signature, rule_body, new_level, relative_max_level, base_signature_length_list);
+			this->rlslp_dictionary.write_element(explicit_nonterminal, rule_body, new_level, relative_max_level, explicit_nonterminal_length_list);
 		}
 
 		/**
-		 * @brief Create random bits for a base signature (restricted block compression only).
-		 * @param base_signature Base signature index whose single-signature count defines bit width.
+		 * @brief Create random bits for a base nonterminal (restricted block compression only).
+		 * @param explicit_nonterminal Base nonterminal index whose single-nonterminal count defines bit width.
 		 */
-		void create_random_bit(BaseSignature base_signature)
+		void create_random_bit(ExplicitNonterminal explicit_nonterminal)
 		{
 			if (this->grammarParsingType == GrammarParsingType::RestrictedBlockCompression)
 			{
-				uint64_t single_count = this->rlslp_dictionary.get_relative_max_level_list()[base_signature];
-				this->random_bit_dictionary.create_random_bit(base_signature, single_count);
+				uint64_t single_count = this->rlslp_dictionary.get_relative_max_level_list()[explicit_nonterminal];
+				this->random_bit_dictionary.create_random_bit(explicit_nonterminal, single_count);
 			}
 		}
 
 		/**
-		 * @brief Remove random bits for a signature.
-		 * @param signature Encoded signature with relative level.
+		 * @brief Remove random bits for a nonterminal.
+		 * @param nonterminal Encoded nonterminal with relative level.
 		 */
-		void erase_random_bit(SignatureWithRelativeLevel signature)
+		void erase_random_bit(NonterminalWithRelativeLevel nonterminal)
 		{
 			if (this->grammarParsingType == GrammarParsingType::RestrictedBlockCompression)
 			{
 #ifdef DEBUG
-				BaseSignature base_signature = SignatureFunctions::get_base_signature(signature);
-				assert(this->rlslp_dictionary.get_relative_max_level_list()[base_signature] == SignatureFunctions::get_relative_level(signature));
+				ExplicitNonterminal explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(nonterminal);
+				assert(this->rlslp_dictionary.get_relative_max_level_list()[explicit_nonterminal] == NonterminalFunctions::get_relative_level(nonterminal));
 #endif
-				this->random_bit_dictionary.erase_random_bit(signature);
+				this->random_bit_dictionary.erase_random_bit(nonterminal);
 			}
 		}
 
@@ -386,11 +386,11 @@ namespace dynRLSLP
 			std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Documents:\t" << this->get_document_counter().size() << std::endl;
 
 			const DictionaryForLayeredRLSLP &rlslp_dictionary = this->get_rlslp_dictionary();
-			const std::vector<uint64_t> &base_signature_length_list = rlslp_dictionary.get_base_signature_length_list();
+			const std::vector<uint64_t> &explicit_nonterminal_length_list = rlslp_dictionary.get_explicit_nonterminal_length_list();
 			if (this->has_root())
 			{
-				std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "The level of the derivation tree: " << this->get_rlslp_dictionary().get_base_signature_level_list()[this->get_root()] << std::endl;
-				std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "The length of the derivation tree: " << SignatureFunctions::get_length(this->get_root(), base_signature_length_list) << std::endl;
+				std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "The level of the derivation tree: " << this->get_rlslp_dictionary().get_explicit_nonterminal_level_list()[this->get_root()] << std::endl;
+				std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "The length of the derivation tree: " << NonterminalFunctions::get_length(this->get_root(), explicit_nonterminal_length_list) << std::endl;
 			}
 			else
 			{
@@ -410,11 +410,11 @@ namespace dynRLSLP
 			Checklist
 			*/
 			// Code 0: GrammarParsingType grammarParsingType = GrammarParsingType::SignatureEncoding;
-			// Code 4: std::map<int64_t, SignatureWithRelativeLevel> character_signature_item_map;
-			// Code 5: std::vector<std::vector<SignatureWithRelativeLevel>> parentVectorList;
-			// Code 5: std::unordered_map<SignatureWithRelativeLevel, std::set<SignatureWithRelativeLevel, NonterminalLessComparer>> parentMap;
-			// Code 6: std::unordered_map<SignatureWithRelativeLevel, uint64_t> documentCounter;
-			// Code 7: std::vector<SignatureWithRelativeLevel> unused_signatures;
+			// Code 4: std::map<int64_t, NonterminalWithRelativeLevel> character_nonterminal_item_map;
+			// Code 5: std::vector<std::vector<NonterminalWithRelativeLevel>> parentVectorList;
+			// Code 5: std::unordered_map<NonterminalWithRelativeLevel, std::set<NonterminalWithRelativeLevel, NonterminalLessComparer>> parentMap;
+			// Code 6: std::unordered_map<NonterminalWithRelativeLevel, uint64_t> documentCounter;
+			// Code 7: std::vector<NonterminalWithRelativeLevel> unused_nonterminals;
 			// Code 8: std::vector<uint8_t> randomBitList;
 
 			// Code 0
@@ -466,14 +466,14 @@ namespace dynRLSLP
 			r.rlslp_dictionary.swap(rlslp_dictionary);
 
 			// Code 4
-			SignatureWithRelativeLevel _document_signature;
+			NonterminalWithRelativeLevel _document_nonterminal;
 			uint64_t _document_counter_size;
-			ifs.read(reinterpret_cast<char *>(&_document_signature), sizeof(_document_signature));
+			ifs.read(reinterpret_cast<char *>(&_document_nonterminal), sizeof(_document_nonterminal));
 			ifs.read(reinterpret_cast<char *>(&_document_counter_size), sizeof(_document_counter_size));
 
-			if (r.rlslp_dictionary.base_signature_count() > 0)
+			if (r.rlslp_dictionary.explicit_nonterminal_count() > 0)
 			{
-				r.documentCounter[_document_signature] = _document_counter_size;
+				r.documentCounter[_document_nonterminal] = _document_counter_size;
 			}
 
 			// Code 6
@@ -509,17 +509,17 @@ namespace dynRLSLP
 			// Code 4
 			if (item.documentCounter.size() == 1)
 			{
-				std::pair<SignatureWithRelativeLevel, uint64_t> document_counter_pair = {item.documentCounter.begin()->first, item.documentCounter.begin()->second};
-				SignatureWithRelativeLevel document_counter_signature = document_counter_pair.first;
+				std::pair<NonterminalWithRelativeLevel, uint64_t> document_counter_pair = {item.documentCounter.begin()->first, item.documentCounter.begin()->second};
+				NonterminalWithRelativeLevel document_counter_nonterminal = document_counter_pair.first;
 				uint64_t document_counter_count = document_counter_pair.second;
-				os.write(reinterpret_cast<const char *>(&document_counter_signature), sizeof(SignatureWithRelativeLevel));
+				os.write(reinterpret_cast<const char *>(&document_counter_nonterminal), sizeof(NonterminalWithRelativeLevel));
 				os.write(reinterpret_cast<const char *>(&document_counter_count), sizeof(uint64_t));
 			}
 			else
 			{
-				SignatureWithRelativeLevel document_counter_signature = 0;
+				NonterminalWithRelativeLevel document_counter_nonterminal = 0;
 				uint64_t document_counter_count = 0;
-				os.write(reinterpret_cast<const char *>(&document_counter_signature), sizeof(SignatureWithRelativeLevel));
+				os.write(reinterpret_cast<const char *>(&document_counter_nonterminal), sizeof(NonterminalWithRelativeLevel));
 				os.write(reinterpret_cast<const char *>(&document_counter_count), sizeof(uint64_t));
 			}
 

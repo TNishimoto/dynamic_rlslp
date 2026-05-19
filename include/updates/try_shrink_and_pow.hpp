@@ -11,14 +11,14 @@ namespace dynRLSLP
         {
         public:
             /**
-             * @brief Attempts to build the level-0 run-rule sequence without adding signatures.
+             * @brief Attempts to build the level-0 run-rule sequence without adding nonterminals.
              * @tparam C Character type of the input text.
              * @tparam CALLBACK Unused callback type parameter for API symmetry.
              * @param text Input character sequence.
              * @param dic Dynamic grammar used for lookup only.
              * @param output Level-0 deque filled on success.
              * @param message_paragraph Indentation level for progress messages.
-             * @return True if all character signatures already exist.
+             * @return True if all character nonterminals already exist.
              */
             template <typename C, typename CALLBACK = decltype(no_callback)>
             static bool try_shrink_char(const std::vector<C> &text, const DynamicGrammarForLayeredRLSLP &dic, std::deque<RunRuleBody> &output, int message_paragraph = stool::Message::SHOW_MESSAGE)
@@ -35,7 +35,7 @@ namespace dynRLSLP
                     std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Constructing the level-0 sequence in the derivation tree..." << std::endl;
                 }
                 RLSLPRuleBody first_char_body = RLSLPRuleBody::create_char_item(text[0]);
-                int64_t first_sig = dic.try_get_signature(first_char_body);
+                int64_t first_sig = dic.try_get_nonterminal(first_char_body);
                 if (first_sig == -1)
                 {
                     return false;
@@ -45,7 +45,7 @@ namespace dynRLSLP
                 for (uint64_t i = 1; i < text.size(); i++)
                 {
                     RLSLPRuleBody char_body = RLSLPRuleBody::create_char_item(text[i]);
-                    int64_t char_sig = dic.try_get_signature(char_body);
+                    int64_t char_sig = dic.try_get_nonterminal(char_body);
                     if (char_sig == -1)
                     {
                         return false;
@@ -82,24 +82,24 @@ namespace dynRLSLP
 
 
             /**
-             * @brief Attempts restricted-block pow without adding signatures.
+             * @brief Attempts restricted-block pow without adding nonterminals.
              * @param items Input run-rule bodies.
              * @param current_level Current hierarchy level.
              * @param dic Dynamic grammar used for lookup only.
              * @param output Lifted run-rule deque filled on success.
-             * @return True if all required signatures exist.
+             * @return True if all required nonterminals exist.
              */
             static bool try_restricted_pow(const std::deque<RunRuleBody> &items, uint16_t current_level, const DynamicGrammarForLayeredRLSLP &dic, std::deque<RunRuleBody> &output)
             {
                 assert(current_level < LEVEL_LIMIT);
-                const std::vector<uint64_t>& base_signature_length_list = dic.get_base_signature_length_list();
+                const std::vector<uint64_t>& explicit_nonterminal_length_list = dic.get_explicit_nonterminal_length_list();
                 for (uint64_t i = 0; i < items.size(); i++)
                 {
 
-                    uint64_t baseLen = SignatureFunctions::get_length(items[i].number, base_signature_length_list);
+                    uint64_t baseLen = NonterminalFunctions::get_length(items[i].number, explicit_nonterminal_length_list);
                     if (baseLen <= dynRLSLP::Mu::MU_FLOOR[current_level + 1] && items[i].power > 1)
                     {
-                        int64_t sig = dic.try_get_signature(RLSLPRuleBody::create_run_rule_body(items[i].number, items[i].power));
+                        int64_t sig = dic.try_get_nonterminal(RLSLPRuleBody::create_run_rule_body(items[i].number, items[i].power));
                         if(sig == -1){
                             return false;
                         }
@@ -107,18 +107,18 @@ namespace dynRLSLP
                     }
                     else
                     {
-                        RLSLPRuleBody newBody = RLSLPRuleBody::create_signature_item(items[i].number);
-                        int64_t newSignature = dic.try_get_signature(newBody);
-                        if(newSignature == -1){
+                        RLSLPRuleBody newBody = RLSLPRuleBody::create_nonterminal_item(items[i].number);
+                        int64_t newNonterminal = dic.try_get_nonterminal(newBody);
+                        if(newNonterminal == -1){
                             return false;
                         }
-                        output.push_back(RunRuleBody(newSignature, items[i].power));
+                        output.push_back(RunRuleBody(newNonterminal, items[i].power));
                     }
                 }
                 return true;
             }
             /**
-             * @brief Attempts one center-line shrink or pow step without adding signatures.
+             * @brief Attempts one center-line shrink or pow step without adding nonterminals.
              * @param left_context Left context run-rule bodies.
              * @param center Center run-rule deque to compile.
              * @param right_context Right context run-rule bodies.
@@ -126,7 +126,7 @@ namespace dynRLSLP
              * @param dic Dynamic grammar used for lookup only.
              * @param output Compiled center sequence filled on success.
              * @param message_paragraph Indentation level for progress messages.
-             * @return True if all required signatures exist.
+             * @return True if all required nonterminals exist.
              */
             static bool try_center_line_compile(const std::vector<RunRuleBody> &left_context, const std::deque<RunRuleBody> &center, const std::vector<RunRuleBody> &right_context,
                                                 uint64_t current_level, const DynamicGrammarForLayeredRLSLP &dic, std::deque<RunRuleBody> &output, [[maybe_unused]] int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
@@ -188,11 +188,11 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Attempts signature-encoding pow without adding signatures.
+             * @brief Attempts nonterminal-encoding pow without adding nonterminals.
              * @param items Input run-rule bodies.
              * @param dic Dynamic grammar used for lookup only.
              * @param output Lifted run-rule deque filled on success.
-             * @return True if all required signatures exist.
+             * @return True if all required nonterminals exist.
              */
             static bool try_pow(const std::deque<RunRuleBody> &items, const DynamicGrammarForLayeredRLSLP &dic, std::deque<RunRuleBody> &output)
             {
@@ -200,7 +200,7 @@ namespace dynRLSLP
                 {
                     if (items[i].power > 1)
                     {
-                        int64_t sig = dic.try_get_signature(RLSLPRuleBody::create_run_rule_body(items[i].number, items[i].power));
+                        int64_t sig = dic.try_get_nonterminal(RLSLPRuleBody::create_run_rule_body(items[i].number, items[i].power));
                         if (sig == -1)
                         {
                             return false;
@@ -209,7 +209,7 @@ namespace dynRLSLP
                     }
                     else if (items[i].power == 1)
                     {
-                        int64_t sig = dic.try_get_signature(RLSLPRuleBody::create_signature_item(items[i].number));
+                        int64_t sig = dic.try_get_nonterminal(RLSLPRuleBody::create_nonterminal_item(items[i].number));
                         if (sig == -1)
                         {
                             return false;
@@ -224,13 +224,13 @@ namespace dynRLSLP
                 return true;
             }
             /**
-             * @brief Attempts shrink with context without adding signatures.
+             * @brief Attempts shrink with context without adding nonterminals.
              * @param left_context Left context run-rule bodies.
              * @param center Center run-rule deque to shrink.
              * @param right_context Right context run-rule bodies.
              * @param dic Dynamic grammar used for lookup only.
              * @param output Shrunk center sequence filled on success.
-             * @return True if all required signatures exist.
+             * @return True if all required nonterminals exist.
              */
             static bool try_shrink_with_context(const std::vector<RunRuleBody> &left_context, const std::deque<RunRuleBody> &center, const std::vector<RunRuleBody> &right_context,
                                                 const DynamicGrammarForLayeredRLSLP &dic, std::deque<RunRuleBody> &output)
@@ -240,7 +240,7 @@ namespace dynRLSLP
                     throw std::runtime_error("ERROR in shrink_with_context: center.size() == 0");
                 }
 
-                std::vector<SignatureWithRelativeLevel> tmp;
+                std::vector<NonterminalWithRelativeLevel> tmp;
 
                 for (RunRuleBody it : left_context)
                     tmp.push_back(it.number);
@@ -270,12 +270,12 @@ namespace dynRLSLP
             }
 
             /**
-             * @brief Attempts shrink according to factor bits without adding signatures.
+             * @brief Attempts shrink according to factor bits without adding nonterminals.
              * @param items Input run-rule bodies.
              * @param bools Factor bits marking block boundaries.
              * @param dic Dynamic grammar used for lookup only.
              * @param output Shrunk run-rule deque filled on success.
-             * @return True if all required signatures exist.
+             * @return True if all required nonterminals exist.
              */
             static bool try_shrink(const std::deque<RunRuleBody> &items, const std::vector<bool> &bools, const DynamicGrammarForLayeredRLSLP &dic, std::deque<RunRuleBody> &output)
             {
@@ -287,7 +287,7 @@ namespace dynRLSLP
                 assert(items.size() == bools.size());
                 assert(bools[0]);
 
-                SignatureWithRelativeLevel tmp = items[0].number;
+                NonterminalWithRelativeLevel tmp = items[0].number;
                 int64_t pairLength = 1;
                 for (int64_t i = 1; i < (int64_t)items.size(); i++)
                 {
@@ -301,11 +301,11 @@ namespace dynRLSLP
                     else
                     {
                         RLSLPRuleBody newItem = RLSLPRuleBody::create_pair_item(tmp, items[i].number);
-                        int64_t newSignature = dic.try_get_signature(newItem);
-                        if(newSignature == -1){
+                        int64_t newNonterminal = dic.try_get_nonterminal(newItem);
+                        if(newNonterminal == -1){
                             return false;
                         }
-                        tmp = newSignature;
+                        tmp = newNonterminal;
                         pairLength++;
                     }
                 }
@@ -314,19 +314,19 @@ namespace dynRLSLP
                 output.push_back(RunRuleBody(tmp, 1));
                 tmp = -1;
                 pairLength = 1;
-                RunRuleBody::merge_same_signatures(output);
+                RunRuleBody::merge_same_nonterminals(output);
                 return true;
 
             }
 
             /**
-             * @brief Attempts restricted-block shrink without adding signatures.
+             * @brief Attempts restricted-block shrink without adding nonterminals.
              * @param items Input run-rule bodies.
              * @param current_level Current hierarchy level.
              * @param dic Dynamic grammar used for lookup only.
              * @param output Shrunk run-rule deque filled on success.
              * @param message_paragraph Indentation level for progress messages.
-             * @return True if all required signatures exist.
+             * @return True if all required nonterminals exist.
              */
             static bool try_restricted_shrink(const std::deque<RunRuleBody> &items, uint16_t current_level, const DynamicGrammarForLayeredRLSLP &dic, std::deque<RunRuleBody> &output, [[maybe_unused]] int64_t message_paragraph = stool::Message::SHOW_MESSAGE)
             {
@@ -345,38 +345,38 @@ namespace dynRLSLP
                     if (i + 1 < vec_size && factor_flags[i] == 1 && factor_flags[i + 1] == 0)
                     {
                         RLSLPRuleBody newItem = RLSLPRuleBody::create_pair_item(items[i].number, items[i + 1].number);
-                        int64_t newSignature = dic.try_get_signature(newItem);
-                        if(newSignature == -1){
+                        int64_t newNonterminal = dic.try_get_nonterminal(newItem);
+                        if(newNonterminal == -1){
                             return false;
                         }
-                        output.push_back(RunRuleBody(newSignature, 1));
+                        output.push_back(RunRuleBody(newNonterminal, 1));
                         i += 2;
                     }
                     else
                     {
                         if (factor_flags[i] != -1)
                         {
-                            RLSLPRuleBody newItem = RLSLPRuleBody::create_signature_item(items[i].number);
-                            int64_t newSignature = dic.try_get_signature(newItem);
-                            if(newSignature == -1){
+                            RLSLPRuleBody newItem = RLSLPRuleBody::create_nonterminal_item(items[i].number);
+                            int64_t newNonterminal = dic.try_get_nonterminal(newItem);
+                            if(newNonterminal == -1){
                                 return false;
                             }
-                            output.push_back(RunRuleBody(newSignature, 1));
+                            output.push_back(RunRuleBody(newNonterminal, 1));
                         }
                         else
                         {
-                            RLSLPRuleBody newBody = RLSLPRuleBody::create_signature_item(items[i].number);
-                            int64_t newSignature = dic.try_get_signature(newBody);
-                            if(newSignature == -1){
+                            RLSLPRuleBody newBody = RLSLPRuleBody::create_nonterminal_item(items[i].number);
+                            int64_t newNonterminal = dic.try_get_nonterminal(newBody);
+                            if(newNonterminal == -1){
                                 return false;
                             }
-                            output.push_back(RunRuleBody(newSignature, items[i].power));
+                            output.push_back(RunRuleBody(newNonterminal, items[i].power));
                         }
 
                         i++;
                     }
                 }
-                RunRuleBody::merge_same_signatures(output);
+                RunRuleBody::merge_same_nonterminals(output);
                 return true;
             }
         };

@@ -10,7 +10,7 @@ namespace dynRLSLP
          */
         struct OccurrenceNode
         {
-            SignatureWithRelativeLevel signature;
+            NonterminalWithRelativeLevel nonterminal;
             uint64_t occ;            
             uint64_t children_start_index;
             uint64_t children_end_index;
@@ -19,17 +19,17 @@ namespace dynRLSLP
 
             /**
              * @brief Constructs an occurrence tree node with child range indices.
-             * @param signature The signature associated with this node.
+             * @param nonterminal The nonterminal associated with this node.
              * @param occ Total number of leaf occurrences in the subtree rooted here.
              * @param children_start_index Inclusive start index into the children range list.
              * @param children_end_index Inclusive end index into the children range list.
              */
-            OccurrenceNode(SignatureWithRelativeLevel signature, uint64_t occ, uint64_t children_start_index, uint64_t children_end_index) : signature(signature), occ(occ), children_start_index(children_start_index), children_end_index(children_end_index){
+            OccurrenceNode(NonterminalWithRelativeLevel nonterminal, uint64_t occ, uint64_t children_start_index, uint64_t children_end_index) : nonterminal(nonterminal), occ(occ), children_start_index(children_start_index), children_end_index(children_end_index){
             }
             /**
              * @brief Default constructor initializing all fields to sentinel maximum values.
              */
-            OccurrenceNode() : signature(std::numeric_limits<SignatureWithRelativeLevel>::max()), occ(std::numeric_limits<uint64_t>::max()), children_start_index(std::numeric_limits<uint64_t>::max()), children_end_index(std::numeric_limits<uint64_t>::max()){
+            OccurrenceNode() : nonterminal(std::numeric_limits<NonterminalWithRelativeLevel>::max()), occ(std::numeric_limits<uint64_t>::max()), children_start_index(std::numeric_limits<uint64_t>::max()), children_end_index(std::numeric_limits<uint64_t>::max()){
             }
 
             /**
