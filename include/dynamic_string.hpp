@@ -40,9 +40,9 @@ namespace dynRLSLP
          * @param use_restricted_block_compression If true, use restricted block compression during grammar updates.
          * @param seed Random seed for compression and hashing.
          */
-        DynamicString(bool use_restricted_block_compression = false, int64_t seed = 0) : dynamic_grammar()
+        DynamicString(GrammarParsingType parser = GrammarParsingType::RestrictedRecompression, int64_t seed = 0) : dynamic_grammar()
         {
-            dynamic_grammar.initialize(use_restricted_block_compression, seed);
+            dynamic_grammar.initialize(parser, seed);
         }
         /**
          * @brief Construct an empty dynamic string with an explicit alphabet.
@@ -50,9 +50,9 @@ namespace dynRLSLP
          * @param alphabet Explicit alphabet as byte values.
          * @param seed Random seed for compression and hashing.
          */
-        DynamicString(bool use_restricted_block_compression, const std::vector<uint8_t> &alphabet, int64_t seed) : dynamic_grammar()
+        DynamicString(GrammarParsingType parser, const std::vector<uint8_t> &alphabet, int64_t seed) : dynamic_grammar()
         {
-            dynamic_grammar.initialize(use_restricted_block_compression, alphabet, seed);
+            dynamic_grammar.initialize(parser, alphabet, seed);
         }
 
         /**
@@ -366,6 +366,72 @@ namespace dynRLSLP
                 return text;
             }
         }
+
+        StaticRLSLP convert_to_rlslp() const
+        {
+            return this->dynamic_grammar.convert_to_rlslp();
+        }
+
+        StaticRLSLP convert_to_canonized_rlslp() const
+        {
+            return this->dynamic_grammar.convert_to_canonized_rlslp();
+        }
+
+
+		void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
+            std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Writing content as JSON format..." << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph) << "{" << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"DynamicString\"," << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "[" << std::endl;
+
+            std::string dictionaryMode_str;
+            if(this->dictionaryMode == DictionaryMode::Standard){
+                dictionaryMode_str = "\"Standard\"";
+            }else{
+                dictionaryMode_str = "\"Fast\"";
+            }
+
+            ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "\"dictionaryMode\": " << dictionaryMode_str << ", " << std::endl;
+
+
+			this->dynamic_grammar.write_content_as_json_format(ofs, message_paragraph+2);
+			ofs << std::endl;
+
+			JsonHelper::write_content_as_json_format<uint64_t>(
+				"leftShortStringList(std::vector<uint64_t>)",
+				this->leftShortStringList,
+				[](const uint64_t &value){ return std::to_string(value); },
+				true,
+				ofs,
+				message_paragraph+2
+			);
+			ofs << std::endl;
+
+			JsonHelper::write_content_as_json_format<uint64_t>(
+				"rightShortStringList(std::vector<uint64_t>)",
+				this->rightShortStringList,
+				[](const uint64_t &value){ return std::to_string(value); },
+				true,
+				ofs,
+				message_paragraph+2
+			);
+			ofs << std::endl;
+
+			JsonHelper::write_content_as_json_format<TemporaryOccurrence>(
+				"ancestorCacheList(std::vector<TemporaryOccurrence>)",
+				this->ancestorCacheList,
+				[](const TemporaryOccurrence &value){ return value.to_string(); },
+				true,
+				ofs,
+				message_paragraph+2
+			);
+			ofs << std::endl;
+
+
+			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "]" << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph) << "}" << std::endl;
+        }
+
 
         //}@
 
@@ -779,7 +845,7 @@ namespace dynRLSLP
         /**
          * @brief Print the derivation tree of the grammar root to standard output.
          */
-        void print_derivation_tree() const
+        std::vector<std::string> get_derivation_tree_as_plain_text() const
         {
             const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
             std::vector<NonterminalWithRelativeLevel> items;
@@ -789,11 +855,9 @@ namespace dynRLSLP
             const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
             const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
 
+
             std::vector<std::string> r = DerivationTreeVisualizer::compute_derivation_tree(items, explicit_nonterminal_rule_list, explicit_nonterminal_level_list, explicit_nonterminal_length_list);
-            for (auto s : r)
-            {
-                std::cout << s << std::endl;
-            }
+            return r;
         }
 
         /**
@@ -889,11 +953,11 @@ namespace dynRLSLP
          * @param message_paragraph The paragraph depth of message logs.
          * @return Compressed \p DynamicString representing \p text.
          */
-        static DynamicString offline_build_from_text(const std::vector<uint8_t> &text, bool use_restricted_block_compression, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
+        static DynamicString offline_build_from_text(const std::vector<uint8_t> &text, GrammarParsingType parser, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
         {
             std::vector<uint8_t> alphabet = stool::StringFunctions::get_alphabet(text);
 
-            return DynamicString::offline_build_from_text(text, use_restricted_block_compression, alphabet, mode, seed, message_paragraph);
+            return DynamicString::offline_build_from_text(text, parser, alphabet, mode, seed, message_paragraph);
         }
         /**
          * @brief Return a new DynamicString built from a given text \p text with an explicit alphabet.
@@ -905,13 +969,13 @@ namespace dynRLSLP
          * @param message_paragraph The paragraph depth of message logs.
          * @return Compressed \p DynamicString representing \p text.
          */
-        static DynamicString offline_build_from_text(const std::vector<uint8_t> &text, bool use_restricted_block_compression, const std::vector<uint8_t> &alphabet, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
+        static DynamicString offline_build_from_text(const std::vector<uint8_t> &text, GrammarParsingType parser, const std::vector<uint8_t> &alphabet, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
         {
             if (message_paragraph != stool::Message::NO_MESSAGE)
             {
                 std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Building DynamicString from text in offline mode... " << std::endl;
             }
-            DynamicString r(use_restricted_block_compression, alphabet, seed);
+            DynamicString r(parser, alphabet, seed);
             Compress::compress(r.dynamic_grammar, text, dynRLSLP::no_callback, message_paragraph);
 
             r.set_mode(mode);
@@ -927,14 +991,14 @@ namespace dynRLSLP
          * @param message_paragraph The paragraph depth of message logs.
          * @return Compressed \p DynamicString representing \p text.
          */
-        static DynamicString build_from_text_for_debug(const std::string &text, bool use_restricted_block_compression, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
+        static DynamicString build_from_text_for_debug(const std::string &text, GrammarParsingType parser, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
         {
             std::vector<uint8_t> text_vector;
             for (auto c : text)
             {
                 text_vector.push_back(c);
             }
-            return DynamicString::offline_build_from_text(text_vector, use_restricted_block_compression, mode, seed, message_paragraph);
+            return DynamicString::offline_build_from_text(text_vector, parser, mode, seed, message_paragraph);
         }
 
         /**
@@ -947,7 +1011,7 @@ namespace dynRLSLP
          * @param message_paragraph The paragraph depth of message logs.
          * @return Compressed \p DynamicString built incrementally from the file.
          */
-        static DynamicString online_build_from_text_file(std::string file_path, bool use_restricted_block_compression = false, DictionaryMode mode = DictionaryMode::Standard, int64_t seed = 0, uint64_t buffer_size = 100000, int message_paragraph = stool::Message::SHOW_MESSAGE)
+        static DynamicString online_build_from_text_file(std::string file_path, GrammarParsingType parser, DictionaryMode mode = DictionaryMode::Standard, int64_t seed = 0, uint64_t buffer_size = 100000, int message_paragraph = stool::Message::SHOW_MESSAGE)
         {
             if (!std::filesystem::exists(file_path))
             {
@@ -969,7 +1033,7 @@ namespace dynRLSLP
 
             std::vector<uint8_t> alphabet = stool::OnlineFileReader::get_alphabet(file_path);
 
-            DynamicString r(use_restricted_block_compression, alphabet, seed);
+            DynamicString r(parser, alphabet, seed);
 
             std::ifstream stream;
             stream.open(file_path, std::ios::binary);
@@ -1038,7 +1102,7 @@ namespace dynRLSLP
          */
         static DynamicString load_from_file(std::ifstream &os)
         {
-            DynamicString r;
+            DynamicString r(GrammarParsingType::RestrictedRecompression);
 
             uint64_t fingerprint;
             os.read(reinterpret_cast<char *>(&fingerprint), sizeof(uint64_t));
@@ -1082,7 +1146,7 @@ namespace dynRLSLP
          */
         static DynamicString build_from_leveled_rlslp(std::ifstream &os)
         {
-            DynamicString r;
+            DynamicString r(GrammarParsingType::RestrictedRecompression);
             auto tmp = DynamicGrammarForLayeredRLSLP::build_from_leveled_rlslp(os);
             r.dynamic_grammar.swap(tmp);
             r.rebuild_ancestor_cache_list();

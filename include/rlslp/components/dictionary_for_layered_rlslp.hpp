@@ -246,6 +246,10 @@ namespace dynRLSLP
 			this->relative_max_level_list_.push_back(UINT16_MAX);
 			return new_number;
 		}
+
+
+
+
 		/**
 		 * @brief Write rule body and metadata into the slot of a given explicit nonterminal X.
 		 * @param rule_body RLSLP rule body to store.
@@ -431,7 +435,7 @@ namespace dynRLSLP
 
 				for (uint64_t j = 0; j <= this->get_relative_max_level_list()[i]; j++)
 				{
-					if (grammar_parsing_type == GrammarParsingType::RestrictedBlockCompression && j > 0 && j <= uncountable_nonterminal_count)
+					if (grammar_parsing_type == GrammarParsingType::RestrictedRecompression && j > 0 && j <= uncountable_nonterminal_count)
 					{
 						continue;
 					}
@@ -454,6 +458,37 @@ namespace dynRLSLP
 			}
 			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "==== Rules[END] ====" << std::endl;
 		}
+
+		void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
+			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Writing content as JSON format..." << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "{" << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"DictionaryForLayeredRLSLP\"," << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "{" << std::endl;
+
+			ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "[" << "\"RLSLP Rule\", \"Level\", \"Length\", \"Relative Max Level\"" << "], " << std::endl;
+
+			for (uint64_t i = 0; i < this->explicit_nonterminal_rule_list_.size(); i++)
+			{
+				std::string sig = std::to_string(i) + "_0";
+				std::string body_info = explicit_nonterminal_rule_list_[i].to_string((NonterminalWithRelativeLevel)i);
+				std::string level_info = std::to_string(this->explicit_nonterminal_level_list_[i]);
+				std::string length_info = std::to_string(this->explicit_nonterminal_length_list_[i]);
+				std::string relative_max_level_info = std::to_string(this->relative_max_level_list_[i]);
+				ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "[" << "\""<< body_info << "\", " << level_info << ", " << length_info << ", " << relative_max_level_info << "]";
+				if (i != this->explicit_nonterminal_rule_list_.size() - 1)
+				{
+					ofs << ", " << std::endl;
+				}
+				else
+				{
+					ofs << std::endl;
+				}
+			}
+
+			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "]" << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph) << "}" << std::endl;
+		}
+
 		//}@
 
 		////////////////////////////////////////////////////////////////////////////////

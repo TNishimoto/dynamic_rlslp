@@ -11,6 +11,7 @@
 #include <cassert>
 #include "../../types/types.hpp"
 #include "./nonterminal_functions.hpp"
+#include "../../json_helper.hpp"
 
 namespace dynRLSLP
 {
@@ -111,6 +112,45 @@ namespace dynRLSLP
 				throw std::logic_error("RLSLPRuleBody::break_power: this->B is not 2");
 			}
 		}
+
+		std::string to_string(NonterminalWithRelativeLevel sig) const
+		{
+			std::stringstream ss;
+			ss << NonterminalFunctions::to_string(sig) << " -> " << this->to_string();
+			return ss.str();
+		}
+
+
+		std::string to_string() const
+		{
+			std::stringstream ss;
+			if (this->get_type() == RLSLPRuleType::Power)
+			{
+				ss << "(" << NonterminalFunctions::to_string(this->A) << ")^" << this->B;
+			}
+			else if (this->get_type() == RLSLPRuleType::Pair)
+			{
+				ss << "(" << NonterminalFunctions::to_string(this->A) << ", " << NonterminalFunctions::to_string(this->B) <<  ")";
+			}
+			else if (this->get_type() == RLSLPRuleType::Character)
+			{
+				ss << JsonHelper::escapeJsonChar((char)this->A);
+			}
+			else if (this->get_type() == RLSLPRuleType::Nonterminal)
+			{
+				ss << NonterminalFunctions::to_string(this->A);
+			}
+			else if (this->get_type() == RLSLPRuleType::Null)
+			{
+				ss << "[NULL]";
+			}
+			else
+			{
+				ss << "[" << this->A << "/" << this->B << "/" << (int)this->type << "]";
+			}
+			return ss.str();
+		}
+
 
 		/**
 		 * @brief Return a compact string description of the rule.

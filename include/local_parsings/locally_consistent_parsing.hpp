@@ -25,7 +25,7 @@ namespace dynRLSLP
          */
         enum class GrammarParsingType {
             SignatureEncoding = 0, 
-            RestrictedBlockCompression = 1
+            RestrictedRecompression = 1
         };
 
         /**

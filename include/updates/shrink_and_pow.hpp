@@ -114,7 +114,7 @@ namespace dynRLSLP
              */
             static std::pair<uint64_t, uint64_t> compute_unstable_context_lengths(const std::deque<RunRuleBody> &text, const DynamicGrammarForLayeredRLSLP &dic, uint16_t level)
             {
-                if (dic.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression)
+                if (dic.get_grammar_parsing_type() == GrammarParsingType::RestrictedRecompression)
                 {
                     if (level % 2 == 0)
                     {
@@ -237,7 +237,7 @@ namespace dynRLSLP
                         assert(RunRuleBody::verify_vector(r));
                     }
                 }
-                else if (dic.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression)
+                else if (dic.get_grammar_parsing_type() == GrammarParsingType::RestrictedRecompression)
                 {
                     if (current_level % 2 == 0)
                     {

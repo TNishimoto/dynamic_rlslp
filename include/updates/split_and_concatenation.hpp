@@ -36,7 +36,7 @@ namespace dynRLSLP
                 const DictionaryForLayeredRLSLP &small_dic = dic.get_dictionary();
 
                 assert(0 < leftLength && leftLength < (int64_t)NonterminalFunctions::get_length(node, small_dic.get_explicit_nonterminal_length_list()));
-                FastCommonSequenceBuilder::initialize(dic.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression);
+                FastCommonSequenceBuilder::initialize(dic.get_grammar_parsing_type() == GrammarParsingType::RestrictedRecompression);
 
                 #ifdef DEBUG
                 RunRuleVector nodeVector = FastCommonSequenceBuilder::build(node, small_dic);
@@ -103,7 +103,7 @@ namespace dynRLSLP
             template <typename CALLBACK1 = decltype(no_callback), typename CALLBACK2 = decltype(no_callback)>
             static int64_t concatenate(int64_t left, int64_t right, bool process_document, DynamicGrammarForLayeredRLSLP &dic, CALLBACK1 &callback_for_removed_nonterminals = no_callback, CALLBACK2 &callback_for_added_nonterminals = no_callback, int message_paragraph = stool::Message::SHOW_MESSAGE)
             {
-                FastCommonSequenceBuilder::initialize(dic.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression);
+                FastCommonSequenceBuilder::initialize(dic.get_grammar_parsing_type() == GrammarParsingType::RestrictedRecompression);
                 const DictionaryForLayeredRLSLP &small_dic = dic.get_dictionary();
 
 #ifdef DEBUG

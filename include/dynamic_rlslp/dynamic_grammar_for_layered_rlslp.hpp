@@ -87,7 +87,7 @@ namespace dynRLSLP
 																							character_id_map(std::move(other.character_id_map))
 			{
 				// this->parentDictionary.set_pointer(&this->relative_max_level_list_);
-				this->fastParentDictionary.set_pointer(&this->grammar.get_rlslp_dictionary().get_relative_max_level_list(), this->grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression);
+				this->fastParentDictionary.set_pointer(&this->grammar.get_rlslp_dictionary().get_relative_max_level_list(), this->grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedRecompression);
 				NonterminalLessComparer::explicit_nonterminal_rule_list = &this->grammar.get_rlslp_dictionary().get_explicit_nonterminal_rule_list();
 			}
 
@@ -116,7 +116,7 @@ namespace dynRLSLP
 					this->fastParentDictionary = std::move(other.fastParentDictionary);
 					this->character_id_map = std::move(other.character_id_map);
 
-					this->fastParentDictionary.set_pointer(&this->grammar.get_rlslp_dictionary().get_relative_max_level_list(), this->grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression);
+					this->fastParentDictionary.set_pointer(&this->grammar.get_rlslp_dictionary().get_relative_max_level_list(), this->grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedRecompression);
 					NonterminalLessComparer::explicit_nonterminal_rule_list = &this->grammar.get_rlslp_dictionary().get_explicit_nonterminal_rule_list();
 				}
 				return *this;
@@ -430,6 +430,16 @@ namespace dynRLSLP
 				}
 			}
 
+			StaticRLSLP convert_to_rlslp() const
+			{
+				return this->grammar.convert_to_rlslp();
+			}
+
+			StaticRLSLP convert_to_canonized_rlslp() const
+			{
+				return this->grammar.convert_to_canonized_rlslp();
+			}
+
 			//}@
 
 			////////////////////////////////////////////////////////////////////////////////
@@ -442,11 +452,11 @@ namespace dynRLSLP
 			 * @param restricted_recompression True to enable restricted block compression mode.
 			 * @param seed Random seed for internal randomized structures.
 			 */
-			void initialize(bool restricted_recompression = false, uint64_t seed = 0)
+			void initialize(GrammarParsingType parser, uint64_t seed = 0)
 			{
 				this->clear();
-				this->grammar.initialize(restricted_recompression, seed);
-				this->fastParentDictionary.set_pointer(&this->grammar.get_rlslp_dictionary().get_relative_max_level_list(), this->grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression);
+				this->grammar.initialize(parser, seed);
+				this->fastParentDictionary.set_pointer(&this->grammar.get_rlslp_dictionary().get_relative_max_level_list(), this->grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedRecompression);
 			}
 			/**
 			 * @brief Initializes an empty grammar and registers an explicit alphabet with numeric IDs.
@@ -454,9 +464,9 @@ namespace dynRLSLP
 			 * @param alphabet Sorted list of characters defining the alphabet.
 			 * @param seed Random seed for internal randomized structures.
 			 */
-			void initialize(bool restricted_recompression, const std::vector<uint8_t> &alphabet, uint64_t seed)
+			void initialize(GrammarParsingType parser, const std::vector<uint8_t> &alphabet, uint64_t seed)
 			{
-				this->initialize(restricted_recompression, seed);
+				this->initialize(parser, seed);
 				std::vector<uint8_t> tmp = alphabet;
 				std::sort(tmp.begin(), tmp.end());
 				for (uint64_t i = 0; i < tmp.size(); i++)
@@ -488,8 +498,8 @@ namespace dynRLSLP
 				this->fastParentDictionary.swap(other.fastParentDictionary);
 				this->character_id_map.swap(other.character_id_map);
 
-				this->fastParentDictionary.set_pointer(&this->grammar.get_rlslp_dictionary().get_relative_max_level_list(), this->grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression);
-				other.fastParentDictionary.set_pointer(&other.grammar.get_rlslp_dictionary().get_relative_max_level_list(), other.grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression);
+				this->fastParentDictionary.set_pointer(&this->grammar.get_rlslp_dictionary().get_relative_max_level_list(), this->grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedRecompression);
+				other.fastParentDictionary.set_pointer(&other.grammar.get_rlslp_dictionary().get_relative_max_level_list(), other.grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedRecompression);
 			}
 
 			/**
@@ -623,7 +633,7 @@ namespace dynRLSLP
 				std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics(DynamicGrammarForLayeredRLSLP):" << std::endl;
 				this->grammar.print_statistics(message_paragraph + 1);
 
-				if (this->grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression)
+				if (this->grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedRecompression)
 				{
 					this->grammar.get_random_bit_dictionary().print_statistics(message_paragraph + 1);
 				}
@@ -654,6 +664,56 @@ namespace dynRLSLP
 				RunRuleVector item1(sig, rlslp_dictionary);
 				item1.print_derivation_tree(3, message_paragraph);
 			}
+
+
+			void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
+				std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Writing content as JSON format..." << std::endl;
+				ofs << stool::Message::get_paragraph_string(message_paragraph) << "{" << std::endl;
+				ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"DynamicGrammarForLayeredRLSLP\"," << std::endl;
+				ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "{" << std::endl;
+				ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"fastParentDictionary\": " << std::endl;
+				this->fastParentDictionary.write_content_as_json_format(ofs, message_paragraph+2);
+				ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"grammar\": " << std::endl;
+				this->grammar.write_content_as_json_format(ofs, message_paragraph+2);
+
+				JsonHelper::write_content_as_json_format<NonterminalWithRelativeLevel>(
+					"unused_nonterminals(std::vector<NonterminalWithRelativeLevel>)",
+					this->unused_nonterminals,
+					[](const NonterminalWithRelativeLevel &value){ return NonterminalFunctions::to_string(value); },
+					false,
+					ofs,
+					message_paragraph+2
+				);
+				ofs << std::endl;
+
+				JsonHelper::write_content_as_json_format<int64_t, NonterminalWithRelativeLevel>(
+					"character_nonterminal_item_map(std::map<int64_t, NonterminalWithRelativeLevel>)",
+					this->character_nonterminal_item_map,
+					[](const int64_t &key){ return std::to_string((uint8_t)key); },
+					[](const NonterminalWithRelativeLevel &value){ return NonterminalFunctions::to_string(value); },
+					false,
+					ofs,
+					message_paragraph+2
+				);
+				ofs << std::endl;
+
+				JsonHelper::write_content_as_json_format<int64_t, uint64_t>(
+					"character_id_map(std::unordered_map<int64_t, uint64_t>)",
+					this->character_id_map,
+					[](const int64_t &key){ return std::to_string((uint8_t)key); },
+					[](const uint64_t &value){ return std::to_string(value); },
+					false,
+					ofs,
+					message_paragraph+2
+				);
+				ofs << std::endl;
+
+
+				ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "]" << std::endl;
+				ofs << stool::Message::get_paragraph_string(message_paragraph) << "}" << std::endl;
+            
+			}
+	
 
 			/**
 			 * @brief Return the memory usage information of this grammar as a vector of strings
@@ -911,7 +971,7 @@ namespace dynRLSLP
 				const DictionaryForLayeredRLSLP &rlslp_dictionary = r.grammar.get_rlslp_dictionary();
 
 				const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = rlslp_dictionary.get_explicit_nonterminal_rule_list();
-				r.fastParentDictionary.set_pointer(&rlslp_dictionary.get_relative_max_level_list(), r.grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression);
+				r.fastParentDictionary.set_pointer(&rlslp_dictionary.get_relative_max_level_list(), r.grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedRecompression);
 
 				for (uint64_t i = 0; i < rlslp_dictionary.count_explicit_nonterminals(); i++)
 				{

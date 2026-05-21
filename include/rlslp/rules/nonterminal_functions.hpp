@@ -79,13 +79,10 @@ namespace dynRLSLP
         {
             uint64_t base_sig = NonterminalFunctions::get_explicit_nonterminal(sig);
             uint64_t level = NonterminalFunctions::get_relative_level(sig);
-            if (level == 0)
-            {
+            if(level == 0){
                 return std::to_string(base_sig);
-            }
-            else
-            {
-                return std::to_string(base_sig) + "(D" + std::to_string(level) + ")";
+            }else{
+                return std::to_string(base_sig) + "Lev" + std::to_string(level);
             }
         }
 

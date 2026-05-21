@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <functional>
 #include "../../../rlslp/static_operations/run_rule_vector.hpp"
+#include "../../../json_helper.hpp"
 
 
 namespace dynRLSLP
@@ -50,6 +51,10 @@ namespace dynRLSLP
             bool is_null() const
             {
                 return this->nonterminal == std::numeric_limits<ExplicitNonterminal>::max() && this->position == std::numeric_limits<uint64_t>::max();
+            }
+
+            std::string to_string() const{
+                return "(" + NonterminalFunctions::to_string(this->nonterminal) + ", " + std::to_string(this->position) + ")";
             }
         };
 
@@ -210,6 +215,63 @@ namespace dynRLSLP
                 }
                 return true;
             }
+
+            
+            void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
+                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "{" << std::endl;
+                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"ManyParentsManager\"," << std::endl;
+                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "{" << std::endl;
+
+                JsonHelper::write_content_as_json_format<std::vector<NonterminalWithRelativeLevel>>(
+                    "tertiary_parent_list(std::vector<std::vector<NonterminalWithRelativeLevel>>)",
+                    this->tertiary_parent_list_,
+                    [](const std::vector<NonterminalWithRelativeLevel> &value){ 
+                        std::stringstream ss;
+                        ss << "[";
+                        for(uint64_t i = 0; i < value.size(); i++){
+                            ss << NonterminalFunctions::to_string(value[i]);
+                            if(i != value.size() - 1){
+                                ss << ", ";
+                            }
+                        }
+                        ss << "]";
+                        return ss.str(); },
+                    true,
+                    ofs,
+                    message_paragraph+2
+                );
+                ofs << std::endl;
+
+                JsonHelper::write_content_as_json_format<std::unordered_map<QuaternaryKey, NonterminalWithRelativeLevel>>(
+                    "quaternary_parent_list(std::vector<std::unordered_map<QuaternaryKey, NonterminalWithRelativeLevel>>)",
+                    this->quaternary_parent_list_,
+                    [](const std::unordered_map<QuaternaryKey, NonterminalWithRelativeLevel> &key){ 
+                        uint64_t item_count = key.size();
+                        uint64_t index = 0;
+                        std::stringstream ss;
+                        ss << "{";
+                        for(auto key_value : key){
+                            index++;
+                            ss << "\"" << NonterminalFunctions::to_string(key_value.first) << "\": \"" << NonterminalFunctions::to_string(key_value.second) << "\"";
+                            if(index < item_count){
+                                ss << ", ";
+                            }
+                        }
+                        ss << "}";
+                        return ss.str(); 
+                    },
+                    true,
+                    ofs,
+                    message_paragraph+2
+                );
+                ofs << std::endl;
+
+                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "}" << std::endl;
+                ofs << stool::Message::get_paragraph_string(message_paragraph) << "}" << std::endl;
+            }
+            
+
+
             /*
             bool has_single_parent(const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list) const {
                 if(this->tertiary_parent_list_.size() >= 2){

@@ -7,6 +7,8 @@
 #include <unordered_set>
 #include <functional>
 #include "../rules/rlslp_rule_info.hpp"
+#include "stool/include/all.hpp"
+#include "../../json_helper.hpp"
 
 namespace dynRLSLP
 {
@@ -356,6 +358,62 @@ namespace dynRLSLP
             std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Long random bits: " << this->longRandomBits.size() << ", counts: " << long_value_count << std::endl;
             std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
         }
+
+		void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
+            
+			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "{" << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"RandomBitDictionary\"," << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "{" << std::endl;
+            ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "\"seed\": " << this->seed << ", " << std::endl;
+            ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "\"mt\": " << "\"[std::mt19937_64*]\"" << ", " << std::endl;
+            ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "\"dist\": " << "\"[std::uniform_int_distribution<uint64_t>]\"" << ", " << std::endl;
+            JsonHelper::write_content_as_json_format<uint16_t>(
+                "short_random_bits(std::vector<uint16_t>)",
+                this->shortRandomBits,
+                [](const uint16_t &value){ return std::to_string(value); },
+                false,
+                ofs,
+                message_paragraph+2
+            );
+            JsonHelper::write_content_as_json_format<NonterminalWithRelativeLevel, uint64_t>(
+                "middle_random_bits(std::unordered_map<int64_t, uint64_t>)",
+                this->middleRandomBits,
+                [](const NonterminalWithRelativeLevel &key){ return NonterminalFunctions::to_string(key); },
+                [](const uint64_t &value){ return std::to_string(value); },
+                true,
+                ofs,
+                message_paragraph+2
+            );
+
+            JsonHelper::write_content_as_json_format<NonterminalWithRelativeLevel, std::vector<uint64_t>>(
+                "long_random_bits(std::unordered_map<int64_t, std::vector<uint64_t>>)",
+                this->longRandomBits,
+                [](const NonterminalWithRelativeLevel &key){ return NonterminalFunctions::to_string(key); },
+                [](const std::vector<uint64_t> &value){ 
+                    std::stringstream ss;
+                    ss << "[";
+                    for(uint64_t i = 0; i < value.size(); i++){
+                        ss << value[i];
+                        if(i != value.size() - 1){
+                            ss << ", ";
+                        }
+                    }
+                    ss << "]";
+                    return ss.str();
+                },
+                true,
+                ofs,
+                message_paragraph+2
+            );
+
+
+
+			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "}" << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph) << "}" << std::endl;
+            
+		}
+
+
         //}@
 
         ////////////////////////////////////////////////////////////////////////////////

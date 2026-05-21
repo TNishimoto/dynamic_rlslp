@@ -80,7 +80,7 @@ namespace dynRLSLP
                 if(text.size() == 0){
                     throw std::runtime_error("Error in build_common_sequence_from_text: text is empty");
                 }
-                FastCommonSequenceBuilder::initialize(dic.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression);
+                FastCommonSequenceBuilder::initialize(dic.get_grammar_parsing_type() == GrammarParsingType::RestrictedRecompression);
                 std::deque<RunRuleBody> current_seq;
                 bool b1 = TryShrinkAndPow::try_shrink_char(text, dic, current_seq, stool::Message::increment_paragraph_level(message_paragraph));
                 if(!b1){

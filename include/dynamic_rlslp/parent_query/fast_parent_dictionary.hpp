@@ -4,6 +4,7 @@
 #include "./sub/few_parents_manager.hpp"
 #include "./sub/parent_vector_manager.hpp"
 #include "../../types/types.hpp"
+#include "../../json_helper.hpp"
 
 namespace dynRLSLP
 {
@@ -574,6 +575,80 @@ namespace dynRLSLP
                 std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|           max size:\t\t" << quaternary_list_max_size << std::endl;
 
                 std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
+            }
+
+            void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
+                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "{" << std::endl;
+                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"FastParentDictionary\"," << std::endl;
+                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "{" << std::endl;
+
+                JsonHelper::write_content_as_json_format<NonterminalWithRelativeLevel>(
+                    "primaryParents(std::vector<NonterminalWithRelativeLevel>)",
+                    this->primaryParents,
+                    [](const NonterminalWithRelativeLevel &value){ return NonterminalFunctions::to_string(value); },
+                    false,
+                    ofs,
+                    message_paragraph+2
+                );
+
+                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"sub_pointer\": [" << std::endl;
+
+                for(uint64_t i = 0; i < this->sub_pointer.size(); i++){
+                    ManagerFlag manager_flag = this->sub_pointer_status_[i];
+                    if(manager_flag == ManagerFlag::Single){
+                        std::pair<NonterminalWithRelativeLevel, bool> special_parent = this->get_special_secondary_parent(i);
+
+                        ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "\"(" << NonterminalFunctions::to_string(special_parent.first) << ", " << special_parent.second << ")\"";
+                    }else if(manager_flag == ManagerFlag::FewParentsManager){
+                        FewParentsManager *few_parents_manager = (FewParentsManager *)this->sub_pointer[i];
+                        few_parents_manager->write_content_as_json_format(ofs, message_paragraph+2);
+                    }
+                    else if(manager_flag == ManagerFlag::Vector){
+                        const std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[i];
+                        JsonHelper::write_content_as_json_format<NonterminalWithRelativeLevel>(
+                            "vec(std::vector<NonterminalWithRelativeLevel>)",
+                            *vec,
+                            [](const NonterminalWithRelativeLevel &value){ return NonterminalFunctions::to_string(value); },
+                            false,
+                            ofs,
+                            message_paragraph+2
+                        );
+                    }
+                    else if(manager_flag == ManagerFlag::None){
+                        ofs << stool::Message::get_paragraph_string(message_paragraph+2)<< "null";
+                    }
+
+                    if(i != this->sub_pointer.size() - 1){
+                        ofs << "," << std::endl;
+                    }
+                }
+                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "]" << std::endl;
+                
+                
+                JsonHelper::write_content_as_json_format<ManagerFlag>(
+                    "sub_pointer_status_(std::vector<ManagerFlag>)",
+                    this->sub_pointer_status_,
+                    [](const ManagerFlag &value){ return std::to_string((uint8_t)value); },
+                    false,
+                    ofs,
+                    message_paragraph+2
+                );
+                
+                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"is_restricted_recompression_mode\": " << this->is_restricted_recompression_mode << ", " << std::endl;
+                if(this->relative_max_level_list_ != nullptr){
+                    JsonHelper::write_content_as_json_format<uint16_t>(
+                        "relative_max_level_list_(std::vector<uint16_t>)",
+                        *this->relative_max_level_list_,
+                        [](const uint16_t &value){ return std::to_string(value); },
+                        false,
+                        ofs,
+                        message_paragraph+2
+                    );
+                }else{
+                    ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"relative_max_level_list_\": ";
+                    ofs << "null";
+                }
+                ofs << std::endl;
             }
 
             /**

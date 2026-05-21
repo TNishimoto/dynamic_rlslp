@@ -290,6 +290,44 @@ namespace dynRLSLP
                     this->many_parents_manager_->print_tree(explicit_nonterminal, this->secondary_parent_list_.size(), this->level_diff_list_, message_paragraph + 1);
                 }
             }
+
+            void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
+                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "{" << std::endl;
+                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"FewParentsManager\"," << std::endl;
+                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "{" << std::endl;
+
+                JsonHelper::write_content_as_json_format<uint16_t>(
+                    "level_diff_list(std::vector<uint16_t>)",
+                    this->level_diff_list_,
+                    [](const uint16_t &value){ return std::to_string(value); },
+                    false,
+                    ofs,
+                    message_paragraph+2
+                );
+                ofs << std::endl;
+
+                JsonHelper::write_content_as_json_format<NonterminalWithRelativeLevel>(
+                    "secondary_parent_list(std::vector<NonterminalWithRelativeLevel>)",
+                    this->secondary_parent_list_,
+                    [](const NonterminalWithRelativeLevel &value){ return NonterminalFunctions::to_string(value); },
+                    false,
+                    ofs,
+                    message_paragraph+2
+                );
+                ofs << std::endl;
+
+                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"many_parents_manager\": ";
+                if(this->many_parents_manager_ != nullptr){
+                    this->many_parents_manager_->write_content_as_json_format(ofs, message_paragraph+2);
+                }else{
+                    ofs << "null";
+                }
+                ofs << std::endl;
+                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "}" << std::endl;
+                ofs << stool::Message::get_paragraph_string(message_paragraph) << "}" << std::endl;
+            }
+
+
             /**
              * @brief Verifies that relative levels in the secondary list are unique.
              * @return True if verification succeeds.

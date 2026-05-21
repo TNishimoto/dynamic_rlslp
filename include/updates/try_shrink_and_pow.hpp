@@ -158,7 +158,7 @@ namespace dynRLSLP
                         assert(RunRuleBody::verify_vector(output));
                     }
                 }
-                else if (dic.get_grammar_parsing_type() == GrammarParsingType::RestrictedBlockCompression)
+                else if (dic.get_grammar_parsing_type() == GrammarParsingType::RestrictedRecompression)
                 {
                     if (current_level % 2 == 0)
                     {

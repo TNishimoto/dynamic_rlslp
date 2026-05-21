@@ -97,13 +97,15 @@ namespace dynRLSLP
          * @param output_strings Output lines for the visualization.
          */
         static void compute_derivation_tree_sub(const std::vector<NonterminalWithRelativeLevel> &items, uint64_t target_level, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list,
-                                                const std::vector<uint16_t> &explicit_nonterminal_level_list, const std::vector<uint64_t> &explicit_nonterminal_length_list, uint64_t padding, std::vector<std::string> &output_strings)
+                                                const std::vector<uint16_t> &explicit_nonterminal_level_list, const std::vector<uint64_t> &explicit_nonterminal_length_list, uint64_t padding, 
+                                                uint64_t max_level,
+                                                std::vector<std::string> &output_strings)
         {
             std::vector<NonterminalWithRelativeLevel> next_items = compute_level_sequence(items, target_level, explicit_nonterminal_rule_list, explicit_nonterminal_level_list, explicit_nonterminal_length_list);
-            stool::DebugPrinter::print_integers(next_items, std::to_string(target_level));
             if (target_level > 0)
             {
-                compute_derivation_tree_sub(next_items, target_level - 1, explicit_nonterminal_rule_list, explicit_nonterminal_level_list, explicit_nonterminal_length_list, padding, output_strings);
+                compute_derivation_tree_sub(next_items, target_level - 1, explicit_nonterminal_rule_list, explicit_nonterminal_level_list, explicit_nonterminal_length_list, padding, max_level, output_strings);
+                std::cout << "\r target_level: " << target_level << " / " << max_level << std::flush;
 
                 uint64_t pos = 0;
                 uint64_t total_length = 0;
@@ -122,7 +124,7 @@ namespace dynRLSLP
                     else if (height == target_level)
                     {
                         output_strings[pos].push_back('-');
-                        output_strings[pos].append(std::to_string(next_items[i]));
+                        output_strings[pos].append(NonterminalFunctions::to_string(next_items[i]));
                         pos++;
                         for (uint64_t j = 1; j < length; j++)
                         {
@@ -189,6 +191,7 @@ namespace dynRLSLP
         static std::vector<std::string> compute_derivation_tree(const std::vector<NonterminalWithRelativeLevel> &items, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list,
                                                                 const std::vector<uint16_t> &explicit_nonterminal_level_list, const std::vector<uint64_t> &explicit_nonterminal_length_list, uint64_t padding = 3)
         {
+            std::cout << "Computing the derivation tree..." << std::endl;
             uint64_t max_level = 0;
             uint64_t length = 0;
             for (auto sig : items)
@@ -198,7 +201,8 @@ namespace dynRLSLP
             }
             std::vector<std::string> output_strings;
             output_strings.resize(length);
-            compute_derivation_tree_sub(items, max_level, explicit_nonterminal_rule_list, explicit_nonterminal_level_list, explicit_nonterminal_length_list, padding, output_strings);
+            compute_derivation_tree_sub(items, max_level, explicit_nonterminal_rule_list, explicit_nonterminal_level_list, explicit_nonterminal_length_list, padding, max_level, output_strings);
+            std::cout << std::endl;
             return output_strings;
         }
     };
