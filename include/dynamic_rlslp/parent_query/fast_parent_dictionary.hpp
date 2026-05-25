@@ -23,12 +23,12 @@ namespace dynRLSLP
 
         public:
             inline static const int64_t EMPTY_FLAG = INT64_MAX;
-            static inline uint64_t MUDA_COUNT = 0;
-            static inline uint64_t NOT_MUDA_COUNT = 0;
-            bool USE_CACHE = false;
+            //static inline uint64_t MUDA_COUNT = 0;
+            //static inline uint64_t NOT_MUDA_COUNT = 0;
+            //bool USE_CACHE = false;
 
-            static inline std::unordered_map<ExplicitNonterminal, TemporaryOccurrence> muda_nonterminal_map;
-            static inline std::unordered_map<ExplicitNonterminal, uint64_t> muda_nonterminal_map2;
+            //static inline std::unordered_map<ExplicitNonterminal, TemporaryOccurrence> muda_nonterminal_map;
+            //static inline std::unordered_map<ExplicitNonterminal, uint64_t> muda_nonterminal_map2;
 
             ////////////////////////////////////////////////////////////////////////////////
             ///   @name Lightweight functions for accessing to properties of this class
@@ -422,158 +422,92 @@ namespace dynRLSLP
              */
             void print_statistics(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
             {
-                uint64_t primary_null_count = 0;
-                uint64_t secondary_list_count = 0;
-                // uint64_t few_parents_manager_null_count = 0;
+                /*
+                std::vector<NonterminalWithRelativeLevel> primaryParents;
+                std::vector<void *> sub_pointer;
+                std::vector<ManagerFlag> sub_pointer_status_;
+                */
+    
 
-                uint64_t secondary_parent_list_size_sum = 0;
-                uint64_t secondary_parent_list_avg = 0;
-                uint64_t secondary_parent_list_size1 = 0;
-                uint64_t secondary_parent_list_size2 = 0;
+                uint64_t lightweight_pointer_count = 0;
+                uint64_t null_pointer_count = 0;
+                uint64_t middleweight_pointer_count = 0;
+                uint64_t heavyweight_pointer_count = 0;
 
-                uint64_t parent_vector_count = 0;
-                uint64_t parent_vector_size_sum = 0;
-                uint64_t parent_vector_avg = 0;
-                uint64_t parent_vector_max = 0;
-
-
-
-                uint64_t secondary_parent_list_max_size = 0;
-
-                uint64_t tertiary_group_count = 0;
-                uint64_t tertiary_group_length_sum = 0;
-                uint64_t tertiary_group_length_avg = 0;
-                uint64_t tertiary_group_length_max = 0;
-
-                uint64_t tertiary_group_element_sum = 0;
-                uint64_t tertiary_group_element_avg = 0;
-
-                uint64_t quaternary_parent_group_count = 0;
-                uint64_t quaternary_parent_group_length_sum = 0;
-                uint64_t quaternary_parent_group_length_avg = 0;
-                uint64_t quaternary_parent_group_element_sum = 0;
-                uint64_t quaternary_parent_group_element_avg = 0;
-
-                uint64_t tertiary_list_max_size = 0;
-                uint64_t quaternary_list_max_size = 0;
-
-                for (uint64_t i = 0; i < this->primaryParents.size(); i++)
-                {
-                    if (this->primaryParents[i] == EMPTY_FLAG)
-                    {
-                        primary_null_count++;
+                for (uint64_t i = 0; i < this->primaryParents.size(); i++) {
+                    if (this->primaryParents[i] == EMPTY_FLAG) {
+                        null_pointer_count++;
+                    }else{
+                        lightweight_pointer_count++;
                     }
                 }
+                for (uint64_t i = 0; i < this->sub_pointer.size(); i++) {
+                    if (this->sub_pointer[i] == nullptr) {
+                        null_pointer_count++;
+                    }else if (this->sub_pointer_status_[i] == ManagerFlag::Single) {
+                        lightweight_pointer_count++;
+                    }else if (this->sub_pointer_status_[i] == ManagerFlag::FewParentsManager) {
+                        FewParentsManager *few_parents_manager = (FewParentsManager *)this->sub_pointer[i];
+                        middleweight_pointer_count += few_parents_manager->secondary_parent_count();
+                        if(few_parents_manager->get_many_parents_manager() != nullptr){                            
+                            heavyweight_pointer_count += few_parents_manager->get_many_parents_manager()->size();
+                        }
+                    }else if (this->sub_pointer_status_[i] == ManagerFlag::Vector) {
+                        const std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[i];
+                        lightweight_pointer_count += vec->size();
+                    }
+                }
+                uint64_t total_pointer_count = lightweight_pointer_count + middleweight_pointer_count + heavyweight_pointer_count + null_pointer_count;
+
+
+                std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics (FastParentDictionary): " << total_pointer_count << " pointers" << std::endl;
+                std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Number of lightweight Pointers: " << lightweight_pointer_count << std::endl;
+                std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Number of middleweight Pointers: " << middleweight_pointer_count << std::endl;
+                std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Number of heavyweight Pointers: " << heavyweight_pointer_count << std::endl;
+                std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Number of null Pointers: " << null_pointer_count << std::endl;
+                std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
+            }
+
+            void print_memory_breakdown(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
+            {
+                std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Memory Breakdown (FastParentDictionary): " << this->size_in_bytes() << " bytes" << std::endl;
+                std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "primaryParents: " << stool::Memory::estimate_memory_usage(this->primaryParents) << " bytes" << std::endl;
+                std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "sub_pointer: " << stool::Memory::estimate_memory_usage(this->sub_pointer) << " bytes" << std::endl;
+                std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "sub_pointer_status_: " << stool::Memory::estimate_memory_usage(this->sub_pointer_status_) << " bytes" << std::endl;
+
+                uint64_t few_parents_manager_size = 0;
+                uint64_t few_parents_manager_count = 0;
+                uint64_t many_parents_manager_size = 0;
+                uint64_t many_parents_manager_count = 0;
+                uint64_t sub_parent_vector_size = 0;
+                uint64_t sub_parent_vector_count = 0;
 
                 for (uint64_t i = 0; i < this->sub_pointer.size(); i++)
                 {
                     ManagerFlag manager_flag = this->sub_pointer_status_[i];
-                    if (manager_flag == ManagerFlag::Single)
+                    if (manager_flag == ManagerFlag::FewParentsManager)
                     {
-                        // secondary_list_count++;
-                    }
-                    else if (manager_flag == ManagerFlag::Vector){
-                        parent_vector_count++;
-                        const std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[i];
-                        parent_vector_size_sum += vec->size();
-                        parent_vector_max = std::max<uint64_t>(parent_vector_max, vec->size());
-                    }
-                    else if (manager_flag == ManagerFlag::FewParentsManager)
-                    {
-                        secondary_list_count++;
                         FewParentsManager *few_parents_manager = (FewParentsManager *)this->sub_pointer[i];
-                        uint64_t secondary_parent_count = few_parents_manager->secondary_parent_count();
-                        //uint64_t secondary_list_size = few_parents_manager->size();
-                        secondary_parent_list_size_sum += secondary_parent_count;
-                        secondary_parent_list_max_size = std::max(secondary_parent_list_max_size, secondary_parent_count);
-                        if (secondary_parent_count == 1)
-                        {
-                            secondary_parent_list_size1++;
-                        }
-                        else if (secondary_parent_count == 2)
-                        {
-                            secondary_parent_list_size2++;
-                        }
+                        few_parents_manager_size += few_parents_manager->size_in_bytes_without_many_parents_manager();
 
-                        const ManyParentsManager *many_parents_manager = few_parents_manager->get_many_parents_manager();
-                        if (many_parents_manager != nullptr)
-                        {
-                            tertiary_group_count++;
-                            uint64_t tertiary_group_length = many_parents_manager->tertiary_parents_list_length();
-
-                            tertiary_group_length_max = std::max(tertiary_group_length_max, tertiary_group_length);
-                            tertiary_group_length_sum += tertiary_group_length;
-                            tertiary_group_element_sum += many_parents_manager->count_tertiary_parents();
-                            tertiary_list_max_size = std::max(tertiary_list_max_size, many_parents_manager->max_tertiary_parent_count());
-
-                            if (many_parents_manager->has_quaternary_parents())
-                            {
-                                quaternary_parent_group_count++;
-                                quaternary_parent_group_length_sum += many_parents_manager->quaternary_parents_list_length();
-                                quaternary_parent_group_element_sum += many_parents_manager->count_quaternary_parents();
-                                quaternary_list_max_size = std::max(quaternary_list_max_size, many_parents_manager->max_quaternary_parent_count());
-                            }
+                        if(few_parents_manager->get_many_parents_manager() != nullptr){
+                            many_parents_manager_count++;
+                            many_parents_manager_size += few_parents_manager->get_many_parents_manager()->size_in_bytes();
                         }
+                        few_parents_manager_count++;
                     }
+                    else if (this->sub_pointer_status_[i] == ManagerFlag::Vector && this->sub_pointer[i] != nullptr)
+                    {
+                        std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[i];
+                        sub_parent_vector_size += stool::Memory::estimate_memory_usage(*vec);
+                        sub_parent_vector_count++;
+                    }
+    
                 }
 
-                secondary_parent_list_avg = secondary_parent_list_size_sum / secondary_list_count;
-                tertiary_group_length_avg = tertiary_group_length_sum / tertiary_group_count;
-                tertiary_group_element_avg = tertiary_group_element_sum / tertiary_group_count;
-                quaternary_parent_group_length_avg = quaternary_parent_group_length_sum / quaternary_parent_group_count;
-                quaternary_parent_group_element_avg = quaternary_parent_group_element_sum / quaternary_parent_group_count;
-                parent_vector_avg = parent_vector_size_sum / parent_vector_count;
-
-
-
-                uint64_t tertiary_list_avg_size = tertiary_group_element_sum / tertiary_group_length_sum;
-                uint64_t quaternary_list_avg_size = quaternary_parent_group_element_sum / quaternary_parent_group_length_sum;
-
-                std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics(ParentDictionary):" << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "PrimaryList:\t\t" << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|          size:\t\t" << this->primaryParents.size() << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|          null:\t\t" << primary_null_count << std::endl;
-
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "ParentVector: \t\t" << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|              count:\t\t" << parent_vector_count << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|         total size:\t\t" << parent_vector_size_sum << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|                avg:\t\t" << parent_vector_avg << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|                max:\t\t" << parent_vector_max << std::endl;
-
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "SecondaryList: \t\t" << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|              count:\t\t" << secondary_list_count << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|         total size:\t\t" << secondary_parent_list_size_sum << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|                avg:\t\t" << secondary_parent_list_avg << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|                max:\t\t" << secondary_parent_list_max_size << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|              size1:\t\t" << secondary_parent_list_size1 << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|              size2:\t\t" << secondary_parent_list_size2 << std::endl;
-                // std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "   subpointer count:\t\t" << many_parents_manager_count << std::endl;
-
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "TertiaryGroup: \t\t" << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|              count:\t\t" << tertiary_group_count << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|       total length:\t\t" << tertiary_group_length_sum << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|         avg length:\t\t" << tertiary_group_length_avg << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|                max:\t\t" << tertiary_group_length_max << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|      total element:\t\t" << tertiary_group_element_sum << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|        avg element:\t\t" << tertiary_group_element_avg << std::endl;
-
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "QuaternaryGroup: \t\t" << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|              count:\t\t" << quaternary_parent_group_count << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|       total length:\t\t" << quaternary_parent_group_length_sum << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|         avg length:\t\t" << quaternary_parent_group_length_avg << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|      total element:\t\t" << quaternary_parent_group_element_sum << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|        avg element:\t\t" << quaternary_parent_group_element_avg << std::endl;
-
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "TertiaryList: \t\t" << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|              count:\t\t" << tertiary_group_length_sum << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|           avg size:\t\t" << tertiary_list_avg_size << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|           max size:\t\t" << tertiary_list_max_size << std::endl;
-
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "QuaternaryList: \t\t" << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|              count:\t\t" << quaternary_parent_group_length_sum << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|           avg size:\t\t" << quaternary_list_avg_size << std::endl;
-                std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "|           max size:\t\t" << quaternary_list_max_size << std::endl;
-
+                std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "Memory Breakdown (SubParentVector): " << sub_parent_vector_size << " bytes" << ", count: " << sub_parent_vector_count << std::endl;
+                std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "Memory Breakdown (FewParentDictionary): " << few_parents_manager_size << " bytes" << ", count: " << few_parents_manager_count << std::endl;
+                std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "Memory Breakdown (ManyParentDictionary): " << many_parents_manager_size << " bytes" << ", count: " << many_parents_manager_count << std::endl;
                 std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
             }
 
@@ -1045,25 +979,14 @@ namespace dynRLSLP
              */
             uint64_t size_in_bytes() const
             {
+
                 uint64_t total = 0;
-                // Size used by primaryParents
-                total += sizeof(this->primaryParents);
-                total += sizeof(NonterminalWithRelativeLevel) * this->primaryParents.size();
-
-                // Size used by sub_pointer (pointers, not objects themselves)
-                total += sizeof(this->sub_pointer);
-                total += sizeof(void *) * this->sub_pointer.size();
-
-                // Size used by sub_pointer_status_
-                total += sizeof(this->sub_pointer_status_);
-                total += sizeof(ManagerFlag) * this->sub_pointer_status_.size();
-
-                // Size used by is_restricted_recompression_mode
-                total += sizeof(this->is_restricted_recompression_mode);
-
-                // Size used by relative_max_level_list_ pointer (not vector itself, as it's external)
-                total += sizeof(this->relative_max_level_list_);
-
+                total += stool::Memory::estimate_memory_usage(this->primaryParents);
+                total += stool::Memory::estimate_memory_usage(this->sub_pointer);
+                total += stool::Memory::estimate_memory_usage(this->sub_pointer_status_);
+                total += sizeof(is_restricted_recompression_mode);
+                total += sizeof(relative_max_level_list_);
+    
                 // Add the size of dynamically allocated FewParentsManager objects, if any
                 for (size_t i = 0; i < this->sub_pointer.size(); ++i)
                 {
@@ -1075,7 +998,7 @@ namespace dynRLSLP
                     else if (this->sub_pointer_status_[i] == ManagerFlag::Vector && this->sub_pointer[i] != nullptr)
                     {
                         std::vector<NonterminalWithRelativeLevel> *vec = (std::vector<NonterminalWithRelativeLevel> *)this->sub_pointer[i];
-                        total += sizeof(NonterminalWithRelativeLevel) * vec->size();
+                        total += stool::Memory::estimate_memory_usage(*vec);
                     }
                 }
                 return total;

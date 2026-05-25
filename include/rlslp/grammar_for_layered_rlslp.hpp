@@ -26,8 +26,8 @@ namespace dynRLSLP
 	class GrammarForLayeredRLSLP
 	{
 	private:
-		GrammarParsingType grammarParsingType = GrammarParsingType::SignatureEncoding;
-		std::unordered_map<NonterminalWithRelativeLevel, uint64_t> documentCounter; // M_{doc}
+		GrammarParsingType grammar_parsing_type = GrammarParsingType::SignatureEncoding;
+		std::unordered_map<NonterminalWithRelativeLevel, uint64_t> document_counter; // M_{doc}
 		RandomBitDictionary random_bit_dictionary;
 		DictionaryForLayeredRLSLP rlslp_dictionary;
 
@@ -53,8 +53,8 @@ namespace dynRLSLP
 		 * @brief Move constructor; transfers dictionary, documents, and parsing type.
 		 * @param other Source grammar to move from.
 		 */
-		GrammarForLayeredRLSLP(GrammarForLayeredRLSLP &&other) noexcept : grammarParsingType(std::move(other.grammarParsingType)),
-																		  documentCounter(std::move(other.documentCounter)),
+		GrammarForLayeredRLSLP(GrammarForLayeredRLSLP &&other) noexcept : grammar_parsing_type(std::move(other.grammar_parsing_type)),
+																		  document_counter(std::move(other.document_counter)),
 																		  random_bit_dictionary(std::move(other.random_bit_dictionary)),
 																		  rlslp_dictionary(std::move(other.rlslp_dictionary))
 		{
@@ -71,8 +71,8 @@ namespace dynRLSLP
 		{
 			if (this != &other)
 			{
-				this->grammarParsingType = std::move(other.grammarParsingType);
-				this->documentCounter = std::move(other.documentCounter);
+				this->grammar_parsing_type = std::move(other.grammar_parsing_type);
+				this->document_counter = std::move(other.document_counter);
 				this->random_bit_dictionary = std::move(other.random_bit_dictionary);
 				this->rlslp_dictionary = std::move(other.rlslp_dictionary);
 			}
@@ -101,15 +101,15 @@ namespace dynRLSLP
 		 */
 		const std::unordered_map<NonterminalWithRelativeLevel, uint64_t> &get_document_counter() const
 		{
-			return this->documentCounter;
+			return this->document_counter;
 		}
 		/**
 		 * @brief Return the grammar parsing algorithm type.
-		 * @return Active GrammarParsingType (nonterminal encoding or restricted block compression).
+		 * @return Active grammar_parsing_type (nonterminal encoding or restricted block compression).
 		 */
 		GrammarParsingType get_grammar_parsing_type() const
 		{
-			return this->grammarParsingType;
+			return this->grammar_parsing_type;
 		}
 		/**
 		 * @brief Return the number of distinct document roots.
@@ -117,7 +117,7 @@ namespace dynRLSLP
 		 */
 		uint64_t get_distinct_document_count() const
 		{
-			return this->documentCounter.size();
+			return this->document_counter.size();
 		}
 		/**
 		 * @brief Return the total number of document occurrences.
@@ -126,7 +126,7 @@ namespace dynRLSLP
 		uint64_t get_document_count() const
 		{
 			uint64_t sum = 0;
-			for (auto it : this->documentCounter)
+			for (auto it : this->document_counter)
 			{
 				sum += it.second;
 			}
@@ -153,7 +153,7 @@ namespace dynRLSLP
 		 */
 		bool has_root() const
 		{
-			return this->documentCounter.size() == 1;
+			return this->document_counter.size() == 1;
 		}
 		/**
 		 * @brief Return the base nonterminal index of the unique document root.
@@ -162,17 +162,17 @@ namespace dynRLSLP
 		 */
 		uint64_t get_root() const
 		{
-			if (this->documentCounter.size() == 0)
+			if (this->document_counter.size() == 0)
 			{
 				throw std::runtime_error("No document");
 			}
-			else if (this->documentCounter.size() > 1)
+			else if (this->document_counter.size() > 1)
 			{
 				throw std::runtime_error("Multiple documents");
 			}
 			else
 			{
-				return this->documentCounter.begin()->first;
+				return this->document_counter.begin()->first;
 			}
 		}
 		/**
@@ -186,7 +186,7 @@ namespace dynRLSLP
 
 		StaticRLSLP convert_to_rlslp() const
 		{
-			if(this->documentCounter.size() != 1){
+			if(this->document_counter.size() != 1){
 				throw std::runtime_error("The size of document counter must be 1.");
 			}
 			const DictionaryForLayeredRLSLP &rlslp_dictionary = this->get_rlslp_dictionary();
@@ -224,7 +224,7 @@ namespace dynRLSLP
 
 		StaticRLSLP convert_to_canonized_rlslp() const
 		{
-			if(this->documentCounter.size() != 1){
+			if(this->document_counter.size() != 1){
 				throw std::runtime_error("The size of document counter must be 1.");
 			}
 			//NonterminalWithRelativeLevel root = this->get_root();
@@ -293,12 +293,12 @@ namespace dynRLSLP
 			this->clear();
 			if (parser == GrammarParsingType::RestrictedRecompression)
 			{
-				this->grammarParsingType = GrammarParsingType::RestrictedRecompression;
+				this->grammar_parsing_type = GrammarParsingType::RestrictedRecompression;
 				this->random_bit_dictionary.initialize(seed);
 			}
 			else
 			{
-				this->grammarParsingType = GrammarParsingType::SignatureEncoding;
+				this->grammar_parsing_type = GrammarParsingType::SignatureEncoding;
 			}
 		}
 		/**
@@ -317,7 +317,7 @@ namespace dynRLSLP
 		{
 			this->random_bit_dictionary.clear();
 			this->rlslp_dictionary.clear();
-			this->documentCounter.clear();
+			this->document_counter.clear();
 		}
 
 		/**
@@ -326,10 +326,10 @@ namespace dynRLSLP
 		 */
 		void swap(GrammarForLayeredRLSLP &other)
 		{
-			std::swap(this->grammarParsingType, other.grammarParsingType);
+			std::swap(this->grammar_parsing_type, other.grammar_parsing_type);
 			this->random_bit_dictionary.swap(other.random_bit_dictionary);
 			this->rlslp_dictionary.swap(other.rlslp_dictionary);
-			this->documentCounter.swap(other.documentCounter);
+			this->document_counter.swap(other.document_counter);
 		}
 		/**
 		 * @brief Register a document rooted at the given nonterminal.
@@ -339,15 +339,15 @@ namespace dynRLSLP
 		{
 			NonterminalLessComparer::explicit_nonterminal_rule_list = &this->rlslp_dictionary.get_explicit_nonterminal_rule_list();
 
-			auto f = this->documentCounter.find(i);
-			if (f == this->documentCounter.end())
+			auto f = this->document_counter.find(i);
+			if (f == this->document_counter.end())
 			{
-				this->documentCounter[i] = 1;
+				this->document_counter[i] = 1;
 				// this->parentList[nonterminal].insert(DOCUMENT_MARK);
 			}
 			else
 			{
-				this->documentCounter[i]++;
+				this->document_counter[i]++;
 			}
 		}
 		/**
@@ -358,18 +358,18 @@ namespace dynRLSLP
 		 */
 		bool remove_document(NonterminalWithRelativeLevel i)
 		{
-			auto f = this->documentCounter.find(i);
-			if (f == this->documentCounter.end())
+			auto f = this->document_counter.find(i);
+			if (f == this->document_counter.end())
 			{
 				throw std::runtime_error("Document not found");
 			}
 			else
 			{
-				assert(this->documentCounter[i] > 0);
-				this->documentCounter[i]--;
-				if (this->documentCounter[i] == 0)
+				assert(this->document_counter[i] > 0);
+				this->document_counter[i]--;
+				if (this->document_counter[i] == 0)
 				{
-					this->documentCounter.erase(i);
+					this->document_counter.erase(i);
 				}
 				return true;
 			}
@@ -384,7 +384,7 @@ namespace dynRLSLP
 
 			ExplicitNonterminal new_number = this->rlslp_dictionary.add_new_explicit_nonterminal();
 
-			if (this->grammarParsingType == GrammarParsingType::RestrictedRecompression)
+			if (this->grammar_parsing_type == GrammarParsingType::RestrictedRecompression)
 			{
 				this->random_bit_dictionary.add_new_element();
 			}
@@ -433,7 +433,7 @@ namespace dynRLSLP
 		 */
 		void create_random_bit(ExplicitNonterminal explicit_nonterminal)
 		{
-			if (this->grammarParsingType == GrammarParsingType::RestrictedRecompression)
+			if (this->grammar_parsing_type == GrammarParsingType::RestrictedRecompression)
 			{
 				uint64_t single_count = this->rlslp_dictionary.get_relative_max_level_list()[explicit_nonterminal];
 				this->random_bit_dictionary.create_random_bit(explicit_nonterminal, single_count);
@@ -446,7 +446,7 @@ namespace dynRLSLP
 		 */
 		void erase_random_bit(NonterminalWithRelativeLevel nonterminal)
 		{
-			if (this->grammarParsingType == GrammarParsingType::RestrictedRecompression)
+			if (this->grammar_parsing_type == GrammarParsingType::RestrictedRecompression)
 			{
 #ifdef DEBUG
 				ExplicitNonterminal explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(nonterminal);
@@ -462,10 +462,20 @@ namespace dynRLSLP
 		void print_documents() const
 		{
 			std::cout << "Documents: " << std::endl;
-			for (auto it : this->documentCounter)
+			for (auto it : this->document_counter)
 			{
 				std::cout << it.first << " " << it.second << std::endl;
 			}
+		}
+
+		uint64_t size_in_bytes() const
+		{
+			uint64_t total_size = 0;
+			total_size += this->rlslp_dictionary.size_in_bytes();
+			total_size += this->random_bit_dictionary.size_in_bytes();
+			total_size += stool::Memory::estimate_memory_usage(this->document_counter);
+			total_size += sizeof(grammar_parsing_type);
+			return total_size;
 		}
 		/**
 		 * @brief Print all grammar rules to standard output.
@@ -473,7 +483,7 @@ namespace dynRLSLP
 		 */
 		void print_info(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
 		{
-			this->rlslp_dictionary.print_info(this->grammarParsingType, message_paragraph);
+			this->rlslp_dictionary.print_info(this->grammar_parsing_type, message_paragraph);
 		}
 		/**
 		 * @brief Print summary statistics to standard output.
@@ -481,23 +491,48 @@ namespace dynRLSLP
 		 */
 		void print_statistics(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
 		{
+			//std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Documents:\t" << this->get_document_counter().size() << std::endl;
 
-			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics(Grammar):" << std::endl;
-			std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Compression Algorithm:\t" << (this->get_grammar_parsing_type() == dynRLSLP::GrammarParsingType::RestrictedRecompression ? "Restricted Recompression" : "Signature Encoding") << std::endl;
-			std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Documents:\t" << this->get_document_counter().size() << std::endl;
+			std::string copmression_algorithm = this->get_grammar_parsing_type() == dynRLSLP::GrammarParsingType::RestrictedRecompression ? "Restricted Recompression" : "Signature Encoding";
+
+			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics (GrammarForLayeredRLSLP): " << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Compression Algorithm:\t" << copmression_algorithm << std::endl;
 
 			const DictionaryForLayeredRLSLP &rlslp_dictionary = this->get_rlslp_dictionary();
 			const std::vector<uint64_t> &explicit_nonterminal_length_list = rlslp_dictionary.get_explicit_nonterminal_length_list();
 			if (this->has_root())
 			{
+				int64_t root = this->get_root();
+				uint64_t text_length = NonterminalFunctions::get_length(root, explicit_nonterminal_length_list);
+	
+				std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Text Length:\t" << text_length << std::endl;
 				std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "The level of the derivation tree: " << this->get_rlslp_dictionary().get_explicit_nonterminal_level_list()[this->get_root()] << std::endl;
-				std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "The length of the derivation tree: " << NonterminalFunctions::get_length(this->get_root(), explicit_nonterminal_length_list) << std::endl;
 			}
 			else
 			{
 				std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "The grammar does not have a root." << std::endl;
 			}
 			rlslp_dictionary.print_statistics(message_paragraph + 1);
+			random_bit_dictionary.print_statistics(message_paragraph + 1);
+			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
+
+		}
+
+		void print_memory_breakdown(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
+		{
+			//std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Documents:\t" << this->get_document_counter().size() << std::endl;
+
+
+			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Memory Breakdown (GrammarForLayeredRLSLP): " << this->size_in_bytes() << " bytes" << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "document_counter: " << stool::Memory::estimate_memory_usage(this->document_counter) << " bytes" << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "grammar_parsing_type: " << sizeof(grammar_parsing_type) << " bytes" << std::endl;
+
+			const DictionaryForLayeredRLSLP &rlslp_dictionary = this->get_rlslp_dictionary();
+
+			rlslp_dictionary.print_memory_breakdown(message_paragraph + 1);
+			random_bit_dictionary.print_memory_breakdown(message_paragraph + 1);
+			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
+
 		}
 
 		void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
@@ -507,7 +542,7 @@ namespace dynRLSLP
 			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "{" << std::endl;
 
 			std::stringstream grammarParsingType_ss;
-			if(this->grammarParsingType == GrammarParsingType::RestrictedRecompression)
+			if(this->grammar_parsing_type == GrammarParsingType::RestrictedRecompression)
 			{
 				grammarParsingType_ss << "\"Restricted Recompression\"";
 			}
@@ -516,11 +551,11 @@ namespace dynRLSLP
 				grammarParsingType_ss << "\"Signature Encoding\"";
 			}
 
-			ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "\"grammarParsingType\": " << grammarParsingType_ss.str() << ", " << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "\"grammar_parsing_type\": " << grammarParsingType_ss.str() << ", " << std::endl;
 
 			JsonHelper::write_content_as_json_format<NonterminalWithRelativeLevel, uint64_t>(
-                "documentCounter(std::unordered_map<int64_t, uint64_t>)",
-                this->documentCounter,
+                "document_counter(std::unordered_map<int64_t, uint64_t>)",
+                this->document_counter,
                 [](const NonterminalWithRelativeLevel &key){ return NonterminalFunctions::to_string(key); },
                 [](const uint64_t &value){ return std::to_string(value); },
                 true,
@@ -547,32 +582,32 @@ namespace dynRLSLP
 			/*
 			Checklist
 			*/
-			// Code 0: GrammarParsingType grammarParsingType = GrammarParsingType::SignatureEncoding;
+			// Code 0: grammar_parsing_type grammar_parsing_type = grammar_parsing_type::SignatureEncoding;
 			// Code 4: std::map<int64_t, NonterminalWithRelativeLevel> character_nonterminal_item_map;
 			// Code 5: std::vector<std::vector<NonterminalWithRelativeLevel>> parentVectorList;
 			// Code 5: std::unordered_map<NonterminalWithRelativeLevel, std::set<NonterminalWithRelativeLevel, NonterminalLessComparer>> parentMap;
-			// Code 6: std::unordered_map<NonterminalWithRelativeLevel, uint64_t> documentCounter;
+			// Code 6: std::unordered_map<NonterminalWithRelativeLevel, uint64_t> document_counter;
 			// Code 7: std::vector<NonterminalWithRelativeLevel> unused_nonterminals;
 			// Code 8: std::vector<uint8_t> randomBitList;
 
 			// Code 0
 
-			if (this->grammarParsingType != other.grammarParsingType)
+			if (this->grammar_parsing_type != other.grammar_parsing_type)
 			{
-				std::cout << "this->grammarParsingType = " << (int)this->grammarParsingType << ", other.grammarParsingType = " << (int)other.grammarParsingType << std::endl;
+				std::cout << "this->grammar_parsing_type = " << (int)this->grammar_parsing_type << ", other.grammar_parsing_type = " << (int)other.grammar_parsing_type << std::endl;
 				throw std::runtime_error("Error in verify_nearly_equal: The grammar parsing type must be equal.");
 			}
 
 			this->rlslp_dictionary.verify_nearly_equal(other.rlslp_dictionary);
 
 			// Code 6
-			if (this->documentCounter.size() != other.documentCounter.size())
+			if (this->document_counter.size() != other.document_counter.size())
 			{
 				throw std::runtime_error("Error in verify_nearly_equal: The size of document counter must be equal.");
 			}
 
 			// Code 8
-			if (this->grammarParsingType == GrammarParsingType::RestrictedRecompression)
+			if (this->grammar_parsing_type == GrammarParsingType::RestrictedRecompression)
 			{
 				if (!this->random_bit_dictionary.verify_equal(other.random_bit_dictionary))
 				{
@@ -598,7 +633,7 @@ namespace dynRLSLP
 
 			int typeValue;
 			ifs.read(reinterpret_cast<char *>(&typeValue), sizeof(int));
-			r.grammarParsingType = static_cast<GrammarParsingType>(typeValue);
+			r.grammar_parsing_type = static_cast<GrammarParsingType>(typeValue);
 
 			DictionaryForLayeredRLSLP rlslp_dictionary = DictionaryForLayeredRLSLP::load_from_file(ifs);
 			r.rlslp_dictionary.swap(rlslp_dictionary);
@@ -611,11 +646,11 @@ namespace dynRLSLP
 
 			if (r.rlslp_dictionary.count_explicit_nonterminals() > 0)
 			{
-				r.documentCounter[_document_nonterminal] = _document_counter_size;
+				r.document_counter[_document_nonterminal] = _document_counter_size;
 			}
 
 			// Code 6
-			if (r.grammarParsingType == GrammarParsingType::RestrictedRecompression)
+			if (r.grammar_parsing_type == GrammarParsingType::RestrictedRecompression)
 			{
 				uint64_t seed;
 				std::random_device rd;
@@ -634,20 +669,20 @@ namespace dynRLSLP
 		 */
 		static void store_to_file(const GrammarForLayeredRLSLP &item, std::ofstream &os)
 		{
-			if (item.documentCounter.size() > 1)
+			if (item.document_counter.size() > 1)
 			{
 				throw std::runtime_error("The size of document counter must be 0 or 1.");
 			}
 
-			int typeValue = static_cast<int>(item.grammarParsingType);
+			int typeValue = static_cast<int>(item.grammar_parsing_type);
 			os.write(reinterpret_cast<const char *>(&typeValue), sizeof(int));
 
 			DictionaryForLayeredRLSLP::store_to_file(item.rlslp_dictionary, os);
 
 			// Code 4
-			if (item.documentCounter.size() == 1)
+			if (item.document_counter.size() == 1)
 			{
-				std::pair<NonterminalWithRelativeLevel, uint64_t> document_counter_pair = {item.documentCounter.begin()->first, item.documentCounter.begin()->second};
+				std::pair<NonterminalWithRelativeLevel, uint64_t> document_counter_pair = {item.document_counter.begin()->first, item.document_counter.begin()->second};
 				NonterminalWithRelativeLevel document_counter_nonterminal = document_counter_pair.first;
 				uint64_t document_counter_count = document_counter_pair.second;
 				os.write(reinterpret_cast<const char *>(&document_counter_nonterminal), sizeof(NonterminalWithRelativeLevel));
@@ -662,7 +697,7 @@ namespace dynRLSLP
 			}
 
 			// Code 6
-			if (item.grammarParsingType == GrammarParsingType::RestrictedRecompression)
+			if (item.grammar_parsing_type == GrammarParsingType::RestrictedRecompression)
 			{
 				RandomBitDictionary::store_to_file(item.random_bit_dictionary, os);
 			}

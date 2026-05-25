@@ -15,15 +15,15 @@ namespace dynRLSLP
      * @brief A class for representing a dynamic string \p T[0..n-1] compressed by an RLSLP grammar \p G.
      * @ingroup SearchClasses
      */
-    class DynamicString
+    class DynamicRLSLPString
     {
         DictionaryMode dictionaryMode = DictionaryMode::Standard;
         DynamicGrammarForLayeredRLSLP dynamic_grammar;
 
         // Data Structures for Fast Mode
-        std::vector<uint64_t> leftShortStringList;
-        std::vector<uint64_t> rightShortStringList;
-        std::vector<TemporaryOccurrence> ancestorCacheList;
+        std::vector<uint64_t> left_short_string_list;
+        std::vector<uint64_t> right_short_string_list;
+        std::vector<TemporaryOccurrence> ancestor_cache_list;
 
         inline static const uint64_t ANCESTOR_CACHE_DEPTH = 10;
 
@@ -40,7 +40,7 @@ namespace dynRLSLP
          * @param use_restricted_block_compression If true, use restricted block compression during grammar updates.
          * @param seed Random seed for compression and hashing.
          */
-        DynamicString(GrammarParsingType parser = GrammarParsingType::RestrictedRecompression, int64_t seed = 0) : dynamic_grammar()
+        DynamicRLSLPString(GrammarParsingType parser = GrammarParsingType::RestrictedRecompression, int64_t seed = 0) : dynamic_grammar()
         {
             dynamic_grammar.initialize(parser, seed);
         }
@@ -50,7 +50,7 @@ namespace dynRLSLP
          * @param alphabet Explicit alphabet as byte values.
          * @param seed Random seed for compression and hashing.
          */
-        DynamicString(GrammarParsingType parser, const std::vector<uint8_t> &alphabet, int64_t seed) : dynamic_grammar()
+        DynamicRLSLPString(GrammarParsingType parser, const std::vector<uint8_t> &alphabet, int64_t seed) : dynamic_grammar()
         {
             dynamic_grammar.initialize(parser, alphabet, seed);
         }
@@ -58,17 +58,17 @@ namespace dynRLSLP
         /**
          * @brief Deleted copy constructor.
          */
-        DynamicString(const DynamicString &) = delete;
+        DynamicRLSLPString(const DynamicRLSLPString &) = delete;
         /**
          * @brief Move constructor; transfers grammar and auxiliary caches from \p other.
          * @param other Source instance to move from.
          */
-        DynamicString(DynamicString &&other) noexcept
+        DynamicRLSLPString(DynamicRLSLPString &&other) noexcept
             : dictionaryMode(std::move(other.dictionaryMode)),
               dynamic_grammar(std::move(other.dynamic_grammar)),
-              leftShortStringList(std::move(other.leftShortStringList)),
-              rightShortStringList(std::move(other.rightShortStringList)),
-              ancestorCacheList(std::move(other.ancestorCacheList))
+              left_short_string_list(std::move(other.left_short_string_list)),
+              right_short_string_list(std::move(other.right_short_string_list)),
+              ancestor_cache_list(std::move(other.ancestor_cache_list))
 
         {
         }
@@ -81,21 +81,21 @@ namespace dynRLSLP
         /**
          * @brief Deleted copy assignment operator.
          */
-        DynamicString &operator=(const DynamicString &) = delete;
+        DynamicRLSLPString &operator=(const DynamicRLSLPString &) = delete;
 
         /**
          * @brief Move assignment operator; transfers grammar and auxiliary caches from \p other.
          * @param other Source instance to move from.
          * @return Reference to this instance after the move.
          */
-        DynamicString &operator=(DynamicString &&other) noexcept
+        DynamicRLSLPString &operator=(DynamicRLSLPString &&other) noexcept
         {
             if (this != &other)
             {
                 this->dynamic_grammar = std::move(other.dynamic_grammar);
-                this->leftShortStringList = std::move(other.leftShortStringList);
-                this->rightShortStringList = std::move(other.rightShortStringList);
-                this->ancestorCacheList = std::move(other.ancestorCacheList);
+                this->left_short_string_list = std::move(other.left_short_string_list);
+                this->right_short_string_list = std::move(other.right_short_string_list);
+                this->ancestor_cache_list = std::move(other.ancestor_cache_list);
                 this->dictionaryMode = std::move(other.dictionaryMode);
             }
             return *this;
@@ -110,7 +110,7 @@ namespace dynRLSLP
         {
             if (this->dynamic_grammar.get_distinct_document_count() == 0)
             {
-                throw std::runtime_error("DynamicString::operator[]: No document");
+                throw std::runtime_error("DynamicRLSLPString::operator[]: No document");
             }
             else
             {
@@ -138,7 +138,7 @@ namespace dynRLSLP
          */
         const std::vector<uint64_t> &get_right_short_string_list() const
         {
-            return this->rightShortStringList;
+            return this->right_short_string_list;
         }
         /**
          * @brief Return the left short-string cache used in Fast dictionary mode.
@@ -146,7 +146,7 @@ namespace dynRLSLP
          */
         const std::vector<uint64_t> &get_left_short_string_list() const
         {
-            return this->leftShortStringList;
+            return this->left_short_string_list;
         }
 
         /**
@@ -223,7 +223,13 @@ namespace dynRLSLP
          */
         uint64_t size_in_bytes(bool only_dynamic_memory = false) const
         {
-            return this->dynamic_grammar.size_in_bytes(only_dynamic_memory);
+            uint64_t total = 0;
+            total += stool::Memory::estimate_memory_usage(this->left_short_string_list);
+            total += stool::Memory::estimate_memory_usage(this->right_short_string_list);
+            total += stool::Memory::estimate_memory_usage(this->ancestor_cache_list);
+            total += this->dynamic_grammar.size_in_bytes(only_dynamic_memory);
+            total += (sizeof(DynamicRLSLPString)) - (sizeof(DynamicGrammarForLayeredRLSLP));
+            return total;
         }
 
         /**
@@ -303,7 +309,7 @@ namespace dynRLSLP
         {
             if (this->dictionaryMode == DictionaryMode::Fast)
             {
-                return this->dynamic_grammar.faster_get_all_occurrences_using_memory(input, &this->ancestorCacheList);
+                return this->dynamic_grammar.faster_get_all_occurrences_using_memory(input, &this->ancestor_cache_list);
             }
             else
             {
@@ -381,7 +387,7 @@ namespace dynRLSLP
 		void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
             std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Writing content as JSON format..." << std::endl;
 			ofs << stool::Message::get_paragraph_string(message_paragraph) << "{" << std::endl;
-			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"DynamicString\"," << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"DynamicRLSLPString\"," << std::endl;
 			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "[" << std::endl;
 
             std::string dictionaryMode_str;
@@ -398,8 +404,8 @@ namespace dynRLSLP
 			ofs << std::endl;
 
 			JsonHelper::write_content_as_json_format<uint64_t>(
-				"leftShortStringList(std::vector<uint64_t>)",
-				this->leftShortStringList,
+				"left_short_string_list(std::vector<uint64_t>)",
+				this->left_short_string_list,
 				[](const uint64_t &value){ return std::to_string(value); },
 				true,
 				ofs,
@@ -408,8 +414,8 @@ namespace dynRLSLP
 			ofs << std::endl;
 
 			JsonHelper::write_content_as_json_format<uint64_t>(
-				"rightShortStringList(std::vector<uint64_t>)",
-				this->rightShortStringList,
+				"right_short_string_list(std::vector<uint64_t>)",
+				this->right_short_string_list,
 				[](const uint64_t &value){ return std::to_string(value); },
 				true,
 				ofs,
@@ -418,8 +424,8 @@ namespace dynRLSLP
 			ofs << std::endl;
 
 			JsonHelper::write_content_as_json_format<TemporaryOccurrence>(
-				"ancestorCacheList(std::vector<TemporaryOccurrence>)",
-				this->ancestorCacheList,
+				"ancestor_cache_list(std::vector<TemporaryOccurrence>)",
+				this->ancestor_cache_list,
 				[](const TemporaryOccurrence &value){ return value.to_string(); },
 				true,
 				ofs,
@@ -443,13 +449,13 @@ namespace dynRLSLP
          * @brief Swap the contents of this instance with \p other.
          * @param other Instance to exchange data with.
          */
-        void swap(DynamicString &other)
+        void swap(DynamicRLSLPString &other)
         {
             this->dynamic_grammar.swap(other.dynamic_grammar);
-            this->ancestorCacheList.swap(other.ancestorCacheList);
+            this->ancestor_cache_list.swap(other.ancestor_cache_list);
             std::swap(this->dictionaryMode, other.dictionaryMode);
-            std::swap(this->leftShortStringList, other.leftShortStringList);
-            std::swap(this->rightShortStringList, other.rightShortStringList);
+            std::swap(this->left_short_string_list, other.left_short_string_list);
+            std::swap(this->right_short_string_list, other.right_short_string_list);
         }
         /**
          * @brief Set the dictionary operating mode and rebuild Fast-mode auxiliary structures when needed.
@@ -460,9 +466,9 @@ namespace dynRLSLP
             if (this->dictionaryMode != mode)
             {
                 this->dictionaryMode = mode;
-                this->leftShortStringList.clear();
-                this->rightShortStringList.clear();
-                this->ancestorCacheList.clear();
+                this->left_short_string_list.clear();
+                this->right_short_string_list.clear();
+                this->ancestor_cache_list.clear();
 
                 if (mode == DictionaryMode::Fast)
                 {
@@ -472,8 +478,8 @@ namespace dynRLSLP
                     }
 
                     uint64_t ruleSize = this->dynamic_grammar.count_explicit_nonterminals();
-                    this->leftShortStringList.resize(ruleSize, UINT64_MAX);
-                    this->rightShortStringList.resize(ruleSize, UINT64_MAX);
+                    this->left_short_string_list.resize(ruleSize, UINT64_MAX);
+                    this->right_short_string_list.resize(ruleSize, UINT64_MAX);
 
                     this->rebuild_short_string_list();
                     this->rebuild_ancestor_cache_list();
@@ -486,9 +492,9 @@ namespace dynRLSLP
         void clear()
         {
             this->dynamic_grammar.clear();
-            this->ancestorCacheList.clear();
-            this->leftShortStringList.clear();
-            this->rightShortStringList.clear();
+            this->ancestor_cache_list.clear();
+            this->left_short_string_list.clear();
+            this->right_short_string_list.clear();
         }
         /**
          * @brief Set the alphabet of \p T to the given alphabet \p alphabet (not implemented yet).
@@ -581,7 +587,7 @@ namespace dynRLSLP
                     else
                     {
                         std::cout << i << " " << size << std::endl;
-                        throw std::runtime_error("DynamicString::insert: Not implemented");
+                        throw std::runtime_error("DynamicRLSLPString::insert: Not implemented");
                     }
                 }
             }
@@ -658,7 +664,7 @@ namespace dynRLSLP
             uint64_t end_pos = i + len - 1;
             if (end_pos >= this->size())
             {
-                throw std::runtime_error("DynamicString::delete_substring_with_callback: end_pos >= this->size()");
+                throw std::runtime_error("DynamicRLSLPString::delete_substring_with_callback: end_pos >= this->size()");
             }
 
             uint64_t size = this->size();
@@ -707,19 +713,19 @@ namespace dynRLSLP
          */
         void rebuild_ancestor_cache_list()
         {
-            this->ancestorCacheList.clear();
+            this->ancestor_cache_list.clear();
             const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
             const FastParentDictionary &fast_parent_dictionary = this->dynamic_grammar.get_parent_dictionary();
             const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
-            this->ancestorCacheList.resize(this->dynamic_grammar.count_explicit_nonterminals(), TemporaryOccurrence::create_null_occurrence());
+            this->ancestor_cache_list.resize(this->dynamic_grammar.count_explicit_nonterminals(), TemporaryOccurrence::create_null_occurrence());
 
             for (ExplicitNonterminal i = 0; i < (int64_t)this->dynamic_grammar.count_explicit_nonterminals(); i++)
             {
                 RLSLPRuleBody item = RLSLPRuleBody::decode_rule(i, explicit_nonterminal_rule_list);
                 if (item.get_type() != RLSLPRuleType::Null)
                 {
-                    TemporaryOccurrence occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(i, fast_parent_dictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, DynamicString::ANCESTOR_CACHE_DEPTH, 0);
-                    this->ancestorCacheList[i] = occurrence;
+                    TemporaryOccurrence occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(i, fast_parent_dictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, DynamicRLSLPString::ANCESTOR_CACHE_DEPTH, 0);
+                    this->ancestor_cache_list[i] = occurrence;
                 }
             }
         }
@@ -759,17 +765,17 @@ namespace dynRLSLP
             bool b1 = TryCommonSequenceCompiler::try_build_common_sequence_from_text(this->dynamic_grammar, text, output, stool::Message::NO_MESSAGE);
             if (!b1)
             {
-                throw std::runtime_error("DynamicString::verify_string: Failed to build common sequence from text");
+                throw std::runtime_error("DynamicRLSLPString::verify_string: Failed to build common sequence from text");
             }
             int64_t root_test = TryCommonSequenceCompiler::try_single_compile(output, this->dynamic_grammar, stool::Message::NO_MESSAGE);
             if (root_test == -1)
             {
-                throw std::runtime_error("DynamicString::verify_string: Failed to compile common sequence");
+                throw std::runtime_error("DynamicRLSLPString::verify_string: Failed to compile common sequence");
             }
 
             if (root_test != root)
             {
-                throw std::runtime_error("DynamicString::verify_string: The root of the grammar is not equal to the root of the text");
+                throw std::runtime_error("DynamicRLSLPString::verify_string: The root of the grammar is not equal to the root of the text");
             }
             return true;
         }
@@ -779,40 +785,40 @@ namespace dynRLSLP
          * @param other Instance to compare against.
          * @return \p true if grammars and Fast-mode caches are structurally equivalent.
          */
-        bool verify_nearly_equal(const DynamicString &other) const
+        bool verify_nearly_equal(const DynamicRLSLPString &other) const
         {
             if (this->dictionaryMode != other.dictionaryMode)
             {
-                throw std::runtime_error("DynamicString::verify_nearly_equal: The dictionary mode must be equal.");
+                throw std::runtime_error("DynamicRLSLPString::verify_nearly_equal: The dictionary mode must be equal.");
             }
 
             if (this->dictionaryMode == DictionaryMode::Fast)
             {
-                if (this->leftShortStringList.size() != other.leftShortStringList.size())
+                if (this->left_short_string_list.size() != other.left_short_string_list.size())
                 {
-                    throw std::runtime_error("DynamicString::verify_nearly_equal: The size of left short string list must be equal.");
+                    throw std::runtime_error("DynamicRLSLPString::verify_nearly_equal: The size of left short string list must be equal.");
                 }
-                if (this->rightShortStringList.size() != other.rightShortStringList.size())
+                if (this->right_short_string_list.size() != other.right_short_string_list.size())
                 {
-                    throw std::runtime_error("DynamicString::verify_nearly_equal: The size of right short string list must be equal.");
+                    throw std::runtime_error("DynamicRLSLPString::verify_nearly_equal: The size of right short string list must be equal.");
                 }
-                if (this->ancestorCacheList.size() != other.ancestorCacheList.size())
+                if (this->ancestor_cache_list.size() != other.ancestor_cache_list.size())
                 {
-                    throw std::runtime_error("DynamicString::verify_nearly_equal: The size of ancestor cache list must be equal.");
+                    throw std::runtime_error("DynamicRLSLPString::verify_nearly_equal: The size of ancestor cache list must be equal.");
                 }
-                for (uint64_t i = 0; i < this->leftShortStringList.size(); i++)
+                for (uint64_t i = 0; i < this->left_short_string_list.size(); i++)
                 {
-                    if (this->leftShortStringList[i] != other.leftShortStringList[i])
+                    if (this->left_short_string_list[i] != other.left_short_string_list[i])
                     {
-                        throw std::runtime_error("DynamicString::verify_nearly_equal: The left short string must be equal.");
+                        throw std::runtime_error("DynamicRLSLPString::verify_nearly_equal: The left short string must be equal.");
                     }
-                    if (this->rightShortStringList[i] != other.rightShortStringList[i])
+                    if (this->right_short_string_list[i] != other.right_short_string_list[i])
                     {
-                        throw std::runtime_error("DynamicString::verify_nearly_equal: The right short string must be equal.");
+                        throw std::runtime_error("DynamicRLSLPString::verify_nearly_equal: The right short string must be equal.");
                     }
-                    if (this->ancestorCacheList[i].nonterminal != other.ancestorCacheList[i].nonterminal || this->ancestorCacheList[i].position != other.ancestorCacheList[i].position)
+                    if (this->ancestor_cache_list[i].nonterminal != other.ancestor_cache_list[i].nonterminal || this->ancestor_cache_list[i].position != other.ancestor_cache_list[i].position)
                     {
-                        throw std::runtime_error("DynamicString::verify_nearly_equal: The nonterminal and position of ancestor cache must be equal.");
+                        throw std::runtime_error("DynamicRLSLPString::verify_nearly_equal: The nonterminal and position of ancestor cache must be equal.");
                     }
                 }
             }
@@ -830,7 +836,7 @@ namespace dynRLSLP
 
             std::vector<std::string> r;
 
-            r.push_back(stool::Message::get_paragraph_string(message_paragraph) + "=DynamicString: ");
+            r.push_back(stool::Message::get_paragraph_string(message_paragraph) + "=DynamicRLSLPString: ");
 
             auto log1 = this->dynamic_grammar.get_memory_usage_info(message_paragraph + 1);
             for (auto s : log1)
@@ -866,12 +872,53 @@ namespace dynRLSLP
          */
         void print_statistics(int message_paragraph = stool::Message::SHOW_MESSAGE) const
         {
-            std::string mode = this->dictionaryMode == DictionaryMode::Fast ? "Fast" : "Standard";
-            std::cout << stool::Message::get_paragraph_string(message_paragraph) << "===Statistics(DynamicString)===" << std::endl;
+            std::string mode = this->dictionaryMode == DictionaryMode::Fast ? "Fast" : (this->dictionaryMode == DictionaryMode::Standard ? "Standard" : "Lightweight");
+            std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics (DynamicRLSLPString)" << std::endl;
             std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Mode: " << mode << std::endl;
-            this->dynamic_grammar.print_statistics(message_paragraph);
-            std::cout << stool::Message::get_paragraph_string(message_paragraph) << "===============================" << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Left Short Strings (Cache): " << this->left_short_string_list.size() << " * 8 bytes" << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Right Short Strings (Cache): " << this->right_short_string_list.size() << " * 8 bytes" << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Ancestor Cache List (Cache): " << this->ancestor_cache_list.size() << " * " << sizeof(TemporaryOccurrence) << " bytes" << std::endl;
+
+
+            this->dynamic_grammar.print_statistics(message_paragraph+1);
+            std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
         }
+
+        void print_memory_breakdown(int message_paragraph = stool::Message::SHOW_MESSAGE) const
+        {
+            std::string mode = this->dictionaryMode == DictionaryMode::Fast ? "Fast" : "Standard";
+            std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Memory Breakdown (DynamicRLSLPString): " << this->size_in_bytes() << " bytes" << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "left_short_string_list: " << stool::Memory::estimate_memory_usage(this->left_short_string_list) << " bytes" << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "right_short_string_list: " << stool::Memory::estimate_memory_usage(this->right_short_string_list) << " bytes" << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "ancestor_cache_list: " << stool::Memory::estimate_memory_usage(this->ancestor_cache_list) << " bytes" << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "dictionary_mode: " << sizeof(this->dictionaryMode) << " bytes" << std::endl;
+            this->dynamic_grammar.print_memory_breakdown(message_paragraph+1);
+
+            std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
+        }
+
+
+
+        /*
+        void print_summary(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
+        {
+            std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Summary" << std::endl;
+            uint64_t text_length = this->size();
+            auto& grammar = this->dynamic_grammar.get_grammar();
+            auto& dictionary = this->dynamic_grammar.get_dictionary();
+            auto& random_bit_dictionary = this->dynamic_grammar.get_random_bit_dictionary();
+            std::string mode = this->dictionaryMode == DictionaryMode::Fast ? "Fast" : (this->dictionaryMode == DictionaryMode::Standard ? "Standard" : "Lightweight");
+
+
+            std::string parser = this->dynamic_grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedRecompression ? "Restricted Recompression" : "Signature Encoding";
+
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Parser: " << parser << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Mode: " << mode << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Seed: " << random_bit_dictionary.get_seed() << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Text length: " << text_length << std::endl;
+        }
+        */
+
 
         /**
          * @brief Print the information about the locate query.
@@ -945,37 +992,37 @@ namespace dynRLSLP
         //@{
 
         /**
-         * @brief Return a new DynamicString built from a given text \p text (alphabet inferred from \p text).
+         * @brief Return a new DynamicRLSLPString built from a given text \p text (alphabet inferred from \p text).
          * @param text Input byte sequence to compress.
          * @param use_restricted_block_compression If true, use restricted block compression.
          * @param mode Dictionary operating mode after build.
          * @param seed Random seed for compression.
          * @param message_paragraph The paragraph depth of message logs.
-         * @return Compressed \p DynamicString representing \p text.
+         * @return Compressed \p DynamicRLSLPString representing \p text.
          */
-        static DynamicString offline_build_from_text(const std::vector<uint8_t> &text, GrammarParsingType parser, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
+        static DynamicRLSLPString offline_build_from_text(const std::vector<uint8_t> &text, GrammarParsingType parser, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
         {
             std::vector<uint8_t> alphabet = stool::StringFunctions::get_alphabet(text);
 
-            return DynamicString::offline_build_from_text(text, parser, alphabet, mode, seed, message_paragraph);
+            return DynamicRLSLPString::offline_build_from_text(text, parser, alphabet, mode, seed, message_paragraph);
         }
         /**
-         * @brief Return a new DynamicString built from a given text \p text with an explicit alphabet.
+         * @brief Return a new DynamicRLSLPString built from a given text \p text with an explicit alphabet.
          * @param text Input byte sequence to compress.
          * @param use_restricted_block_compression If true, use restricted block compression.
          * @param alphabet Explicit alphabet as byte values.
          * @param mode Dictionary operating mode after build.
          * @param seed Random seed for compression.
          * @param message_paragraph The paragraph depth of message logs.
-         * @return Compressed \p DynamicString representing \p text.
+         * @return Compressed \p DynamicRLSLPString representing \p text.
          */
-        static DynamicString offline_build_from_text(const std::vector<uint8_t> &text, GrammarParsingType parser, const std::vector<uint8_t> &alphabet, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
+        static DynamicRLSLPString offline_build_from_text(const std::vector<uint8_t> &text, GrammarParsingType parser, const std::vector<uint8_t> &alphabet, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
         {
             if (message_paragraph != stool::Message::NO_MESSAGE)
             {
-                std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Building DynamicString from text in offline mode... " << std::endl;
+                std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Building DynamicRLSLPString from text in offline mode... " << std::endl;
             }
-            DynamicString r(parser, alphabet, seed);
+            DynamicRLSLPString r(parser, alphabet, seed);
             Compress::compress(r.dynamic_grammar, text, dynRLSLP::no_callback, message_paragraph);
 
             r.set_mode(mode);
@@ -983,35 +1030,35 @@ namespace dynRLSLP
             return r;
         }
         /**
-         * @brief Return a new DynamicString built from a given text \p text (debug helper using \p std::string).
+         * @brief Return a new DynamicRLSLPString built from a given text \p text (debug helper using \p std::string).
          * @param text Input string to compress.
          * @param use_restricted_block_compression If true, use restricted block compression.
          * @param mode Dictionary operating mode after build.
          * @param seed Random seed for compression.
          * @param message_paragraph The paragraph depth of message logs.
-         * @return Compressed \p DynamicString representing \p text.
+         * @return Compressed \p DynamicRLSLPString representing \p text.
          */
-        static DynamicString build_from_text_for_debug(const std::string &text, GrammarParsingType parser, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
+        static DynamicRLSLPString build_from_text_for_debug(const std::string &text, GrammarParsingType parser, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
         {
             std::vector<uint8_t> text_vector;
             for (auto c : text)
             {
                 text_vector.push_back(c);
             }
-            return DynamicString::offline_build_from_text(text_vector, parser, mode, seed, message_paragraph);
+            return DynamicRLSLPString::offline_build_from_text(text_vector, parser, mode, seed, message_paragraph);
         }
 
         /**
-         * @brief Return a new DynamicString built from a given file \p file_path using a buffer of size \p buffer_size.
+         * @brief Return a new DynamicRLSLPString built from a given file \p file_path using a buffer of size \p buffer_size.
          * @param file_path Path to the input text file.
          * @param use_restricted_block_compression If true, use restricted block compression.
          * @param mode Dictionary operating mode after build.
          * @param seed Random seed for compression.
          * @param buffer_size Read buffer size in bytes for streaming compression.
          * @param message_paragraph The paragraph depth of message logs.
-         * @return Compressed \p DynamicString built incrementally from the file.
+         * @return Compressed \p DynamicRLSLPString built incrementally from the file.
          */
-        static DynamicString online_build_from_text_file(std::string file_path, GrammarParsingType parser, DictionaryMode mode = DictionaryMode::Standard, int64_t seed = 0, uint64_t buffer_size = 100000, int message_paragraph = stool::Message::SHOW_MESSAGE)
+        static DynamicRLSLPString online_build_from_text_file(std::string file_path, GrammarParsingType parser, DictionaryMode mode = DictionaryMode::Standard, int64_t seed = 0, uint64_t buffer_size = 100000, int message_paragraph = stool::Message::SHOW_MESSAGE)
         {
             if (!std::filesystem::exists(file_path))
             {
@@ -1020,12 +1067,12 @@ namespace dynRLSLP
             }
             if (buffer_size == 0)
             {
-                throw std::runtime_error("DynamicString::build_from_text_file: buffer_size == 0");
+                throw std::runtime_error("DynamicRLSLPString::build_from_text_file: buffer_size == 0");
             }
 
             if (message_paragraph != stool::Message::NO_MESSAGE)
             {
-                std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Building DynamicString from text file in online mode... " << std::endl;
+                std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Building DynamicRLSLPString from text file in online mode... " << std::endl;
             }
 
             std::chrono::steady_clock::time_point st1, st2;
@@ -1033,7 +1080,7 @@ namespace dynRLSLP
 
             std::vector<uint8_t> alphabet = stool::OnlineFileReader::get_alphabet(file_path);
 
-            DynamicString r(parser, alphabet, seed);
+            DynamicRLSLPString r(parser, alphabet, seed);
 
             std::ifstream stream;
             stream.open(file_path, std::ios::binary);
@@ -1096,19 +1143,19 @@ namespace dynRLSLP
             return r;
         }
         /**
-         * @brief Load a DynamicString instance from a binary file stream.
-         * @param os Input stream positioned at a serialized \p DynamicString.
-         * @return Deserialized \p DynamicString instance.
+         * @brief Load a DynamicRLSLPString instance from a binary file stream.
+         * @param os Input stream positioned at a serialized \p DynamicRLSLPString.
+         * @return Deserialized \p DynamicRLSLPString instance.
          */
-        static DynamicString load_from_file(std::ifstream &os)
+        static DynamicRLSLPString load_from_file(std::ifstream &os)
         {
-            DynamicString r(GrammarParsingType::RestrictedRecompression);
+            DynamicRLSLPString r(GrammarParsingType::RestrictedRecompression);
 
             uint64_t fingerprint;
             os.read(reinterpret_cast<char *>(&fingerprint), sizeof(uint64_t));
             if (fingerprint != FINGERPRINT)
             {
-                throw std::runtime_error("DynamicString::load_from_file: Fingerprint mismatch");
+                throw std::runtime_error("DynamicRLSLPString::load_from_file: Fingerprint mismatch");
             }
 
             int modeValue;
@@ -1116,22 +1163,22 @@ namespace dynRLSLP
             r.dictionaryMode = static_cast<DictionaryMode>(modeValue);
 
             // Code 7
-            uint64_t _leftShortStringList_size;
-            os.read(reinterpret_cast<char *>(&_leftShortStringList_size), sizeof(_leftShortStringList_size));
-            r.leftShortStringList.resize(_leftShortStringList_size);
-            os.read(reinterpret_cast<char *>(r.leftShortStringList.data()), sizeof(uint64_t) * _leftShortStringList_size);
+            uint64_t _left_short_string_list_size;
+            os.read(reinterpret_cast<char *>(&_left_short_string_list_size), sizeof(_left_short_string_list_size));
+            r.left_short_string_list.resize(_left_short_string_list_size);
+            os.read(reinterpret_cast<char *>(r.left_short_string_list.data()), sizeof(uint64_t) * _left_short_string_list_size);
 
-            uint64_t _rightShortStringList_size;
-            os.read(reinterpret_cast<char *>(&_rightShortStringList_size), sizeof(_rightShortStringList_size));
-            r.rightShortStringList.resize(_rightShortStringList_size);
-            os.read(reinterpret_cast<char *>(r.rightShortStringList.data()), sizeof(uint64_t) * _rightShortStringList_size);
+            uint64_t _right_short_string_list_size;
+            os.read(reinterpret_cast<char *>(&_right_short_string_list_size), sizeof(_right_short_string_list_size));
+            r.right_short_string_list.resize(_right_short_string_list_size);
+            os.read(reinterpret_cast<char *>(r.right_short_string_list.data()), sizeof(uint64_t) * _right_short_string_list_size);
 
             uint64_t size = 0;
             os.read(reinterpret_cast<char *>(&size), sizeof(uint64_t));
-            r.ancestorCacheList.resize(size);
+            r.ancestor_cache_list.resize(size);
             if (size > 0)
             {
-                os.read(reinterpret_cast<char *>(r.ancestorCacheList.data()), sizeof(TemporaryOccurrence) * size);
+                os.read(reinterpret_cast<char *>(r.ancestor_cache_list.data()), sizeof(TemporaryOccurrence) * size);
             }
 
             auto tmp = DynamicGrammarForLayeredRLSLP::load_from_file(os);
@@ -1140,13 +1187,13 @@ namespace dynRLSLP
             return r;
         }
         /**
-         * @brief Build a DynamicString from a serialized leveled RLSLP grammar stream.
+         * @brief Build a DynamicRLSLPString from a serialized leveled RLSLP grammar stream.
          * @param os Input stream containing leveled RLSLP data.
-         * @return \p DynamicString wrapping the loaded grammar.
+         * @return \p DynamicRLSLPString wrapping the loaded grammar.
          */
-        static DynamicString build_from_leveled_rlslp(std::ifstream &os)
+        static DynamicRLSLPString build_from_leveled_rlslp(std::ifstream &os)
         {
-            DynamicString r(GrammarParsingType::RestrictedRecompression);
+            DynamicRLSLPString r(GrammarParsingType::RestrictedRecompression);
             auto tmp = DynamicGrammarForLayeredRLSLP::build_from_leveled_rlslp(os);
             r.dynamic_grammar.swap(tmp);
             r.rebuild_ancestor_cache_list();
@@ -1157,7 +1204,7 @@ namespace dynRLSLP
          * @param item Instance to write.
          * @param os Output stream for binary serialization.
          */
-        static void store_to_file(const DynamicString &item, std::ofstream &os)
+        static void store_to_file(const DynamicRLSLPString &item, std::ofstream &os)
         {
             os.write(reinterpret_cast<const char *>(&FINGERPRINT), sizeof(uint64_t));
 
@@ -1165,17 +1212,17 @@ namespace dynRLSLP
             os.write(reinterpret_cast<const char *>(&modeValue), sizeof(int));
 
             // Code 7
-            uint64_t leftShortStringList_size = item.leftShortStringList.size();
-            os.write(reinterpret_cast<const char *>(&leftShortStringList_size), sizeof(uint64_t));
-            os.write(reinterpret_cast<const char *>(item.leftShortStringList.data()), sizeof(uint64_t) * leftShortStringList_size);
+            uint64_t left_short_string_list_size = item.left_short_string_list.size();
+            os.write(reinterpret_cast<const char *>(&left_short_string_list_size), sizeof(uint64_t));
+            os.write(reinterpret_cast<const char *>(item.left_short_string_list.data()), sizeof(uint64_t) * left_short_string_list_size);
 
-            uint64_t rightShortStringList_size = item.rightShortStringList.size();
-            os.write(reinterpret_cast<const char *>(&rightShortStringList_size), sizeof(uint64_t));
-            os.write(reinterpret_cast<const char *>(item.rightShortStringList.data()), sizeof(uint64_t) * rightShortStringList_size);
+            uint64_t right_short_string_list_size = item.right_short_string_list.size();
+            os.write(reinterpret_cast<const char *>(&right_short_string_list_size), sizeof(uint64_t));
+            os.write(reinterpret_cast<const char *>(item.right_short_string_list.data()), sizeof(uint64_t) * right_short_string_list_size);
 
-            uint64_t size = item.ancestorCacheList.size();
+            uint64_t size = item.ancestor_cache_list.size();
             os.write(reinterpret_cast<const char *>(&size), sizeof(uint64_t));
-            os.write(reinterpret_cast<const char *>(item.ancestorCacheList.data()), sizeof(TemporaryOccurrence) * size);
+            os.write(reinterpret_cast<const char *>(item.ancestor_cache_list.data()), sizeof(TemporaryOccurrence) * size);
 
             DynamicGrammarForLayeredRLSLP::store_to_file(item.dynamic_grammar, os);
         }
@@ -1196,10 +1243,10 @@ namespace dynRLSLP
 
                 if (NonterminalFunctions::is_explicit_nonterminal(sig))
                 {
-                    this->leftShortStringList[sig] = UINT64_MAX;
-                    this->rightShortStringList[sig] = UINT64_MAX;
+                    this->left_short_string_list[sig] = UINT64_MAX;
+                    this->right_short_string_list[sig] = UINT64_MAX;
 
-                    this->add_descendants(sig, changed_nonterminals, DynamicString::ANCESTOR_CACHE_DEPTH, 0);
+                    this->add_descendants(sig, changed_nonterminals, DynamicRLSLPString::ANCESTOR_CACHE_DEPTH, 0);
                 }
             }
         }
@@ -1221,38 +1268,38 @@ namespace dynRLSLP
                 {
                     RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, explicit_nonterminal_rule_list);
 
-                    while ((uint64_t)this->leftShortStringList.size() <= (uint64_t)sig)
+                    while ((uint64_t)this->left_short_string_list.size() <= (uint64_t)sig)
                     {
-                        this->leftShortStringList.push_back(UINT64_MAX);
-                        this->rightShortStringList.push_back(UINT64_MAX);
-                        this->ancestorCacheList.push_back(TemporaryOccurrence::create_null_occurrence());
+                        this->left_short_string_list.push_back(UINT64_MAX);
+                        this->right_short_string_list.push_back(UINT64_MAX);
+                        this->ancestor_cache_list.push_back(TemporaryOccurrence::create_null_occurrence());
                     }
                     uint64_t alphabet_bit_size = this->dynamic_grammar.get_alphabet_bit_size();
 
                     if (item.get_type() == RLSLPRuleType::Pair)
                     {
-                        uint64_t left_short_string = ShortString::create_left_short_string_for_pair(item.A, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->leftShortStringList);
-                        uint64_t right_short_string = ShortString::create_right_short_string_for_pair(item.A, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->rightShortStringList);
-                        this->leftShortStringList[sig] = left_short_string;
-                        this->rightShortStringList[sig] = right_short_string;
+                        uint64_t left_short_string = ShortString::create_left_short_string_for_pair(item.A, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->left_short_string_list);
+                        uint64_t right_short_string = ShortString::create_right_short_string_for_pair(item.A, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->right_short_string_list);
+                        this->left_short_string_list[sig] = left_short_string;
+                        this->right_short_string_list[sig] = right_short_string;
                     }
                     else if (item.get_type() == RLSLPRuleType::Power)
                     {
-                        uint64_t left_short_string = ShortString::create_left_short_string_for_power(item.A, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->leftShortStringList);
-                        uint64_t right_short_string = ShortString::create_right_short_string_for_power(item.A, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->rightShortStringList);
-                        this->leftShortStringList[sig] = left_short_string;
-                        this->rightShortStringList[sig] = right_short_string;
+                        uint64_t left_short_string = ShortString::create_left_short_string_for_power(item.A, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->left_short_string_list);
+                        uint64_t right_short_string = ShortString::create_right_short_string_for_power(item.A, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->right_short_string_list);
+                        this->left_short_string_list[sig] = left_short_string;
+                        this->right_short_string_list[sig] = right_short_string;
                     }
                     else if (item.get_type() == RLSLPRuleType::Character)
                     {
                         const std::unordered_map<int64_t, uint64_t> &character_id_map = this->dynamic_grammar.get_character_id_map();
                         uint64_t left_short_string = ShortString::create_left_short_string_for_character(item.A, alphabet_bit_size, character_id_map);
                         uint64_t right_short_string = ShortString::create_right_short_string_for_character(item.A, alphabet_bit_size, character_id_map);
-                        this->leftShortStringList[sig] = left_short_string;
-                        this->rightShortStringList[sig] = right_short_string;
+                        this->left_short_string_list[sig] = left_short_string;
+                        this->right_short_string_list[sig] = right_short_string;
                     }
 
-                    this->add_descendants(sig, changed_nonterminals, DynamicString::ANCESTOR_CACHE_DEPTH, 0);
+                    this->add_descendants(sig, changed_nonterminals, DynamicRLSLPString::ANCESTOR_CACHE_DEPTH, 0);
                 }
             }
         }
@@ -1283,21 +1330,21 @@ namespace dynRLSLP
                     RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, explicit_nonterminal_rule_list);
                     if (item.get_type() != RLSLPRuleType::Null)
                     {
-                        if ((uint64_t)this->ancestorCacheList.size() <= (uint64_t)sig)
+                        if ((uint64_t)this->ancestor_cache_list.size() <= (uint64_t)sig)
                         {
-                            while ((uint64_t)this->ancestorCacheList.size() <= (uint64_t)sig)
+                            while ((uint64_t)this->ancestor_cache_list.size() <= (uint64_t)sig)
                             {
-                                this->ancestorCacheList.push_back(TemporaryOccurrence::create_null_occurrence());
+                                this->ancestor_cache_list.push_back(TemporaryOccurrence::create_null_occurrence());
                             }
                         }
-                        TemporaryOccurrence occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(sig, fast_parent_dictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, DynamicString::ANCESTOR_CACHE_DEPTH, 0);
-                        this->ancestorCacheList[sig] = occurrence;
+                        TemporaryOccurrence occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(sig, fast_parent_dictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, DynamicRLSLPString::ANCESTOR_CACHE_DEPTH, 0);
+                        this->ancestor_cache_list[sig] = occurrence;
                     }
                     else
                     {
-                        if ((uint64_t)sig < (uint64_t)this->ancestorCacheList.size())
+                        if ((uint64_t)sig < (uint64_t)this->ancestor_cache_list.size())
                         {
-                            this->ancestorCacheList[sig] = TemporaryOccurrence::create_null_occurrence();
+                            this->ancestor_cache_list[sig] = TemporaryOccurrence::create_null_occurrence();
                         }
                     }
                 }
@@ -1350,12 +1397,12 @@ namespace dynRLSLP
             const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
             uint64_t alphabet_bit_size = this->dynamic_grammar.get_alphabet_bit_size();
             uint64_t ruleSize = this->dynamic_grammar.count_explicit_nonterminals();
-            assert(this->leftShortStringList.size() == ruleSize);
+            assert(this->left_short_string_list.size() == ruleSize);
 
             for (uint64_t i = 0; i < ruleSize; i++)
             {
-                this->leftShortStringList[i] = UINT64_MAX;
-                this->rightShortStringList[i] = UINT64_MAX;
+                this->left_short_string_list[i] = UINT64_MAX;
+                this->right_short_string_list[i] = UINT64_MAX;
             }
 
             if (grammar.has_root())
@@ -1384,8 +1431,8 @@ namespace dynRLSLP
 
                             if (flags[left_base_sig] && flags[right_base_sig])
                             {
-                                this->leftShortStringList[sig] = ShortString::create_left_short_string_for_pair(left_base_sig, right_base_sig, alphabet_bit_size, explicit_nonterminal_length_list, this->leftShortStringList);
-                                this->rightShortStringList[sig] = ShortString::create_right_short_string_for_pair(left_base_sig, right_base_sig, alphabet_bit_size, explicit_nonterminal_length_list, this->rightShortStringList);
+                                this->left_short_string_list[sig] = ShortString::create_left_short_string_for_pair(left_base_sig, right_base_sig, alphabet_bit_size, explicit_nonterminal_length_list, this->left_short_string_list);
+                                this->right_short_string_list[sig] = ShortString::create_right_short_string_for_pair(left_base_sig, right_base_sig, alphabet_bit_size, explicit_nonterminal_length_list, this->right_short_string_list);
 
                                 flags[sig] = true;
                             }
@@ -1409,8 +1456,8 @@ namespace dynRLSLP
                             ExplicitNonterminal child_base_sig = NonterminalFunctions::get_explicit_nonterminal(child_sig);
                             if (flags[child_base_sig])
                             {
-                                this->leftShortStringList[sig] = ShortString::create_left_short_string_for_power(child_base_sig, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->leftShortStringList);
-                                this->rightShortStringList[sig] = ShortString::create_right_short_string_for_power(child_base_sig, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->rightShortStringList);
+                                this->left_short_string_list[sig] = ShortString::create_left_short_string_for_power(child_base_sig, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->left_short_string_list);
+                                this->right_short_string_list[sig] = ShortString::create_right_short_string_for_power(child_base_sig, item.B, alphabet_bit_size, explicit_nonterminal_length_list, this->right_short_string_list);
 
                                 flags[sig] = true;
                             }
@@ -1423,8 +1470,8 @@ namespace dynRLSLP
                         else if (item.get_type() == RLSLPRuleType::Character)
                         {
                             const std::unordered_map<int64_t, uint64_t> &character_id_map = this->dynamic_grammar.get_character_id_map();
-                            this->leftShortStringList[sig] = ShortString::create_left_short_string_for_character(item.A, alphabet_bit_size, character_id_map);
-                            this->rightShortStringList[sig] = ShortString::create_right_short_string_for_character(item.A, alphabet_bit_size, character_id_map);
+                            this->left_short_string_list[sig] = ShortString::create_left_short_string_for_character(item.A, alphabet_bit_size, character_id_map);
+                            this->right_short_string_list[sig] = ShortString::create_right_short_string_for_character(item.A, alphabet_bit_size, character_id_map);
 
                             flags[sig] = true;
                         }

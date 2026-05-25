@@ -139,6 +139,33 @@ namespace dynRLSLP
                 }
             }
         }
+
+        uint64_t get_seed() const
+        {
+            return this->seed;
+        }
+
+        uint64_t size_in_bytes_for_long_random_bits() const
+        {
+
+            uint64_t long_random_bits_size = 0;
+            for (const auto &[key, value] : this->longRandomBits)
+            {
+                long_random_bits_size += stool::Memory::estimate_memory_usage(value);
+            }
+            long_random_bits_size += stool::Memory::estimate_memory_usage(this->longRandomBits);
+
+            return long_random_bits_size;
+        }
+
+        uint64_t size_in_bytes() const
+        {
+            uint64_t short_random_bits_size = stool::Memory::estimate_memory_usage(this->shortRandomBits);
+            uint64_t middle_random_bits_size = stool::Memory::estimate_memory_usage(this->middleRandomBits);
+            uint64_t long_random_bits_size = this->size_in_bytes_for_long_random_bits();
+            uint64_t others_size = sizeof(seed) + sizeof(mt) + sizeof(dist);
+            return short_random_bits_size + middle_random_bits_size + long_random_bits_size + others_size;
+        }
         //}@
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -347,17 +374,40 @@ namespace dynRLSLP
          */
         void print_statistics(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
         {
+            uint64_t short_random_bits_size = stool::Memory::estimate_memory_usage(this->shortRandomBits);
+            uint64_t middle_random_bits_size = stool::Memory::estimate_memory_usage(this->middleRandomBits);
+            uint64_t long_random_bits_size = this->size_in_bytes_for_long_random_bits();
+
+            std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics (RandomBitDictionary): " << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Seed: " << this->seed << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Number of short random bytes: " << short_random_bits_size << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Number of middle random bytes: " << middle_random_bits_size << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Number of long random bytes: " << long_random_bits_size << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
+        }
+
+        void print_memory_breakdown(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
+        {
             uint64_t long_value_count = 0;
             for (const auto &[key, value] : this->longRandomBits)
             {
                 long_value_count += value.size();
             }
-            std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics(RandomBitDictionary):" << std::endl;
-            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Short random bits: " << this->shortRandomBits.size() << std::endl;
-            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Middle random bits: " << this->middleRandomBits.size() << std::endl;
-            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Long random bits: " << this->longRandomBits.size() << ", counts: " << long_value_count << std::endl;
+
+            uint64_t short_random_bits_size = stool::Memory::estimate_memory_usage(this->shortRandomBits);
+            uint64_t middle_random_bits_size = stool::Memory::estimate_memory_usage(this->middleRandomBits);
+            uint64_t long_random_bits_size = this->size_in_bytes_for_long_random_bits();
+            uint64_t others_size = sizeof(seed) + sizeof(mt) + sizeof(dist);
+
+
+            std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Memory Breakdown (RandomBitDictionary): " << this->size_in_bytes() << " bytes" << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "short_random_bits_: " << short_random_bits_size << " bytes" << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "middle_random_bits_: " << middle_random_bits_size << " bytes" << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "long_random_bits_: " << long_random_bits_size << " bytes" << ", counts: " << long_value_count << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Others: " << others_size << " bytes" << std::endl;
             std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
         }
+
 
 		void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
             

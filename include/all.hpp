@@ -27,4 +27,4 @@
 
 #include "./local_parsings/locally_consistent_parsing.hpp"
 #include "./rlslp/grammar_for_layered_rlslp.hpp"
-#include "./dynamic_string.hpp"
+#include "./dynamic_rlslp_string.hpp"

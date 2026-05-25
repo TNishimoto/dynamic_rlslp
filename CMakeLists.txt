@@ -39,7 +39,7 @@ set(CMAKE_CXX_FLAGS_RELEASE  "-O3 -DNDEBUG -DNTIME_DEBUG")
 
 INCLUDE_DIRECTORIES(./modules)
 
-add_executable(build_dynamic_string main/build_dynamic_string_main.cpp)
-add_executable(print_dynamic_string main/print_dynamic_string_main.cpp)
+add_executable(build main/build_main.cpp)
+add_executable(print main/print_main.cpp)
 
 

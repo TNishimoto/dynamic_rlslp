@@ -34,7 +34,7 @@ namespace dynRLSLP
                     {
                         NonterminalWithRelativeLevel parent = fastParentDictionary.take_any_important_ancestor(sig);
                         uint64_t position = ManyParentsManager::get_any_occurrence_position(sig, parent, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, true);
-                        FastParentDictionary::MUDA_COUNT++;
+                        //FastParentDictionary::MUDA_COUNT++;
                         auto q = find_type_2_primary_occurrence_of_nonterminal(parent, fastParentDictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list);
                         uint64_t new_pos = position + q.first.position;
                         TemporaryOccurrence new_to(q.first.nonterminal, new_pos);
@@ -59,7 +59,7 @@ namespace dynRLSLP
                 TemporaryOccurrence temp_occurrence = occCacheList[sig];
                 if (temp_occurrence.nonterminal != sig)
                 {
-                    FastParentDictionary::MUDA_COUNT++;
+                    //FastParentDictionary::MUDA_COUNT++;
                     int64_t new_offset = position_offset + temp_occurrence.position;
                     return find_type_2_primary_occurrence_of_nonterminal(temp_occurrence.nonterminal, new_offset, occCacheList);
                 }
@@ -96,7 +96,7 @@ namespace dynRLSLP
 
                 uint64_t base_size = output.size();
                 fastParentDictionary.get_all_type_1_primary_occurrences_of_nonterminal(temp_occurrence.nonterminal, temp_occurrence.position, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, output);
-                FastParentDictionary::NOT_MUDA_COUNT++;
+                //FastParentDictionary::NOT_MUDA_COUNT++;
                 uint64_t new_size = output.size();
 
                 if (new_size - base_size >= 1)
@@ -175,8 +175,8 @@ namespace dynRLSLP
                     stk.pop();
                     TemporaryOccurrence temporary_occurrence = top;
 
+                    /*
                     uint64_t dif = stk.size();
-                    bool b = fastParentDictionary.get_all_type_1_primary_occurrences_of_nonterminal(temporary_occurrence.nonterminal, temporary_occurrence.position, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, stk);
                     uint64_t dif2 = stk.size();
                     if (dif2 - dif <= 1)
                     {
@@ -186,6 +186,9 @@ namespace dynRLSLP
                     {
                         FastParentDictionary::NOT_MUDA_COUNT++;
                     }
+                    */
+
+                    bool b = fastParentDictionary.get_all_type_1_primary_occurrences_of_nonterminal(temporary_occurrence.nonterminal, temporary_occurrence.position, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, stk);
                     if (!b)
                     {
                         output.push_back(temporary_occurrence.position);

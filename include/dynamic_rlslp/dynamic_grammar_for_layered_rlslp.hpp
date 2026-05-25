@@ -251,24 +251,22 @@ namespace dynRLSLP
 			 */
 			uint64_t size_in_bytes([[maybe_unused]] bool only_dynamic_memory = false) const
 			{
-				uint64_t size_in_bytes = 0;
-				uint64_t _capacity = this->grammar.get_rlslp_dictionary().get_explicit_nonterminal_rule_list().capacity();
-				size_in_bytes += sizeof(std::vector<RLSLPRuleBody>) + (sizeof(RLSLPRuleBody) * _capacity);
-				size_in_bytes += sizeof(std::vector<uint8_t>) + (sizeof(unsigned char) * _capacity);
-				size_in_bytes += sizeof(std::vector<uint64_t>) + (sizeof(uint64_t) * _capacity);
+				/*
+				GrammarForLayeredRLSLP grammar;
+				FastParentDictionary fastParentDictionary;
+				std::vector<NonterminalWithRelativeLevel> unused_nonterminals;					// Z
+				std::map<int64_t, NonterminalWithRelativeLevel> character_nonterminal_item_map; // M_{char}
+				std::unordered_map<int64_t, uint64_t> character_id_map;
+				*/
 
-				uint64_t character_nonterminal_item_map_size = this->character_nonterminal_item_map.size();
-				size_in_bytes += ((character_nonterminal_item_map_size + 1) * (sizeof(std::pair<int64_t, NonterminalWithRelativeLevel>) + 3 * sizeof(void *))) + sizeof(void *);
-
-				size_in_bytes += this->fastParentDictionary.size_in_bytes();
-
-				uint64_t doc_size = this->grammar.get_document_counter().size();
-				size_in_bytes += ((doc_size + 1) * (sizeof(std::pair<NonterminalWithRelativeLevel, uint64_t>) + 3 * sizeof(void *))) + sizeof(void *);
-
-				uint64_t _capacity2 = this->unused_nonterminals.capacity();
-				size_in_bytes += sizeof(std::vector<NonterminalWithRelativeLevel>) + (sizeof(NonterminalWithRelativeLevel) * _capacity2);
-
-				return size_in_bytes;
+				uint64_t total_size = 0;
+				total_size += this->grammar.size_in_bytes();
+				total_size += this->fastParentDictionary.size_in_bytes();
+				total_size += stool::Memory::estimate_memory_usage(this->unused_nonterminals);
+				total_size += stool::Memory::estimate_memory_usage(this->character_nonterminal_item_map);
+				total_size += stool::Memory::estimate_memory_usage(this->character_id_map);
+				return total_size;
+	
 			}
 
 			//}@
@@ -623,23 +621,43 @@ namespace dynRLSLP
 			////////////////////////////////////////////////////////////////////////////////
 			//@{
 
+
+
 			/**
 			 * @brief Prints storage and structure statistics for this grammar.
 			 * @param message_paragraph Indentation depth for log output.
 			 */
 			void print_statistics(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
 			{
+				/*
+				GrammarForLayeredRLSLP grammar;
+				FastParentDictionary fastParentDictionary;
+				std::vector<NonterminalWithRelativeLevel> unused_nonterminals;					// Z
+				std::map<int64_t, NonterminalWithRelativeLevel> character_nonterminal_item_map; // M_{char}
+				std::unordered_map<int64_t, uint64_t> character_id_map;
+				*/
+	
 
-				std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics(DynamicGrammarForLayeredRLSLP):" << std::endl;
+
+				std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics (DynamicGrammarForLayeredRLSLP): " << std::endl;
 				this->grammar.print_statistics(message_paragraph + 1);
-
-				if (this->grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedRecompression)
-				{
-					this->grammar.get_random_bit_dictionary().print_statistics(message_paragraph + 1);
-				}
-
 				this->fastParentDictionary.print_statistics(message_paragraph + 1);
+				std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
 			}
+
+			void print_memory_breakdown(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
+			{
+				std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Memory Breakdown (DynamicGrammarForLayeredRLSLP): " << this->size_in_bytes() << " bytes" << std::endl;
+				this->grammar.print_memory_breakdown(message_paragraph + 1);
+				std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "unused_nonterminals: " << stool::Memory::estimate_memory_usage(this->unused_nonterminals) << " bytes" << std::endl;
+				std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "character_nonterminal_item_map: " << stool::Memory::estimate_memory_usage(this->character_nonterminal_item_map) << " bytes" << std::endl;
+				std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "character_id_map: " << stool::Memory::estimate_memory_usage(this->character_id_map) << " bytes" << std::endl;
+				this->fastParentDictionary.print_memory_breakdown(message_paragraph + 1);
+				std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
+
+			}
+
+
 
 			/**
 			 * @brief Print the information of the grammar \p G

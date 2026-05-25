@@ -8,55 +8,12 @@
 #include <functional>
 #include "../../../rlslp/static_operations/run_rule_vector.hpp"
 #include "../../../json_helper.hpp"
+#include "./temporary_occurrence.hpp"
 
 
 namespace dynRLSLP
 {
-        /**
-         * @brief A nonterminal together with a position offset during occurrence enumeration.
-         * @ingroup ParentClasses
-         */
-        struct TemporaryOccurrence
-        {
-            ExplicitNonterminal nonterminal;
-            uint64_t position;
-            /**
-             * @brief Constructs a temporary occurrence for a nonterminal at a position offset.
-             * @param nonterminal Base nonterminal of the occurrence.
-             * @param position Position offset within the expanded string.
-             */
-            TemporaryOccurrence(ExplicitNonterminal nonterminal, uint64_t position) : nonterminal(nonterminal), position(position)
-            {
-            }
-            /**
-             * @brief Default constructor initializing fields to sentinel maximum values.
-             */
-            TemporaryOccurrence() : nonterminal(std::numeric_limits<ExplicitNonterminal>::max()), position(std::numeric_limits<uint64_t>::max())
-            {
-            }
-
-            /**
-             * @brief Creates a null sentinel occurrence.
-             * @return Temporary occurrence with maximum nonterminal and position values.
-             */
-            static TemporaryOccurrence create_null_occurrence()
-            {
-                return TemporaryOccurrence(std::numeric_limits<ExplicitNonterminal>::max(), std::numeric_limits<uint64_t>::max());
-            }
-
-            /**
-             * @brief Tests whether this occurrence is the null sentinel.
-             * @return True if both fields hold their maximum sentinel values.
-             */
-            bool is_null() const
-            {
-                return this->nonterminal == std::numeric_limits<ExplicitNonterminal>::max() && this->position == std::numeric_limits<uint64_t>::max();
-            }
-
-            std::string to_string() const{
-                return "(" + NonterminalFunctions::to_string(this->nonterminal) + ", " + std::to_string(this->position) + ")";
-            }
-        };
+        
 
         /**
          * @brief Manages large numbers of tertiary and quaternary parents for one base nonterminal.
@@ -215,6 +172,8 @@ namespace dynRLSLP
                 }
                 return true;
             }
+
+
 
             
             void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
@@ -503,29 +462,30 @@ namespace dynRLSLP
             ///   @name Print and verification functions
             ////////////////////////////////////////////////////////////////////////////////
             //@{
+
+
+            uint64_t size_in_bytes_for_tertiary_parent_list() const
+            {
+                uint64_t tertiary_parent_list_size = stool::Memory::estimate_memory_usage(this->tertiary_parent_list_);
+                for (const auto &vec : this->tertiary_parent_list_)
+                {
+                    tertiary_parent_list_size += stool::Memory::estimate_memory_usage(vec);
+                }
+                return tertiary_parent_list_size;
+            }
+
+
             /**
              * @brief Returns the memory usage of this manager in bytes.
              * @return Memory footprint of tertiary vectors and quaternary hash maps.
              */
             uint64_t size_in_bytes() const
             {
-                size_t total = 0;
-                // Calculate size used by tertiary_parent_list_
-                total += sizeof(this->tertiary_parent_list_);
-                for (const auto &vec : this->tertiary_parent_list_)
-                {
-                    total += sizeof(vec);
-                    total += sizeof(NonterminalWithRelativeLevel) * vec.size();
-                }
-                // Calculate size used by quaternary_parent_list_
-                total += sizeof(this->quaternary_parent_list_);
-                for (const auto &m : this->quaternary_parent_list_)
-                {
-                    total += sizeof(m);
-                    total += sizeof(typename std::decay<decltype(m)>::type::value_type) * m.size();
-                }
-                return total;
+                uint64_t tertiary_parent_list_size = this->size_in_bytes_for_tertiary_parent_list();
+                uint64_t quaternary_parent_list_size = stool::Memory::estimate_memory_usage(this->quaternary_parent_list_);
+                return tertiary_parent_list_size + quaternary_parent_list_size + sizeof(tertiary_parent_list_);
             }
+
 
             /**
              * @brief Prints all parents managed for one base nonterminal.

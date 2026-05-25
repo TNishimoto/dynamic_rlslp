@@ -365,12 +365,39 @@ namespace dynRLSLP
 			uint64_t implicit_nonterminal_count = this->count_valid_implicit_nonterminals();
 			uint64_t null_nonterminal_count = this->count_null_nonterminals();
 
-			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics(Dictionary):" << std::endl;
-			std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Nonterminals:           \t" << nonterminal_count << std::endl;
-			std::cout << stool::Message::get_paragraph_string(message_paragraph + 3) << "Explicit Nonterminals:      \t" << explicit_nonterminal_count << std::endl;
-			std::cout << stool::Message::get_paragraph_string(message_paragraph + 3) << "Implicit Nonterminals:    \t" << implicit_nonterminal_count << std::endl;
-			std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "Null Nonterminals:      \t" << null_nonterminal_count << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics (DictionaryForLayeredRLSLP): " << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Number of nonterminals:           \t" << nonterminal_count << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "Number of explicit nonterminals:      \t" << explicit_nonterminal_count << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "Number of implicit nonterminals:    \t" << implicit_nonterminal_count << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Number of null nonterminals:      \t" << null_nonterminal_count << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
+
 		}
+
+		void print_memory_breakdown(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
+		{
+			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Memory Breakdown (DictionaryForLayeredRLSLP): " << this->size_in_bytes() << " bytes" << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "explicit_nonterminal_rule_list_: " << stool::Memory::estimate_memory_usage(this->explicit_nonterminal_rule_list_) << " bytes" << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "explicit_nonterminal_level_list_: " << stool::Memory::estimate_memory_usage(this->explicit_nonterminal_level_list_) << " bytes" << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "explicit_nonterminal_length_list_: " << stool::Memory::estimate_memory_usage(this->explicit_nonterminal_length_list_) << " bytes" << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "relative_max_level_list_: " << stool::Memory::estimate_memory_usage(this->relative_max_level_list_) << " bytes" << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
+
+		}
+
+
+
+        uint64_t size_in_bytes() const
+        {
+			uint64_t total_size = 0;
+            uint64_t explicit_nonterminal_rule_list_size = stool::Memory::estimate_memory_usage(this->explicit_nonterminal_rule_list_);
+            uint64_t explicit_nonterminal_level_list_size = stool::Memory::estimate_memory_usage(this->explicit_nonterminal_level_list_);
+            uint64_t explicit_nonterminal_length_list_size = stool::Memory::estimate_memory_usage(this->explicit_nonterminal_length_list_);
+            uint64_t relative_max_level_list_size = stool::Memory::estimate_memory_usage(this->relative_max_level_list_);
+			total_size = explicit_nonterminal_rule_list_size + explicit_nonterminal_level_list_size + explicit_nonterminal_length_list_size + relative_max_level_list_size;
+            return total_size;
+        }
+
 		/**
 		 * @brief Print detailed dictionary statistics.
 		 * @param message_paragraph Indentation level for formatted output.
@@ -404,11 +431,12 @@ namespace dynRLSLP
 			std::sort(nonterminal_length_vector.begin(), nonterminal_length_vector.end(), [](const std::pair<uint64_t, uint64_t> &a, const std::pair<uint64_t, uint64_t> &b)
 					  { return a.first < b.first; });
 
-			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics(Dictionary):" << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Statistics (DictionaryForLayeredRLSLP): " << this->size_in_bytes() << " bytes" << std::endl;
 			std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Nonterminals:           \t" << nonterminal_count << std::endl;
 			std::cout << stool::Message::get_paragraph_string(message_paragraph + 3) << "Explicit Nonterminals:      \t" << explicit_nonterminal_count << std::endl;
 			std::cout << stool::Message::get_paragraph_string(message_paragraph + 3) << "Implicit Nonterminals:    \t" << implicit_nonterminal_count << std::endl;
 			std::cout << stool::Message::get_paragraph_string(message_paragraph + 2) << "Null Nonterminals:      \t" << null_nonterminal_count << std::endl;
+
 
 			for (auto &[length, count] : nonterminal_length_vector)
 			{

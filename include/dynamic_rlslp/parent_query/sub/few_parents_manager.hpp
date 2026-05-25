@@ -241,31 +241,33 @@ namespace dynRLSLP
             ///   @name Print and verification functions
             ////////////////////////////////////////////////////////////////////////////////
             //@{
+
+            uint64_t size_in_bytes_without_many_parents_manager() const
+            {
+                uint64_t total = 0;
+                total += stool::Memory::estimate_memory_usage(this->secondary_parent_list_);
+                total += stool::Memory::estimate_memory_usage(this->level_diff_list_);    
+                total += sizeof(many_parents_manager_);
+                total += sizeof(count_);
+                return total;
+            }
+            
+            
+
             /**
              * @brief Returns the memory usage of this manager in bytes.
              * @return Memory footprint including any owned ManyParentsManager.
              */
             uint64_t size_in_bytes() const
             {
-                uint64_t total = 0;
-                // Size used by secondary_parent_list_
-                total += sizeof(this->secondary_parent_list_);
-                total += sizeof(NonterminalWithRelativeLevel) * this->secondary_parent_list_.size();
-
-                // Size used by level_diff_list_
-                total += sizeof(this->level_diff_list_);
-                total += sizeof(uint16_t) * this->level_diff_list_.size();
-
-                // Size used by pointer to many_parents_manager_
-                total += sizeof(this->many_parents_manager_);
-
-                // If many_parents_manager_ is not null, add its size as well
+                uint64_t total = this->size_in_bytes_without_many_parents_manager();
                 if (this->many_parents_manager_ != nullptr)
                 {
                     total += this->many_parents_manager_->size_in_bytes();
                 }
                 return total;
             }
+
 
             /**
              * @brief Prints all parents managed for one base nonterminal.
