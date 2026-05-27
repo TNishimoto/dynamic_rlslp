@@ -312,7 +312,12 @@ Options:
 ```
 
 
-- See [`examples/short.rr.fa.j.json`](short.rr.fa.j.json) for the full implementation.
+- See [`short.rr.fa.j.json`](examples/log/short.rr.fa.j.json).
+- See [`short.rr.fa.r.json`](examples/log/short.rr.fa.r.json).
+- See [`short.rr.fa.d.log`](examples/log/short.rr.fa.d.log).
+- See [`short.rr.fa.c.json`](examples/log/short.rr.fa.c.json).
+
+
 
 #### print_index (r-index)
 
