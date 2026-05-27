@@ -684,15 +684,13 @@ namespace dynRLSLP
 			}
 
 
-			void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
+			void write_content_as_json_format(std::ofstream &ofs, std::string name, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
 				std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Writing content as JSON format..." << std::endl;
-				ofs << stool::Message::get_paragraph_string(message_paragraph) << "{" << std::endl;
-				ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"DynamicGrammarForLayeredRLSLP\"," << std::endl;
-				ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "{" << std::endl;
-				ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"fastParentDictionary\": " << std::endl;
-				this->fastParentDictionary.write_content_as_json_format(ofs, message_paragraph+2);
-				ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"grammar\": " << std::endl;
-				this->grammar.write_content_as_json_format(ofs, message_paragraph+2);
+				ofs << stool::Message::get_paragraph_string(message_paragraph) << "\"" << name << "\": " << "{" << std::endl;
+				this->fastParentDictionary.write_content_as_json_format(ofs, "fastParentDictionary", message_paragraph+1);
+				ofs << ", " << std::endl;
+				this->grammar.write_content_as_json_format(ofs, "grammar", message_paragraph+1);
+				ofs << ", " << std::endl;
 
 				JsonHelper::write_content_as_json_format<NonterminalWithRelativeLevel>(
 					"unused_nonterminals(std::vector<NonterminalWithRelativeLevel>)",
@@ -700,9 +698,10 @@ namespace dynRLSLP
 					[](const NonterminalWithRelativeLevel &value){ return NonterminalFunctions::to_string(value); },
 					false,
 					ofs,
-					message_paragraph+2
+					false,
+					message_paragraph+1
 				);
-				ofs << std::endl;
+				ofs << ", " << std::endl;
 
 				JsonHelper::write_content_as_json_format<int64_t, NonterminalWithRelativeLevel>(
 					"character_nonterminal_item_map(std::map<int64_t, NonterminalWithRelativeLevel>)",
@@ -711,9 +710,9 @@ namespace dynRLSLP
 					[](const NonterminalWithRelativeLevel &value){ return NonterminalFunctions::to_string(value); },
 					false,
 					ofs,
-					message_paragraph+2
+					message_paragraph+1
 				);
-				ofs << std::endl;
+				ofs << ", " << std::endl;
 
 				JsonHelper::write_content_as_json_format<int64_t, uint64_t>(
 					"character_id_map(std::unordered_map<int64_t, uint64_t>)",
@@ -722,13 +721,9 @@ namespace dynRLSLP
 					[](const uint64_t &value){ return std::to_string(value); },
 					false,
 					ofs,
-					message_paragraph+2
+					message_paragraph+1
 				);
-				ofs << std::endl;
-
-
-				ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "]" << std::endl;
-				ofs << stool::Message::get_paragraph_string(message_paragraph) << "}" << std::endl;
+				ofs << "}";
             
 			}
 	

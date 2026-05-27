@@ -1,6 +1,6 @@
 {
  "root_id": "20",
- "production_rules": "{
+ "production_rules": {
    "0Lev1": "0", 
    "0Lev2": "0Lev1", 
    "0Lev3": "0Lev2", 
@@ -234,5 +234,4 @@
    "19Lev11": "19Lev10", 
    "19": "(16Lev11, 18Lev3)", 
    "20": "(15Lev25, 19Lev11)"
-  }
-}
+  }}

@@ -304,6 +304,7 @@ namespace dynRLSLP
                     [](const uint16_t &value){ return std::to_string(value); },
                     false,
                     ofs,
+                    false,
                     message_paragraph+2
                 );
                 ofs << std::endl;
@@ -314,6 +315,7 @@ namespace dynRLSLP
                     [](const NonterminalWithRelativeLevel &value){ return NonterminalFunctions::to_string(value); },
                     false,
                     ofs,
+                    false,
                     message_paragraph+2
                 );
                 ofs << std::endl;

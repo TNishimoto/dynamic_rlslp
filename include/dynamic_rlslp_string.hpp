@@ -387,8 +387,8 @@ namespace dynRLSLP
 		void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
             std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Writing content as JSON format..." << std::endl;
 			ofs << stool::Message::get_paragraph_string(message_paragraph) << "{" << std::endl;
-			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"DynamicRLSLPString\"," << std::endl;
-			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "[" << std::endl;
+			//ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"DynamicRLSLPString\"," << std::endl;
+			//ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "{" << std::endl;
 
             std::string dictionaryMode_str;
             if(this->dictionaryMode == DictionaryMode::Standard){
@@ -398,10 +398,8 @@ namespace dynRLSLP
             }
 
             ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "\"dictionaryMode\": " << dictionaryMode_str << ", " << std::endl;
-
-
-			this->dynamic_grammar.write_content_as_json_format(ofs, message_paragraph+2);
-			ofs << std::endl;
+			this->dynamic_grammar.write_content_as_json_format(ofs, "dynamic_grammar", message_paragraph+2);
+			ofs << ", " << std::endl;
 
 			JsonHelper::write_content_as_json_format<uint64_t>(
 				"left_short_string_list(std::vector<uint64_t>)",
@@ -409,9 +407,10 @@ namespace dynRLSLP
 				[](const uint64_t &value){ return std::to_string(value); },
 				true,
 				ofs,
+				false,
 				message_paragraph+2
 			);
-			ofs << std::endl;
+			ofs << ", " << std::endl;
 
 			JsonHelper::write_content_as_json_format<uint64_t>(
 				"right_short_string_list(std::vector<uint64_t>)",
@@ -419,9 +418,10 @@ namespace dynRLSLP
 				[](const uint64_t &value){ return std::to_string(value); },
 				true,
 				ofs,
+                false,
 				message_paragraph+2
 			);
-			ofs << std::endl;
+			ofs << ", " << std::endl;
 
 			JsonHelper::write_content_as_json_format<TemporaryOccurrence>(
 				"ancestor_cache_list(std::vector<TemporaryOccurrence>)",
@@ -429,12 +429,13 @@ namespace dynRLSLP
 				[](const TemporaryOccurrence &value){ return value.to_string(); },
 				true,
 				ofs,
+                false,
 				message_paragraph+2
 			);
 			ofs << std::endl;
 
 
-			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "]" << std::endl;
+			//ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "}" << std::endl;
 			ofs << stool::Message::get_paragraph_string(message_paragraph) << "}" << std::endl;
         }
 

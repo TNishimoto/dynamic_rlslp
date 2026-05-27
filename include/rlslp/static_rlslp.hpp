@@ -30,7 +30,7 @@ namespace dynRLSLP
             std::ofstream ofs(file_path);
             ofs << "{" << std::endl;
             ofs << " \"root_id\": \"" << std::to_string(this->root_id) << "\"," << std::endl;
-            ofs << " \"production_rules\": \"" << "{" << std::endl;
+            ofs << " \"production_rules\": " << "{" << std::endl;
 
             for(uint64_t i = 0; i < this->rule_list.size(); i++){
                 RLSLPRuleBody rule = this->rule_list[i];
@@ -42,7 +42,7 @@ namespace dynRLSLP
                     ofs << std::endl;
                 }
             }
-            ofs << stool::Message::get_paragraph_string(1) << "}" << std::endl;
+            ofs << stool::Message::get_paragraph_string(1) << "}";
             ofs << "}" << std::endl;
             ofs.close();
             

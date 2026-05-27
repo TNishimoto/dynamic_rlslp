@@ -409,11 +409,9 @@ namespace dynRLSLP
         }
 
 
-		void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
+		void write_content_as_json_format(std::ofstream &ofs, std::string name, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
             
-			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "{" << std::endl;
-			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"RandomBitDictionary\"," << std::endl;
-			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "{" << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph) << "\"" << name << "\": " << "{" << std::endl;
             ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "\"seed\": " << this->seed << ", " << std::endl;
             ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "\"mt\": " << "\"[std::mt19937_64*]\"" << ", " << std::endl;
             ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "\"dist\": " << "\"[std::uniform_int_distribution<uint64_t>]\"" << ", " << std::endl;
@@ -423,8 +421,10 @@ namespace dynRLSLP
                 [](const uint16_t &value){ return std::to_string(value); },
                 false,
                 ofs,
+                false,
                 message_paragraph+2
             );
+            ofs << ", " << std::endl;
             JsonHelper::write_content_as_json_format<NonterminalWithRelativeLevel, uint64_t>(
                 "middle_random_bits(std::unordered_map<int64_t, uint64_t>)",
                 this->middleRandomBits,
@@ -434,7 +434,7 @@ namespace dynRLSLP
                 ofs,
                 message_paragraph+2
             );
-
+            ofs << ", " << std::endl;
             JsonHelper::write_content_as_json_format<NonterminalWithRelativeLevel, std::vector<uint64_t>>(
                 "long_random_bits(std::unordered_map<int64_t, std::vector<uint64_t>>)",
                 this->longRandomBits,
@@ -455,11 +455,7 @@ namespace dynRLSLP
                 ofs,
                 message_paragraph+2
             );
-
-
-
-			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "}" << std::endl;
-			ofs << stool::Message::get_paragraph_string(message_paragraph) << "}" << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph) << "}";
             
 		}
 

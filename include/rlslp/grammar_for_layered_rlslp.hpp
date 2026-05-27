@@ -535,11 +535,9 @@ namespace dynRLSLP
 
 		}
 
-		void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
+		void write_content_as_json_format(std::ofstream &ofs, std::string name, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
 			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Writing content as JSON format..." << std::endl;
-			ofs << stool::Message::get_paragraph_string(message_paragraph) << "{" << std::endl;
-			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"GrammarForLayeredRLSLP\"," << std::endl;
-			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "{" << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph) << "\"" << name << "\": " << "{" << std::endl;
 
 			std::stringstream grammarParsingType_ss;
 			if(this->grammar_parsing_type == GrammarParsingType::RestrictedRecompression)
@@ -551,7 +549,7 @@ namespace dynRLSLP
 				grammarParsingType_ss << "\"Signature Encoding\"";
 			}
 
-			ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "\"grammar_parsing_type\": " << grammarParsingType_ss.str() << ", " << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"grammar_parsing_type\": " << grammarParsingType_ss.str() << ", " << std::endl;
 
 			JsonHelper::write_content_as_json_format<NonterminalWithRelativeLevel, uint64_t>(
                 "document_counter(std::unordered_map<int64_t, uint64_t>)",
@@ -560,14 +558,13 @@ namespace dynRLSLP
                 [](const uint64_t &value){ return std::to_string(value); },
                 true,
                 ofs,
-                message_paragraph+2
+                message_paragraph+1
             );
-			ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "\"random_bit_dictionary\": " << std::endl;
-			this->random_bit_dictionary.write_content_as_json_format(ofs, message_paragraph+3);
-			ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "\"rlslp_dictionary\": " << std::endl;
-			this->rlslp_dictionary.write_content_as_json_format(ofs, message_paragraph+3);
-			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "}" << std::endl;
-			ofs << stool::Message::get_paragraph_string(message_paragraph) << "}" << std::endl;
+			ofs << ", " << std::endl;
+			this->random_bit_dictionary.write_content_as_json_format(ofs, "random_bit_dictionary", message_paragraph+1);
+			ofs << ", " << std::endl;
+			this->rlslp_dictionary.write_content_as_json_format(ofs, "rlslp_dictionary", message_paragraph+1);			
+			ofs << "}";
         }
 
 

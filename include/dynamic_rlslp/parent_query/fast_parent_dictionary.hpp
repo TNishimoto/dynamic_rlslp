@@ -511,20 +511,18 @@ namespace dynRLSLP
                 std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
             }
 
-            void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
-                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "{" << std::endl;
-                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"FastParentDictionary\"," << std::endl;
-                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "{" << std::endl;
-
+            void write_content_as_json_format(std::ofstream &ofs, std::string name, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
+                ofs << stool::Message::get_paragraph_string(message_paragraph) << "\"" << name << "\": " << "{" << std::endl;
                 JsonHelper::write_content_as_json_format<NonterminalWithRelativeLevel>(
                     "primaryParents(std::vector<NonterminalWithRelativeLevel>)",
                     this->primaryParents,
                     [](const NonterminalWithRelativeLevel &value){ return NonterminalFunctions::to_string(value); },
                     false,
                     ofs,
-                    message_paragraph+2
+                    false,
+                    message_paragraph+1
                 );
-
+                ofs << ", " << std::endl;
                 ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"sub_pointer\": [" << std::endl;
 
                 for(uint64_t i = 0; i < this->sub_pointer.size(); i++){
@@ -545,6 +543,7 @@ namespace dynRLSLP
                             [](const NonterminalWithRelativeLevel &value){ return NonterminalFunctions::to_string(value); },
                             false,
                             ofs,
+                            true,
                             message_paragraph+2
                         );
                     }
@@ -556,7 +555,7 @@ namespace dynRLSLP
                         ofs << "," << std::endl;
                     }
                 }
-                ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "]" << std::endl;
+                ofs << "], " << std::endl;
                 
                 
                 JsonHelper::write_content_as_json_format<ManagerFlag>(
@@ -565,9 +564,10 @@ namespace dynRLSLP
                     [](const ManagerFlag &value){ return std::to_string((uint8_t)value); },
                     false,
                     ofs,
-                    message_paragraph+2
+                    false,
+                    message_paragraph+1
                 );
-                
+                ofs << ", " << std::endl;
                 ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"is_restricted_recompression_mode\": " << this->is_restricted_recompression_mode << ", " << std::endl;
                 if(this->relative_max_level_list_ != nullptr){
                     JsonHelper::write_content_as_json_format<uint16_t>(
@@ -576,13 +576,14 @@ namespace dynRLSLP
                         [](const uint16_t &value){ return std::to_string(value); },
                         false,
                         ofs,
-                        message_paragraph+2
+                        false,
+                        message_paragraph+1
                     );
                 }else{
                     ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"relative_max_level_list_\": ";
                     ofs << "null";
                 }
-                ofs << std::endl;
+                ofs << "}";
             }
 
             /**
