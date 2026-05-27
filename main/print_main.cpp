@@ -76,9 +76,14 @@ int main(int argc, char *argv[])
     ifs.close();
     std::cout << "[DONE]" << std::endl;
 
+	std::cout << "\033[36m" << std::endl;
+	std::cout << "=============RESULT===============" << std::endl;
+	std::cout << "File : " << input_file_path << std::endl;
     ds.print_statistics(0);
     std::cout << std::endl;
     ds.print_memory_breakdown(0);
+	std::cout << "==================================" << std::endl;
+	std::cout << "\033[39m" << std::endl;
 
 
     if (output_dynamic_data_structure_file_path.size() > 0)
@@ -86,6 +91,7 @@ int main(int argc, char *argv[])
         std::ofstream ofs(output_dynamic_data_structure_file_path);
         ds.write_content_as_json_format(ofs);
         ofs.close();
+        std::cout << "The dynamic data structure is written to the json file: " << output_dynamic_data_structure_file_path << std::endl;
     }
     else
     {
@@ -95,13 +101,13 @@ int main(int argc, char *argv[])
     if (output_derivation_tree_file_path.size() > 0)
     {
         std::ofstream ofs_derivation_tree(output_derivation_tree_file_path);
-        std::cout << "Writing the derivation tree to the file...: " << output_derivation_tree_file_path << std::endl;
         std::vector<std::string> derivation_tree = ds.get_derivation_tree_as_plain_text();
         for (auto it : derivation_tree)
         {
             ofs_derivation_tree << it << std::endl;
         }
         ofs_derivation_tree.close();
+        std::cout << "The derivation tree is written to the file: " << output_derivation_tree_file_path << std::endl;
     }
     else
     {
@@ -111,6 +117,7 @@ int main(int argc, char *argv[])
     if (output_canonized_rlslp_file_path.size() > 0)
     {
         ds.convert_to_canonized_rlslp().write_to_file_as_json(output_canonized_rlslp_file_path);
+        std::cout << "The canonized RLSLP is written to the file: " << output_canonized_rlslp_file_path << std::endl;
     }
     else
     {
@@ -120,6 +127,7 @@ int main(int argc, char *argv[])
     if (output_rlslp_file_path.size() > 0)
     {
         ds.convert_to_rlslp().write_to_file_as_json(output_rlslp_file_path);
+        std::cout << "The RLSLP is written to the file: " << output_rlslp_file_path << std::endl;
     }
     else
     {

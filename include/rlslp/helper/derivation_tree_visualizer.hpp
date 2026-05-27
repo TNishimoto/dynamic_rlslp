@@ -105,7 +105,7 @@ namespace dynRLSLP
             if (target_level > 0)
             {
                 compute_derivation_tree_sub(next_items, target_level - 1, explicit_nonterminal_rule_list, explicit_nonterminal_level_list, explicit_nonterminal_length_list, padding, max_level, output_strings);
-                std::cout << "\r target_level: " << target_level << " / " << max_level << std::flush;
+                //std::cout << "\r target_level: " << target_level << " / " << max_level << std::flush;
 
                 uint64_t pos = 0;
                 uint64_t total_length = 0;

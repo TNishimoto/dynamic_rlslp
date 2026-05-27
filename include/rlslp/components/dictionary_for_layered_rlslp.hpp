@@ -488,7 +488,6 @@ namespace dynRLSLP
 		}
 
 		void write_content_as_json_format(std::ofstream &ofs, std::string name, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
-			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Writing content as JSON format..." << std::endl;
 			ofs << stool::Message::get_paragraph_string(message_paragraph) << "\"" << name << "\": " << "[" << std::endl;
 			ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "[" << "\"RLSLP Rule\", \"Level\", \"Length\", \"Relative Max Level\"" << "], " << std::endl;
 

@@ -206,18 +206,18 @@ Build mode : Online
     Statistics (DynamicGrammarForLayeredRLSLP): 
       Statistics (GrammarForLayeredRLSLP): 
         Compression Algorithm:  Restricted Recompression
-        Text Length:    65
-        The level of the derivation tree: 68
+        Text Length:    41
+        The level of the derivation tree: 70
         Statistics (DictionaryForLayeredRLSLP): 
-          Number of nonterminals:               239
+          Number of nonterminals:               229
             Number of explicit nonterminals:            14
-            Number of implicit nonterminals:            225
+            Number of implicit nonterminals:            215
           Number of null nonterminals:          0
         [END]
         Statistics (RandomBitDictionary): 
           Seed: 0
           Number of short random bytes: 56
-          Number of middle random bytes: 152
+          Number of middle random bytes: 104
           Number of long random bytes: 40
         [END]
       [END]
@@ -230,7 +230,7 @@ Build mode : Online
     [END]
   [END]
 Excecution time : 0ms [infchars/ms]
-Memory footprint: 1632 KB (1 MB)
+Memory footprint: 1616 KB (1 MB)
 ==================================
 ```
 
@@ -251,7 +251,7 @@ Build mode : Offline
     Statistics (DynamicGrammarForLayeredRLSLP): 
       Statistics (GrammarForLayeredRLSLP): 
         Compression Algorithm:  Signature Encoding
-        Text Length:    65
+        Text Length:    41
         The level of the derivation tree: 8
         Statistics (DictionaryForLayeredRLSLP): 
           Number of nonterminals:               36
@@ -275,7 +275,7 @@ Build mode : Offline
     [END]
   [END]
 Excecution time : 0ms [infchars/ms]
-Memory footprint: 1664 KB (1 MB)
+Memory footprint: 1616 KB (1 MB)
 ==================================
 ```
 ---
@@ -300,15 +300,84 @@ Options:
   -?, --help                                       print this message
 ```
 
+
 **Example:**
 
 ```bash
-# From text
-./build_r_index -i ../examples/ab.txt -o ab.dri
+./print -i short.rr.fa.ds -j short.rr.fa.j.json -r short.rr.fa.r.json -d short.rr.fa.d.log -c short.rr.fa.c.json
+```
 
-# From BWT
-./build_bwt -i ../examples/ab.txt -o ab.bwt -c "$"
-./build_r_index -i ab.bwt -o ab.dri -u 1
+```
+=============RESULT===============
+File : short.rr.fa.ds
+Statistics (DynamicRLSLPString)
+  Mode: Fast
+  Left Short Strings (Cache): 14 * 8 bytes
+  Right Short Strings (Cache): 14 * 8 bytes
+  Ancestor Cache List (Cache): 14 * 16 bytes
+  Statistics (DynamicGrammarForLayeredRLSLP): 
+    Statistics (GrammarForLayeredRLSLP): 
+      Compression Algorithm:    Restricted Recompression
+      Text Length:      41
+      The level of the derivation tree: 70
+      Statistics (DictionaryForLayeredRLSLP): 
+        Number of nonterminals:                 229
+          Number of explicit nonterminals:              14
+          Number of implicit nonterminals:      215
+        Number of null nonterminals:            0
+      [END]
+      Statistics (RandomBitDictionary): 
+        Seed: 16539473643135484331
+        Number of short random bytes: 52
+        Number of middle random bytes: 104
+        Number of long random bytes: 40
+      [END]
+    [END]
+    Statistics (FastParentDictionary): 30 pointers
+      Number of lightweight Pointers: 19
+      Number of middleweight Pointers: 0
+      Number of heavyweight Pointers: 0
+      Number of null Pointers: 11
+    [END]
+  [END]
+[END]
+
+Memory Breakdown (DynamicRLSLPString): 2327 bytes
+  left_short_string_list: 136 bytes
+  right_short_string_list: 136 bytes
+  ancestor_cache_list: 248 bytes
+  dictionary_mode: 1 bytes
+  Memory Breakdown (DynamicGrammarForLayeredRLSLP): 1727 bytes
+    Memory Breakdown (GrammarForLayeredRLSLP): 912 bytes
+      document_counter: 80 bytes
+      grammar_parsing_type: 4 bytes
+      Memory Breakdown (DictionaryForLayeredRLSLP): 600 bytes
+        explicit_nonterminal_rule_list_: 360 bytes
+        explicit_nonterminal_level_list_: 52 bytes
+        explicit_nonterminal_length_list_: 136 bytes
+        relative_max_level_list_: 52 bytes
+      [END]
+      Memory Breakdown (RandomBitDictionary): 228 bytes
+        short_random_bits_: 52 bytes
+        middle_random_bits_: 104 bytes
+        long_random_bits_: 40 bytes, counts: 0
+        Others: 32 bytes
+      [END]
+    [END]
+    unused_nonterminals: 24 bytes
+    character_nonterminal_item_map: 216 bytes
+    character_id_map: 176 bytes
+    Memory Breakdown (FastParentDictionary): 399 bytes
+      primaryParents: 136 bytes
+      sub_pointer: 136 bytes
+      sub_pointer_status_: 38 bytes
+      Memory Breakdown (SubParentVector): 80 bytes, count: 2
+      Memory Breakdown (FewParentDictionary): 0 bytes, count: 0
+      Memory Breakdown (ManyParentDictionary): 0 bytes, count: 0
+    [END]
+  [END]
+[END]
+==================================
 ```
 
 The output files are as follows: 

@@ -2,13 +2,13 @@
     "dictionaryMode": "Fast", 
     "dynamic_grammar": {
       "fastParentDictionary": {
-        "primaryParents(std::vector<NonterminalWithRelativeLevel>)": ["12", "6", "9", "5", "10", "7", "8", "8", "11", "10", "13", "12", "13", "281474976710655Lev32767"], 
+        "primaryParents(std::vector<NonterminalWithRelativeLevel>)": ["13", "6", "8", "5", "6", "7", "10", "10", "9", "12", "11", "12", "13", "281474976710655Lev32767"], 
         "sub_pointer": [
           {"vec(std::vector<NonterminalWithRelativeLevel>)": ["4", "7"]},
-          {"vec(std::vector<NonterminalWithRelativeLevel>)": ["4", "9"]},
+          {"vec(std::vector<NonterminalWithRelativeLevel>)": ["4", "8"]},
           "(5, 0)",
           null,
-          "(6, 0)",
+          "(9, 0)",
           null,
           null,
           null,
@@ -20,40 +20,39 @@
           null], 
         "sub_pointer_status_(std::vector<ManagerFlag>)": ["3", "3", "1", "0", "1", "0", "0", "0", "0", "0", "0", "0", "0", "0"], 
         "is_restricted_recompression_mode": 1, 
-        "relative_max_level_list_(std::vector<uint16_t>)": ["65", "13", "3", "1", "15", "11", "5", "5", "8", "13", "49", "36", "1", "0"]}, 
+        "relative_max_level_list_(std::vector<uint16_t>)": ["69", "13", "3", "1", "11", "11", "5", "5", "9", "41", "8", "26", "13", "0"]}, 
       "grammar": {
         "grammar_parsing_type": "Restricted Recompression", 
         "document_counter(std::unordered_map<int64_t, uint64_t>)": {
           "13": "1"
         }, 
         "random_bit_dictionary": {
-            "seed": 1633054691143067132, 
+            "seed": 11754802696138351895, 
             "mt": "[std::mt19937_64*]", 
             "dist": "[std::uniform_int_distribution<uint64_t>]", 
-            "short_random_bits(std::vector<uint16_t>)": ["56382", "63883", "59577", "64750", "9644", "59886", "57647", "18152", "17254", "18969", "13587", "63224", "12865", "35059"], 
+            "short_random_bits(std::vector<uint16_t>)": ["56382", "63883", "59577", "64750", "9644", "59886", "57647", "18152", "17254", "18969", "13587", "63224", "25656", "12865"], 
             "middle_random_bits(std::unordered_map<int64_t, uint64_t>)": {
               "0": "17163424360305231502", 
-              "10": "6352792256529822470", 
-              "11": "4696818759170745400"
+              "9": "6352792256529822470"
             }, 
             "long_random_bits(std::unordered_map<int64_t, std::vector<uint64_t>>)": {
             }        }, 
         "rlslp_dictionary": [
             ["RLSLP Rule", "Level", "Length", "Relative Max Level"], 
-            ["0 -> c", 0, 1, 65], 
+            ["0 -> c", 0, 1, 69], 
             ["1 -> a", 0, 1, 13], 
             ["2 -> o", 0, 1, 3], 
             ["3 -> _", 0, 1, 1], 
-            ["4 -> (1Lev1, 0Lev1)", 2, 2, 15], 
+            ["4 -> (1Lev1, 0Lev1)", 2, 2, 11], 
             ["5 -> (2Lev1, 3Lev1)", 2, 2, 11], 
             ["6 -> (4Lev11, 1Lev13)", 14, 3, 5], 
             ["7 -> (5Lev11, 0Lev13)", 14, 3, 5], 
-            ["8 -> (6Lev5, 7Lev5)", 20, 6, 8], 
-            ["9 -> (1Lev3, 2Lev3)", 4, 2, 13], 
-            ["10 -> (4Lev15, 9Lev13)", 18, 4, 49], 
-            ["11 -> (8Lev8)^10", 29, 60, 36], 
-            ["12 -> (0Lev65, 11Lev36)", 66, 61, 1], 
-            ["13 -> (12Lev1, 10Lev49)", 68, 65, 0]
+            ["8 -> (1Lev3, 2Lev3)", 4, 2, 9], 
+            ["9 -> (4Lev11, 8Lev9)", 14, 4, 41], 
+            ["10 -> (6Lev5, 7Lev5)", 20, 6, 8], 
+            ["11 -> (10Lev8)^6", 29, 36, 26], 
+            ["12 -> (11Lev26, 9Lev41)", 56, 40, 13], 
+            ["13 -> (0Lev69, 12Lev13)", 70, 41, 0]
         ]}, 
       "unused_nonterminals(std::vector<NonterminalWithRelativeLevel>)": [], 
       "character_nonterminal_item_map(std::map<int64_t, NonterminalWithRelativeLevel>)": {"95": "3", "97": "1", "99": "0", "111": "2"}, 
@@ -67,11 +66,11 @@
       "13835058055282163712", 
       "7205759403792793600", 
       "14411518807585587200", 
-      "7430939385161318400", 
       "8070450532247928832", 
       "7421932185906577408", 
+      "7430939385161318400", 
       "7432754022373812006", 
-      "11081560542448228809", 
+      "7432754022373812006", 
       "11081560542448228809"
     ], 
     "right_short_string_list(std::vector<uint64_t>)": [
@@ -83,27 +82,27 @@
       "3458764513820540928", 
       "7205759403792793600", 
       "10088063165309911040", 
-      "10200653155994173440", 
       "14987979559889010688", 
       "15636497906230362112", 
+      "10200653155994173440", 
       "10203144157985869208", 
-      "10203144157985869208", 
+      "15676353938097494413", 
       "15676353938097494413"
     ], 
     "ancestor_cache_list(std::vector<TemporaryOccurrence>)": [
       "(0, 0)", 
       "(1, 0)", 
       "(2, 0)", 
-      "(8, 4)", 
+      "(10, 4)", 
       "(4, 0)", 
-      "(8, 3)", 
-      "(8, 0)", 
-      "(8, 3)", 
-      "(8, 0)", 
-      "(13, 63)", 
-      "(13, 61)", 
+      "(10, 3)", 
+      "(10, 0)", 
+      "(10, 3)", 
+      "(13, 39)", 
+      "(13, 37)", 
+      "(10, 0)", 
       "(13, 1)", 
-      "(13, 0)", 
+      "(13, 1)", 
       "(13, 0)"
     ]
 }
