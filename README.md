@@ -136,20 +136,9 @@ cd dynamic_r_index
 git submodule update --init --recursive
 ```
 
-### Install SDSL
+## Executable File
 
-If you haven't installed SDSL yet:
-
-```bash
-git clone https://github.com/simongog/sdsl-lite.git
-cd sdsl-lite
-./install.sh ~/local
-cd ..
-```
-
-This installs the library to `~/local/lib` and headers to `~/local/include`.
-
-### Build
+### build
 
 ```bash
 mkdir build
@@ -179,14 +168,12 @@ make
 
 ## Usage
 
-### Common Tools
-
-#### build
+### Build
 
 Build the dynamic RLSLP representing a given text.
 
 ```
-options:
+Options:
   -i, --input_file_path     Input text file path (string)
   -o, --output_file_path    Output data structure file path (string [=])
   -p, --parser              Grammar_parser(restricted_recompression or signature_encoding) (string [=restricted_recompression])
@@ -291,23 +278,26 @@ Excecution time : 0ms [infchars/ms]
 Memory footprint: 1616 KB (1 MB)
 ==================================
 ```
-
-
 ---
 
-### Dynamic r-index Usage
+### Print Information for Dynamic RLSLPs
 
-#### build_r_index
+Displays the statistics and the memory breakdown for the input dynamic data structure storing an RLSLP. 
+In addition, outputs the following information: 
 
-Builds the dynamic r-index from a text file or BWT.
+- The JSON file representing the content of the input dynamic data structure.
+- The JSON file representing the input RLSLP.
+- The plain text file representing the derivation tree of the input RLSLP.
+- The JSON file representing the canonized RLSLP corresponding to the input RLSLP. 
 
 ```
 Options:
-  -i, --input_file_path           Input file path (text or BWT)
-  -o, --output_file_path          Output index file path (.dri)
-  -c, --null_terminated_string    End-of-text character (default: \0)
-  -u, --is_bwt                    Set to 1 if input is BWT
-  -?, --help                      Show help
+  -i, --input_file_path                            The file path to a dynamic data structure storingan RLSLP (string)
+  -j, --output_dynamic_data_structure_file_path    File path for writing the input dynamic data structure in JSON format (string [=])
+  -r, --output_rlslp_file_path                     File path for writing the RLSLP in JSON format (string [=])
+  -d, --output_derivation_tree_file_path           File path for writing the derivation tree of the RLSLP (string [=])
+  -c, --output_canonized_rlslp_file_path           File path for writing the canonized RLSLP corresponding to the RLSLP in JSON format (string [=])
+  -?, --help                                       print this message
 ```
 
 **Example:**
@@ -320,6 +310,9 @@ Options:
 ./build_bwt -i ../examples/ab.txt -o ab.bwt -c "$"
 ./build_r_index -i ab.bwt -o ab.dri -u 1
 ```
+
+
+- See [`examples/short.rr.fa.j.json`](short.rr.fa.j.json) for the full implementation.
 
 #### print_index (r-index)
 

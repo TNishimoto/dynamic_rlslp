@@ -1,0 +1,160 @@
+{
+  "data_structure": "DynamicRLSLPString",
+  "content": [
+    "dictionaryMode": "Fast", 
+    {
+      "data_structure": "DynamicGrammarForLayeredRLSLP",
+      "content": {
+      "fastParentDictionary": 
+          {
+          "data_structure": "FastParentDictionary",
+          "content": {
+            "primaryParents(std::vector<NonterminalWithRelativeLevel>)": ["8", "8", "6", "10", "7", "9", "12", "10", "11", "16", "13", "18", "16", "15", "17", "20", "19", "18", "19", "20", "281474976710655Lev32767"]          "sub_pointer": [
+            "vec(std::vector<NonterminalWithRelativeLevel>)": ["6", "7"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            "(11, 1)",
+            null,
+            "(9, 1)",
+            "(14, 1)",
+            "(12, 1)",
+            "vec(std::vector<NonterminalWithRelativeLevel>)": ["13", "14", "15"],
+            "(17, 1)",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null          ]
+            "sub_pointer_status_(std::vector<ManagerFlag>)": ["3", "0", "0", "0", "0", "0", "1", "0", "1", "1", "1", "3", "1", "0", "0", "0", "0", "0", "0", "0", "0"]          "is_restricted_recompression_mode": 1, 
+            "relative_max_level_list_(std::vector<uint16_t>)": ["5", "5", "1", "13", "3", "13", "17", "9", "11", "19", "9", "23", "13", "7", "7", "25", "11", "7", "3", "11", "0"]
+      "grammar": 
+        {
+          "data_structure": "GrammarForLayeredRLSLP",
+          "content": {
+            "grammar_parsing_type": "Restricted Recompression", 
+            "document_counter(std::unordered_map<int64_t, uint64_t>)": {
+              "20": "1"
+            }            "random_bit_dictionary": 
+                {
+                "data_structure": "RandomBitDictionary",
+                "content": {
+                  "seed": 14663206071080703300, 
+                  "mt": "[std::mt19937_64*]", 
+                  "dist": "[std::uniform_int_distribution<uint64_t>]", 
+                  "short_random_bits(std::vector<uint16_t>)": ["56382", "63883", "59577", "64750", "9644", "59886", "57647", "18152", "17254", "18969", "13587", "63224", "34446", "62214", "25656", "12865", "35059", "63305", "51317", "24220", "36623"]                  "middle_random_bits(std::unordered_map<int64_t, uint64_t>)": {
+                  }                  "long_random_bits(std::unordered_map<int64_t, std::vector<uint64_t>>)": {
+                  }                }
+              }
+            "rlslp_dictionary": 
+                {
+                "data_structure": "DictionaryForLayeredRLSLP",
+                "content": {
+                  ["RLSLP Rule", "Level", "Length", "Relative Max Level"], 
+                  ["0 -> a", 0, 1, 5], 
+                  ["1 -> b", 0, 1, 5], 
+                  ["2 -> r", 0, 1, 1], 
+                  ["3 -> c", 0, 1, 13], 
+                  ["4 -> d", 0, 1, 3], 
+                  ["5 -> _", 0, 1, 13], 
+                  ["6 -> (2Lev1, 0Lev1)", 2, 2, 17], 
+                  ["7 -> (0Lev3, 4Lev3)", 4, 2, 9], 
+                  ["8 -> (0Lev5, 1Lev5)", 6, 2, 11], 
+                  ["9 -> (5Lev13, 8Lev7)", 14, 3, 19], 
+                  ["10 -> (3Lev13, 7Lev9)", 14, 3, 9], 
+                  ["11 -> (8Lev11, 6Lev15)", 18, 4, 23], 
+                  ["12 -> (6Lev17, 10Lev5)", 20, 5, 13], 
+                  ["13 -> (10Lev9, 11Lev5)", 24, 7, 7], 
+                  ["14 -> (11Lev7, 9Lev11)", 26, 7, 7], 
+                  ["15 -> (11Lev13, 13Lev7)", 32, 11, 25], 
+                  ["16 -> (9Lev19, 12Lev13)", 34, 8, 11], 
+                  ["17 -> (14Lev7, 12Lev13)", 34, 12, 7], 
+                  ["18 -> (17Lev7, 11Lev23)", 42, 16, 3], 
+                  ["19 -> (16Lev11, 18Lev3)", 46, 24, 11], 
+                  ["20 -> (15Lev25, 19Lev11)", 58, 35, 0]
+                ]
+              }
+          }
+        }
+        "unused_nonterminals(std::vector<NonterminalWithRelativeLevel>)": []
+        "character_nonterminal_item_map(std::map<int64_t, NonterminalWithRelativeLevel>)": {"95": "5", "97": "0", "98": "1", "99": "3", "100": "4", "114": "2"}
+        "character_id_map(std::unordered_map<int64_t, uint64_t>)": {"95": "0", "100": "4", "97": "1", "98": "2", "99": "3", "114": "5"}
+      ]
+    }
+
+    "left_short_string_list(std::vector<uint64_t>)": [
+      "1152921504606846976", 
+      "2305843009213693952", 
+      "5764607523034234880", 
+      "3458764513820540928", 
+      "4611686018427387904", 
+      "0", 
+      "5836665117072162816", 
+      "1441151880758558720", 
+      "1297036692682702848", 
+      "81064793292668928", 
+      "3548836506367950848", 
+      "1319836165796265984", 
+      "5850527759675162624", 
+      "3549158731994365952", 
+      "1319837402746847232", 
+      "1319890321660706816", 
+      "82493144796495872", 
+      "1319837424541761536", 
+      "1319837424541766225", 
+      "82493145103794469", 
+      "1319890321660711505"
+    ]
+    "right_short_string_list(std::vector<uint64_t>)": [
+      "1152921504606846976", 
+      "2305843009213693952", 
+      "5764607523034234880", 
+      "3458764513820540928", 
+      "4611686018427387904", 
+      "0", 
+      "1513209474796486656", 
+      "4683743612465315840", 
+      "2377900603251621888", 
+      "2377900603251621888", 
+      "4697254411347427328", 
+      "1522498149027938304", 
+      "4697623847254360064", 
+      "1522569823442173952", 
+      "2378272306901286912", 
+      "1522569829113921536", 
+      "4697626114997092352", 
+      "4697626115351576576", 
+      "1522569829113926945", 
+      "1522569829113926945", 
+      "1522569829113926945"
+    ]
+    "ancestor_cache_list(std::vector<TemporaryOccurrence>)": [
+      "(0, 0)", 
+      "(8, 1)", 
+      "(6, 0)", 
+      "(10, 0)", 
+      "(10, 2)", 
+      "(9, 0)", 
+      "(6, 0)", 
+      "(10, 1)", 
+      "(8, 0)", 
+      "(9, 0)", 
+      "(10, 0)", 
+      "(11, 0)", 
+      "(12, 0)", 
+      "(20, 4)", 
+      "(20, 19)", 
+      "(20, 0)", 
+      "(20, 11)", 
+      "(20, 19)", 
+      "(20, 19)", 
+      "(20, 11)", 
+      "(20, 0)"
+    ]
+  ]
+}

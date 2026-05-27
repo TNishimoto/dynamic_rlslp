@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 	cmdline::parser p;
 
 	p.add<std::string>("input_file_path", 'i', "Input text file path", true);
-	p.add<std::string>("output_file_path", 'o', "Output data structure file path", false, "");
+	p.add<std::string>("output_file_path", 'o', "File path for writing the dynamic data structure storing an RLSLP deriving the input text", false, "");
 	p.add<std::string>("parser", 'p', "Grammar_parser(restricted_recompression or signature_encoding)", false, "restricted_recompression");
 	p.add<uint64_t>("seed", 's', "Seed", false, 0);
 	p.add<bool>("offline_build", 'f', "Offline build mode", false, false);
