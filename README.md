@@ -197,40 +197,40 @@ Options:
 =============RESULT===============
 File : ../examples/short.txt
 Output : short.rr.fa.ds
-Processing Mode : Online
+Build mode : Online
   Statistics (DynamicRLSLPString)
     Mode: Fast
-    Left Short Strings (Cache): 21 * 8 bytes
-    Right Short Strings (Cache): 21 * 8 bytes
-    Ancestor Cache List (Cache): 21 * 16 bytes
+    Left Short Strings (Cache): 14 * 8 bytes
+    Right Short Strings (Cache): 14 * 8 bytes
+    Ancestor Cache List (Cache): 14 * 16 bytes
     Statistics (DynamicGrammarForLayeredRLSLP): 
       Statistics (GrammarForLayeredRLSLP): 
         Compression Algorithm:  Restricted Recompression
-        Text Length:    35
-        The level of the derivation tree: 58
+        Text Length:    65
+        The level of the derivation tree: 68
         Statistics (DictionaryForLayeredRLSLP): 
-          Number of nonterminals:               233
-            Number of explicit nonterminals:            21
-            Number of implicit nonterminals:            212
+          Number of nonterminals:               239
+            Number of explicit nonterminals:            14
+            Number of implicit nonterminals:            225
           Number of null nonterminals:          0
         [END]
         Statistics (RandomBitDictionary): 
           Seed: 0
-          Number of short random bytes: 88
-          Number of middle random bytes: 40
+          Number of short random bytes: 56
+          Number of middle random bytes: 152
           Number of long random bytes: 40
         [END]
       [END]
-      Statistics (FastParentDictionary): 45 pointers
-        Number of lightweight Pointers: 30
+      Statistics (FastParentDictionary): 30 pointers
+        Number of lightweight Pointers: 19
         Number of middleweight Pointers: 0
         Number of heavyweight Pointers: 0
-        Number of null Pointers: 15
+        Number of null Pointers: 11
       [END]
     [END]
   [END]
 Excecution time : 0ms [infchars/ms]
-Memory footprint: 1616 KB (1 MB)
+Memory footprint: 1632 KB (1 MB)
 ==================================
 ```
 
@@ -242,7 +242,7 @@ Memory footprint: 1616 KB (1 MB)
 =============RESULT===============
 File : ../examples/short.txt
 Output : short.se.st.ds
-Processing Mode : Offline
+Build mode : Offline
   Statistics (DynamicRLSLPString)
     Mode: Standard
     Left Short Strings (Cache): 0 * 8 bytes
@@ -251,12 +251,12 @@ Processing Mode : Offline
     Statistics (DynamicGrammarForLayeredRLSLP): 
       Statistics (GrammarForLayeredRLSLP): 
         Compression Algorithm:  Signature Encoding
-        Text Length:    35
+        Text Length:    65
         The level of the derivation tree: 8
         Statistics (DictionaryForLayeredRLSLP): 
-          Number of nonterminals:               46
-            Number of explicit nonterminals:            26
-            Number of implicit nonterminals:            20
+          Number of nonterminals:               36
+            Number of explicit nonterminals:            21
+            Number of implicit nonterminals:            15
           Number of null nonterminals:          0
         [END]
         Statistics (RandomBitDictionary): 
@@ -266,16 +266,16 @@ Processing Mode : Offline
           Number of long random bytes: 40
         [END]
       [END]
-      Statistics (FastParentDictionary): 58 pointers
-        Number of lightweight Pointers: 40
+      Statistics (FastParentDictionary): 49 pointers
+        Number of lightweight Pointers: 33
         Number of middleweight Pointers: 0
         Number of heavyweight Pointers: 0
-        Number of null Pointers: 18
+        Number of null Pointers: 16
       [END]
     [END]
   [END]
 Excecution time : 0ms [infchars/ms]
-Memory footprint: 1616 KB (1 MB)
+Memory footprint: 1664 KB (1 MB)
 ==================================
 ```
 ---
@@ -311,11 +311,12 @@ Options:
 ./build_r_index -i ab.bwt -o ab.dri -u 1
 ```
 
+The output files are as follows: 
 
-- See [`short.rr.fa.j.json`](examples/log/short.rr.fa.j.json).
-- See [`short.rr.fa.r.json`](examples/log/short.rr.fa.r.json).
-- See [`short.rr.fa.d.log`](examples/log/short.rr.fa.d.log).
-- See [`short.rr.fa.c.json`](examples/log/short.rr.fa.c.json).
+- [`short.rr.fa.j.json`](examples/log/short.rr.fa.j.json).
+- [`short.rr.fa.r.json`](examples/log/short.rr.fa.r.json).
+- [`short.rr.fa.d.log`](examples/log/short.rr.fa.d.log).
+- [`short.rr.fa.c.json`](examples/log/short.rr.fa.c.json).
 
 
 
