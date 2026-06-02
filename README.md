@@ -387,154 +387,65 @@ The output files are as follows:
 - [`short.rr.fa.d.log`](examples/log/short.rr.fa.d.log).
 - [`short.rr.fa.c.json`](examples/log/short.rr.fa.c.json).
 
+### Query
 
-
-#### print_index (r-index)
-
-Displays r-index information and optionally extracts the text/BWT.
+Executes queries on a dynamic RLSLP from a TSV query file.
 
 ```
-Options:
-  -i, --input_file_path     Input index file path (.dri)
-  -o, --output_text_path    Output text file path (optional)
-  -b, --output_bwt_path     Output BWT file path (optional)
-  -?, --help                Show help
+usage: ./query --input_index_path=string --input_query_path=string --output_log_path=string [options] ... 
+options:
+  -i, --input_index_path              Input index file path (.ds) (string)
+  -q, --input_query_path              Input query file path (TSV format) (string)
+  -w, --output_log_path               Output log file path (string)
+  -o, --output_index_path             Save updated index (optional) (string [=])
+  -t, --alternative_tab_key           The alternative tab key for the query file (optional) (string [=])
+  -n, --alternative_line_break_key    The alternative line break key for the query file (optional) (string [=])
+  -?, --help                          print this message
 ```
+
+**Supported Queries:**
+
+| Query        | Param 1 | Param 2 | Description                                                                                     |
+| ------------ | ------- | ------- | ----------------------------------------------------------------------------------------------- |
+| `ACCESS`     | i       | m       | Return T[i..i+m-1]                                                                              |
+| `DECOMPRESS` | F       | -       | Write the string derived by the RLSLP using filepath F                                          |
+| `LCE`        | i       | j       | Return the length of the longest common prefix between two suffixes T[i..n-1] and T[j..n-1]     |
+| `INSERT`     | i       | P       | Update the input data structure for an insertion of a string P into T at position i             |
+| `DELETE`     | i       | m       | Update the input data structure for a deletion of substring T[i..i+m-1] from T                  |
+
 
 **Example:**
 
 ```bash
-./print_index -i ab.dri
+cat ../examples/query.tsv
+./query -i short.rr.fa.ds -q ../examples/query.tsv -w query.log -o update.ds
+cat short.1.txt
+cat short.2.txt
+cat short.3.txt
 ```
+> ACCESS  5       15
+> LCE     5       10
+> DECOMPRESS      short.1.txt
+> DELETE  5       30
+> DECOMPRESS      short.2.txt
+> INSERT  5       _aaa
+> DECOMPRESS      short.3.txt
 
+=============RESULT===============
+Index File:                 short.rr.fa.ds
+Query File:                 ../examples/query.tsv
+Log File:                   query.log
+Output Index File:          update.ds
+Alternative Tab Key:        
+Alternative Line Break Key: 
+==================================
+
+> cacao_cacao_cacao_cacao_cacao_cacao_cacao
+
+> cacao_cacao
+
+> cacao_aaa_cacao
 ```
-Statistics(DynamicRIndex):
-  Text length:              26
-  Text:                     aaaaABAaaaaABAaaaABAaaaab$
-  Alphabet size:            5
-  Alphabet:                 [$, A, B, a, b]
-  BWT:                      baaaBBBAAAaaaaaaaaAA$Aaaaa
-  The number of runs:       9
-```
-
-#### query (r-index)
-
-Executes queries on a dynamic r-index from a TSV command file.
-
-```
-Options:
-  -i, --input_index_path    Input index file path (.dri)
-  -q, --command_file        Command file path (TSV format)
-  -w, --log_file            Output log file path
-  -o, --output_index_path   Save updated index (optional)
-  -?, --help                Show help
-```
-
-**Supported Commands:**
-
-| Command      | Param 1 | Param 2 | Description                                |
-| ------------ | ------- | ------- | ------------------------------------------ |
-| `COUNT`      | P       | -       | Count occurrences of pattern P             |
-| `LOCATE`     | P       | -       | Find all positions of pattern P            |
-| `LOCATE_SUM` | P       | -       | Sum of all occurrence positions            |
-| `INSERT`     | i       | P       | Insert string P at position i              |
-| `DELETE`     | i       | m       | Delete m characters starting at position i |
-| `PRINT`      | -       | -       | Print current text and BWT                 |
-
-**Example command file** (`command.tsv`):
-
-```
-PRINT
-COUNT ABA
-LOCATE ABA
-INSERT 3 bbbb
-PRINT
-DELETE 3 5
-PRINT
-```
-
-**Example:**
-
-```bash
-./build_r_index -i ../examples/ab.txt -o ab.dri
-./query -i ab.dri -q ../examples/command.tsv -w result.log
-cat result.log
-```
-
-**Sample output** (`result.log`):
-
-```
-0	PRINT	Text:	aaaaABAaaaaABAaaaABAaaaab$	BWT:	baaaBBBAAAaaaaaaaaAA$Aaaaa
-1	COUNT	The number of occurrences of the given pattern: 	3	Time (microseconds): 	51
-2	LOCATE	The occurrences of the given pattern: 	[11, 4, 17]	Time (microseconds): 	57
-3	INSERT	Reorder count: 	3	Time (microseconds): 	25
-4	PRINT	Text:	aaabbbbaABAaaaaABAaaaABAaaaab$	BWT:	baaaBBBAAAabaaaaAAAa$aaaaabbba
-...
-```
-
----
-
-### Dynamic FM-index Usage
-
-#### build_fm_index
-
-Builds the dynamic FM-index from a text file or BWT.
-
-```
-Options:
-  -i, --input_file_path           Input file path (text or BWT)
-  -o, --output_file_path          Output index file path (.dfmi)
-  -c, --null_terminated_string    End-of-text character (default: \0)
-  -u, --is_bwt                    Set to 1 if input is BWT
-  -s, --sampling_interval         SA sampling interval (default: 32)
-  -?, --help                      Show help
-```
-
-**Example:**
-
-```bash
-# Default sampling interval (32)
-./build_fm_index -i ../examples/ab.txt -o ab.dfmi
-
-# Custom sampling interval
-./build_fm_index -i ../examples/ab.txt -o ab.dfmi -s 8
-```
-
-#### print_index (FM-index)
-
-Displays FM-index information and optionally extracts the text/BWT.
-
-```bash
-./print_index -i ab.dfmi
-```
-
-```
-Statistics(DynamicFMIndex):
-  Text length:                    26
-  Text:                           aaaaABAaaaaABAaaaABAaaaab$
-  Alphabet size:                  5
-  Alphabet:                       [$, A, B, a, b]
-  BWT:                            baaaBBBAAAaaaaaaaaAA$Aaaaa
-  Sampling interval:              8
-  The number of sampled values:   5
-```
-
-#### query (FM-index)
-
-Executes queries on a dynamic FM-index from a TSV command file.
-
-The command format is identical to the r-index version.
-
-**Example:**
-
-```bash
-./build_fm_index -i ../examples/ab.txt -o ab.dfmi -s 8
-./query -i ab.dfmi -q ../examples/command.tsv -w result.log
-cat result.log
-```
-
-> [!NOTE]
-> The `query` command automatically detects whether the input is a dynamic r-index (.dri) or dynamic FM-index (.dfmi).
 
 ---
 

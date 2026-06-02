@@ -41,5 +41,7 @@ INCLUDE_DIRECTORIES(./modules)
 
 add_executable(build main/build_main.cpp)
 add_executable(print main/print_main.cpp)
+add_executable(query main/query_main.cpp)
+
 
 

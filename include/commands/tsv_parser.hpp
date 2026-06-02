@@ -1,5 +1,4 @@
 #pragma once
-#include "./line_query.hpp"
 #include "stool/include/all.hpp"
 
 namespace dynRLSLP
@@ -62,7 +61,7 @@ namespace dynRLSLP
              * @param replacement_code_to_line_break Escape sequence representing a newline.
              * @return Vector of tab-separated field strings.
              */
-            static std::vector<std::string> line_parse(const std::string line, const std::string replacement_code_to_tab, const std::string replacement_code_to_line_break)
+            static std::vector<std::string> line_parse(const std::string line, const std::string replacement_code_to_tab = "", const std::string replacement_code_to_line_break = "")
             {
                 std::string sanitized_line = get_sanitized_line(line, replacement_code_to_tab, replacement_code_to_line_break);
                 std::vector<std::string> result;
@@ -75,6 +74,15 @@ namespace dynRLSLP
                 }
 
                 return result;
+            }
+
+
+            static std::vector<uint8_t> to_uint8_t_vector(const std::string &text){
+                std::vector<uint8_t> r;
+                for(char c : text){
+                    r.push_back(c);
+                }
+                return r;
             }
         };
     

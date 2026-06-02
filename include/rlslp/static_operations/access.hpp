@@ -18,7 +18,7 @@ namespace dynRLSLP
 	 */
 	class Access
 	{
-		private:
+	private:
 		template <typename ARRAY>
 		static int64_t get_prefix(RLSLPRuleBody item, int64_t current_pos, uint64_t len, const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list, ARRAY &output)
 		{
@@ -112,6 +112,82 @@ namespace dynRLSLP
 		}
 
 	public:
+		static void random_access(RLSLPRuleBody X, uint64_t pos, uint64_t len, 
+			const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list, const std::vector<uint64_t> &explicit_nonterminal_length_list, 
+			std::vector<uint8_t> &output)
+		{
+			uint64_t end_pos = pos + len - 1;
+
+
+			uint64_t output_size1 = output.size();
+
+			if (X.get_type() == RLSLPRuleType::Pair)
+			{
+				auto left = RLSLPRuleBody::decode_rule(X.A, explicit_nonterminal_rule_list);					 // The left child of X.
+				uint64_t right_start_pos = (int64_t)NonterminalFunctions::get_length(X.A, explicit_nonterminal_length_list); // The length of the left child of X.
+				auto right = RLSLPRuleBody::decode_rule(X.B, explicit_nonterminal_rule_list);					 // The right child of X.
+
+				if(end_pos < right_start_pos){
+					Access::random_access(left, pos, len, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, output);
+				}else if(pos >= right_start_pos){
+					Access::random_access(right, pos - right_start_pos, len, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, output);
+				}else{
+					uint64_t left_len = right_start_pos - pos;
+					uint64_t right_len = len - left_len;
+					Access::random_access(left, pos, left_len, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, output);
+					Access::random_access(right, 0, right_len, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, output);
+				}
+			}
+			else if (X.get_type() == RLSLPRuleType::Power)
+			{
+				auto child = RLSLPRuleBody::decode_rule(X.A, explicit_nonterminal_rule_list);
+				auto childLen = NonterminalFunctions::get_length(X.A, explicit_nonterminal_length_list);
+				uint64_t current_pos = pos % childLen;
+				uint64_t current_len = len; 
+
+				// auto nextPos = pos - (childLen * k);
+
+				while(current_len > 0){
+					uint64_t x_len = current_pos + current_len <= childLen ? current_len : childLen - current_pos;
+					Access::random_access(child, current_pos, x_len, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, output);
+					current_pos = 0;
+					current_len -= x_len;	
+				}
+			}
+			else if (X.get_type() == RLSLPRuleType::Character)
+			{
+				
+				if (pos == 0)
+				{
+					output.push_back(X.A);
+				}
+				else
+				{
+					throw std::logic_error("Access::random_access: pos is not 0");
+				}
+			}
+			else if (X.get_type() == RLSLPRuleType::Nonterminal)
+			{
+				ExplicitNonterminal explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(X.A);
+				RLSLPRuleBody nonterminal_rule = explicit_nonterminal_rule_list[explicit_nonterminal];
+				Access::random_access(nonterminal_rule, pos, len, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, output);
+			}
+			else
+			{
+				throw std::logic_error("Access::random_access: invalid item type");
+			}			
+
+			uint64_t output_size2 = output.size();
+
+			if(output_size2 - output_size1 != len){
+				std::cout << "output_size1: " << output_size1 << std::endl;
+				std::cout << "output_size2: " << output_size2 << std::endl;
+				std::cout << "len: " << len << std::endl;
+				throw std::runtime_error("Access::random_access: output size is not equal to len");
+			}
+
+		}
+
 		/**
 		 * @brief Return @ref term_val "val(X)"[pos].
 		 * @param explicit_nonterminal_rule_list Base-nonterminal rule list (D).

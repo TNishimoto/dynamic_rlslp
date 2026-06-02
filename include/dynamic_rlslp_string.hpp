@@ -268,10 +268,41 @@ namespace dynRLSLP
          * @return Character at position \p i.
          * @note O(log n) time.
          */
-        uint8_t access(uint64_t i) const
+        uint8_t access_char(uint64_t i) const
         {
             return this->operator[](i);
         }
+
+        std::vector<uint8_t> access_substring(uint64_t i, uint64_t len) const
+        {
+            std::vector<uint8_t> result;
+            const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
+            const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
+            NonterminalWithRelativeLevel root = grammar.get_root();
+            RLSLPRuleBody item = small_dic.get_rule_body(root);
+            const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
+            const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
+
+            Access::random_access(item, i, len, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, result);
+            return result;
+        }
+
+        void decompress(std::ofstream &ofs, uint64_t buffer_size = 1024 * 1024 * 1024) const{
+            uint64_t current_pos = 0;
+            uint64_t length = this->size();
+        
+            while(current_pos < length){
+                if(current_pos + buffer_size > length){
+                    buffer_size = length - current_pos;
+                }
+                std::vector<uint8_t> buffer = this->access_substring(current_pos, buffer_size);
+                ofs.write(reinterpret_cast<const char *>(buffer.data()), buffer.size());
+                current_pos += buffer_size;
+            }        
+        }
+
+
+
         /**
          * @brief Compute the longest common prefix length of suffixes starting at \p i and \p j.
          * @param i Starting position of the first suffix.
