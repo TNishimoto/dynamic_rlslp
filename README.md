@@ -1,128 +1,137 @@
-# Dynamic r-index
+# Dynamic RLSLP
 
-A C++ implementation of the **dynamic r-index** and **dynamic FM-index** — space-efficient data structures supporting pattern matching queries and dynamic text updates.
+A C++ implementation of dynamic RLSLPs (run-length encoded straight-line programs).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## Table of Contents
 
-- [Quick Start](#quick-start)
-- [Overview](#overview)
-  - [Dynamic r-index](#dynamic-r-index-1)
-  - [Dynamic FM-index](#dynamic-fm-index)
-  - [Comparison](#comparison-between-dynamic-r-index-and-dynamic-fm-index)
-- [Requirements](#requirements)
-- [Installation](#installation)
-  - [Download](#download)
-  - [Install SDSL](#install-sdsl)
-  - [Build](#build)
-- [Usage](#usage)
-  - [Common Tools](#common-tools)
-  - [Dynamic r-index](#dynamic-r-index-usage)
-  - [Dynamic FM-index](#dynamic-fm-index-usage)
-- [API Documentation](#api-documentation)
-- [Dependencies](#dependencies)
-- [License](#license)
-- [References](#references)
+* [Quick Start](#quick-start)
+* [Overview](#overview)
+* [Requirements](#requirements)
+* [Installation](#installation)
+
+  * [Download](#download)
+  * [Build](#build)
+  * [Generated Executables](#generated-executables)
+* [Usage](#usage)
+
+  * [Build Data Structure](#build-data-structure)
+  * [Print Data Structure](#print-data-structure)
+  * [Query](#query)
+* [API Documentation](#api-documentation)
+* [Dependencies](#dependencies)
+* [License](#license)
+* [References](#references)
 
 ---
 
 ## Quick Start
 
 ```bash
-# 1. Install SDSL library (if not already installed)
-git clone https://github.com/simongog/sdsl-lite.git
-cd sdsl-lite
-./install.sh ~/local
-cd ..
-
-# 2. Clone and setup
-git clone https://github.com/TNishimoto/dynamic_r_index.git
-cd dynamic_r_index
+# 1. Clone the repository and initialize submodules
+git clone https://github.com/TNishimoto/dynamic_rlslp.git
+cd dynamic_rlslp
 git submodule update --init --recursive
 
-# 3. Build
+# 2. Build the project
 mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release \
-         -DSDSL_LIBRARY_DIR=~/local/lib \
-         -DSDSL_INCLUDE_DIR=~/local/include
+cmake .. -DCMAKE_BUILD_TYPE=Release
 make
 
-# 4. Try it out
-./build_r_index -i ../examples/ab.txt -o ab.dri
-./query -i ab.dri -q ../examples/command.tsv -w result.log
-cat result.log
+# 3. Try an example
+cat ../examples/short.txt
+./build -i ../examples/short.txt -o short.rr.fa.ds -p restricted_recompression -m fast
+cat ../examples/query.tsv
+./query -i short.rr.fa.ds -q ../examples/query.tsv -w query.log -o update.ds
+cat short.1.txt
+cat short.2.txt
+cat short.3.txt
 ```
-
-> [!NOTE]
-> If SDSL is already installed elsewhere, skip step 1 and adjust the paths in step 3.
-> See [Installation](#installation) for alternative SDSL locations (e.g., Homebrew).
 
 ---
 
 ## Overview
 
-### Dynamic r-index
+This repository provides a dynamic data structure, `DynamicRLSLPString`, for an RLSLP that derives a given string $T[0..n-1]$.
 
-The [dynamic r-index](https://arxiv.org/abs/2504.19482) is a dynamic version of [the r-index](https://dl.acm.org/doi/10.1145/3375890), supporting count and locate queries on an input string $T$ while allowing insertions and deletions.
-It can be stored in $O(r \log n)$ bytes, where $r$ is the number of runs in the BWT.
+The grammar-based compression algorithm can be selected from the following two options:
 
-For more details on the r-index, see [the r-index repository](https://github.com/nicolaprezza/r-index).
+* **Restricted recompression**
+* **Signature encoding**
 
-| Operation               | Time Complexity                          | Description                                    |
-| ----------------------- | ---------------------------------------- | ---------------------------------------------- |
-| build_from_BWT($L$)     | $O(n \log σ \log n)$                     | Build index from BWT $L[0..n-1]$               |
-| insert_string($i$, $P$) | avg. $O((m + L_{avg}) \log σ \log n)$    | Insert string $P[0..m-1]$ at position $i$      |
-| delete_string($i$, $m$) | avg. $O((m + L_{avg}) \log σ \log n)$    | Delete $m$ characters starting at position $i$|
-| count_query($P$)        | $O(m \log σ \log n)$                     | Count occurrences of pattern $P$               |
-| locate_query($P$)       | $O((m + occ) \log σ \log n)$             | Find all positions of pattern $P$              |
-| backward_search($P$)    | $O(m \log σ \log n)$                     | Return the SA-interval of $P$                  |
+Restricted recompression is a randomized construction algorithm that outputs an RLSLP that can be stored in expected $\delta$-optimal space.
 
-> [!NOTE]  
-> - $σ$: alphabet size of $T$
-> - $L_{avg}$: average LCP value in the LCP array of $T$
-> - Worst-case time for insert/delete: $O((m + L_{max}) \log σ \log n)$
+Signature encoding is a deterministic construction algorithm that outputs an RLSLP that can be stored in compressed space.
 
-### Dynamic FM-index
+The following table summarizes the properties of the RLSLPs constructed by these compression algorithms.
 
-The [dynamic FM-index](https://www.sciencedirect.com/science/article/pii/S1570866709000343), proposed by Salson et al., is a dynamic version of [the FM-index](https://en.wikipedia.org/wiki/FM-index).
-It can be stored in $O(n \log σ + (n/s) \log n)$ bytes for a tunable parameter $1 \leq s \leq n$.
+| Value                                    | Restricted recompression                                    | Signature encoding       |
+| ---------------------------------------- | ----------------------------------------------------------- | ------------------------ |
+| Height $H$ of the derivation tree        | Expected $O(\log n)$                                        | At most $2 \log n$       |
+| Number $M$ of explicit nonterminals      | Expected $O(\delta \log ((n \log \sigma)/(\delta \log n)))$ | $O(z \log n \log^{*} n)$ |
+| Number $M'$ of non-explicit nonterminals | $O(MH)$                                                     | At most $M$              |
 
-For more details, see [the original implementation](https://framagit.org/mikaels/dfmi).
+> [!NOTE]
+>
+> * $H$: The height of the derivation tree corresponding to the RLSLP.
+> * $M = O(1)$ if the RLSLP is built by restricted recompression. Otherwise, $M = O(\log^{*} n)$.
+> * $\delta$: Substring complexity.
+> * $\sigma$: Alphabet size.
+> * $z$: The number of factors in the LZ77 factorization of $T$.
 
-| Operation               | Time Complexity                          | Description                                    |
-| ----------------------- | ---------------------------------------- | ---------------------------------------------- |
-| build_from_BWT($L$)     | $O(n \log σ \log n)$                     | Build index from BWT $L[0..n-1]$               |
-| insert_string($i$, $P$) | avg. $O((m + L_{avg}) \log σ \log n)$    | Insert string $P[0..m-1]$ at position $i$      |
-| delete_string($i$, $m$) | avg. $O((m + L_{avg}) \log σ \log n)$    | Delete $m$ characters starting at position $i$|
-| count_query($P$)        | $O(m \log σ \log n)$                     | Count occurrences of pattern $P$               |
-| locate_query($P$)       | $O((m + s \cdot occ) \log σ \log n)$     | Find all positions of pattern $P$              |
-| backward_search($P$)    | $O(m \log σ \log n)$                     | Return the SA-interval of $P$                  |
+When constructing an instance of `DynamicRLSLPString`, you can choose either `standard` or `fast` as the data structure mode.
 
-### Comparison between dynamic r-index and dynamic FM-index
+If `fast` mode is selected, `DynamicRLSLPString` stores the following cached information for each explicit nonterminal `X`:
 
-| Feature          | Dynamic r-index                      | Dynamic FM-index                         |
-| ---------------- | ------------------------------------ | ---------------------------------------- |
-| **Space**        | $O(r \log n)$                        | $O(n \log σ + (n/s) \log n)$             |
-| **Locate query** | $O((m + occ) \log σ \log n)$         | $O((m + s \cdot occ) \log σ \log n)$     |
-| **Best for**     | Highly repetitive texts              | General texts                            |
-| **Trade-off**    | Smaller for repetitive data          | Adjustable via parameter $s$             |
+* short prefixes and suffixes of the string represented by `X`
+* pointers to certain ancestors `X'` of `X`, together with their relative distances
 
-**Recommendation:**
-- Use **r-index** for highly repetitive texts (e.g., genome collections, versioned documents)
-- Use **FM-index** for general-purpose indexing with tunable space/time trade-off
+These caches are used to speed up several operations supported by `DynamicRLSLPString`.
 
-> [!IMPORTANT]
-> These time complexities are slightly larger than described in the original papers due to the use of [B-trees](https://github.com/TNishimoto/b_tree_plus_alpha) for performance.
+In either mode, the memory usage of `DynamicRLSLPString` is $O(M \log n)$ bits.
+
+An instance of `DynamicRLSLPString` can be built using either `DynamicRLSLPString::offline_build_from_text` or `DynamicRLSLPString::online_build_from_text_file`.
+
+| Operation                     | Time Complexity | Working Space |
+| ----------------------------- | --------------- | ------------- |
+| `offline_build_from_text`     | $O(nb)$         | $O(n \log n)$ |
+| `online_build_from_text_file` | $O(nb)$         | $O(M \log n)$ |
+
+> [!NOTE]
+>
+> * $b = O(1)$ if the RLSLP is built by restricted recompression. Otherwise, $b = O(\log^{*} n)$.
+
+`DynamicRLSLPString` supports the following operations.
+
+| Operation                | Time Complexity  | Description                                                                                                  |
+| ------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| `access_char(i)`         | $O(H)$           | Returns $T[i]$.                                                                                              |
+| `access_substring(i, d)` | $O(H + d)$       | Returns $T[i..i+d-1]$.                                                                                       |
+| `lce(i, j)`              | $O(Hb)$          | Returns the length of the longest common prefix of the two suffixes $T[i..n-1]$ and $T[j..n-1]$.             |
+| `reverse_lce(i, j)`      | $O(Hb)$          | Returns the length of the longest common suffix of the two prefixes $T[0..i]$ and $T[0..j]$.                 |
+| `lcp(X, X')`             | $O(Hb)$          | Returns the length of the longest common prefix of the two strings derived by the nonterminals $X$ and $X'$. |
+| `lcs(X, X')`             | $O(Hb)$          | Returns the length of the longest common suffix of the two strings derived by the nonterminals $X$ and $X'$. |
+| `decompress(ofs)`        | $O(n)$           | Writes $T$ to the given output file stream `ofs`.                                                            |
+| `get_all_occurrences(X)` | $O(vocc H)$      | Returns all occurrence positions of the explicit nonterminal `X` in the derivation tree.                     |
+| `insert_string(i, P)`    | Expected $O(HM)$ | Inserts the string $P[0..m-1]$ at position $i$.                                                              |
+| `delete_string(i, m)`    | Expected $O(HM)$ | Deletes $T[i..i+m-1]$ from $T$.                                                                              |
+
+> [!NOTE]
+>
+> * $vocc$: The number of occurrences of `X` in the derivation tree.
+> * The occurrence position of an occurrence of `X` is the position of the character corresponding to the leftmost leaf in the subtree rooted at that occurrence.
+> * `get_all_occurrences` runs in $O(vocc H / \log \log n)$ time if `fast` mode is selected.
+> * `lcp(X, X')` runs in $O(1)$ time if `lcp(X, X')` is very small and `fast` mode is selected.
+> * `lcs(X, X')` runs in $O(1)$ time if `lcs(X, X')` is very small and `fast` mode is selected.
 
 ---
 
 ## Requirements
 
-- **C++ Compiler**: C++17 or later (GCC 7+, Clang 5+, MSVC 2017+)
-- **CMake**: 3.10 or later
-- **Make**: GNU Make
-- **SDSL Library**: [sdsl-lite](https://github.com/simongog/sdsl-lite)
+* **C++ compiler**: C++17 or later, such as GCC 7+, Clang 5+, or MSVC 2017+
+* **CMake**: 3.10 or later
+* **Make**: GNU Make
 
 ---
 
@@ -131,61 +140,50 @@ For more details, see [the original implementation](https://framagit.org/mikaels
 ### Download
 
 ```bash
-git clone https://github.com/TNishimoto/dynamic_r_index.git
-cd dynamic_r_index
+git clone https://github.com/TNishimoto/dynamic_rlslp.git
+cd dynamic_rlslp
 git submodule update --init --recursive
 ```
 
-## Executable File
-
-### build
+### Build
 
 ```bash
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release \
-         -DSDSL_LIBRARY_DIR=~/local/lib \
-         -DSDSL_INCLUDE_DIR=~/local/include
+cmake .. -DCMAKE_BUILD_TYPE=Release
 make
 ```
 
-> [!TIP]
-> **Alternative SDSL locations:**
-> - Homebrew (Apple Silicon): `-DSDSL_LIBRARY_DIR=/opt/homebrew/lib -DSDSL_INCLUDE_DIR=/opt/homebrew/include`
-> - Homebrew (Intel Mac): `-DSDSL_LIBRARY_DIR=/usr/local/lib -DSDSL_INCLUDE_DIR=/usr/local/include`
+### Generated Executables
 
-**Generated executables:**
-
-| Executable        | Description                                      |
-| ----------------- | ------------------------------------------------ |
-| `build_bwt`       | Compute BWT from a text file                     |
-| `build_r_index`   | Build dynamic r-index from text or BWT           |
-| `build_fm_index`  | Build dynamic FM-index from text or BWT          |
-| `print_index`     | Display index information and extract text/BWT   |
-| `query`           | Execute queries from a command file              |
+| Executable | Description                                                      |
+| ---------- | ---------------------------------------------------------------- |
+| `build`    | Builds a dynamic data structure for an RLSLP from an input text. |
+| `print`    | Displays details of a built dynamic data structure.              |
+| `query`    | Executes queries from a command file.                            |
 
 ---
 
 ## Usage
 
-### Build
+### Build Data Structure
 
-Build the dynamic RLSLP representing a given text.
+Build a dynamic data structure for an RLSLP representing a given text.
 
-```
+```text
 Options:
   -i, --input_file_path     Input text file path (string)
   -o, --output_file_path    Output data structure file path (string [=])
-  -p, --parser              Grammar_parser(restricted_recompression or signature_encoding) (string [=restricted_recompression])
-  -s, --seed                Seed (unsigned long long [=0])
-  -f, --offline_build       Offline build mode (bool [=0])
-  -m, --mode                If fast mode is selected, the built data structure incldues cache for fast LCE and parent queries (fast or standard) (string [=standard])
-  -?, --help   
+  -p, --parser              Grammar parser: restricted_recompression or signature_encoding (string [=restricted_recompression])
+  -s, --seed                Random seed (unsigned long long [=0])
+  -f, --offline_build       Use offline build mode (bool [=0])
+  -m, --mode                Data structure mode: fast or standard (string [=standard])
+  -?, --help                Print this help message
 ```
 
-> [!NOTE]  
-> If --offline_build=0, then construct the DynamicRLSLPString by dynRLSLP::DynamicRLSLPString::offline_build_from_text function. 
-> Otherwise, construct the DynamicRLSLPString by dynRLSLP::DynamicRLSLPString::online_build_from_text_file function. 
+> [!NOTE]
+> If `--offline_build=0`, `DynamicRLSLPString` is constructed using `dynRLSLP::DynamicRLSLPString::online_build_from_text_file`.
+> If `--offline_build=1`, `DynamicRLSLPString` is constructed using `dynRLSLP::DynamicRLSLPString::offline_build_from_text`.
 
 **Example:**
 
@@ -193,7 +191,7 @@ Options:
 ./build -i ../examples/short.txt -o short.rr.fa.ds -p restricted_recompression -m fast
 ```
 
-```
+```text
 =============RESULT===============
 File : ../examples/short.txt
 Output : short.rr.fa.ds
@@ -229,7 +227,7 @@ Build mode : Online
       [END]
     [END]
   [END]
-Excecution time : 0ms [infchars/ms]
+Execution time : 0ms [infchars/ms]
 Memory footprint: 1616 KB (1 MB)
 ==================================
 ```
@@ -238,7 +236,7 @@ Memory footprint: 1616 KB (1 MB)
 ./build -i ../examples/short.txt -o short.se.st.ds -p signature_encoding -m standard -f 1
 ```
 
-```
+```text
 =============RESULT===============
 File : ../examples/short.txt
 Output : short.se.st.ds
@@ -274,32 +272,33 @@ Build mode : Offline
       [END]
     [END]
   [END]
-Excecution time : 0ms [infchars/ms]
+Execution time : 0ms [infchars/ms]
 Memory footprint: 1616 KB (1 MB)
 ==================================
 ```
+
 ---
 
-### Print Information for Dynamic RLSLPs
+### Print Data Structure
 
-Displays the statistics and the memory breakdown for the input dynamic data structure storing an RLSLP. 
-In addition, outputs the following information: 
+Display statistics and a memory breakdown for an input dynamic data structure storing an RLSLP.
 
-- The JSON file representing the content of the input dynamic data structure.
-- The JSON file representing the input RLSLP.
-- The plain text file representing the derivation tree of the input RLSLP.
-- The JSON file representing the canonized RLSLP corresponding to the input RLSLP. 
+This command can also output the following files:
 
-```
+* A JSON file representing the input dynamic data structure.
+* A JSON file representing the input RLSLP.
+* A plain text file representing the derivation tree of the input RLSLP.
+* A JSON file representing the canonized RLSLP corresponding to the input RLSLP.
+
+```text
 Options:
-  -i, --input_file_path                            The file path to a dynamic data structure storingan RLSLP (string)
+  -i, --input_file_path                            File path to a dynamic data structure storing an RLSLP (string)
   -j, --output_dynamic_data_structure_file_path    File path for writing the input dynamic data structure in JSON format (string [=])
   -r, --output_rlslp_file_path                     File path for writing the RLSLP in JSON format (string [=])
   -d, --output_derivation_tree_file_path           File path for writing the derivation tree of the RLSLP (string [=])
   -c, --output_canonized_rlslp_file_path           File path for writing the canonized RLSLP corresponding to the RLSLP in JSON format (string [=])
-  -?, --help                                       print this message
+  -?, --help                                       Print this help message
 ```
-
 
 **Example:**
 
@@ -307,7 +306,7 @@ Options:
 ./print -i short.rr.fa.ds -j short.rr.fa.j.json -r short.rr.fa.r.json -d short.rr.fa.d.log -c short.rr.fa.c.json
 ```
 
-```
+```text
 =============RESULT===============
 File : short.rr.fa.ds
 Statistics (DynamicRLSLPString)
@@ -380,39 +379,41 @@ Memory Breakdown (DynamicRLSLPString): 2327 bytes
 ==================================
 ```
 
-The output files are as follows: 
+The output files are as follows:
 
-- [`short.rr.fa.j.json`](examples/log/short.rr.fa.j.json).
-- [`short.rr.fa.r.json`](examples/log/short.rr.fa.r.json).
-- [`short.rr.fa.d.log`](examples/log/short.rr.fa.d.log).
-- [`short.rr.fa.c.json`](examples/log/short.rr.fa.c.json).
+* [`short.rr.fa.j.json`](examples/log/short.rr.fa.j.json)
+* [`short.rr.fa.r.json`](examples/log/short.rr.fa.r.json)
+* [`short.rr.fa.d.log`](examples/log/short.rr.fa.d.log)
+* [`short.rr.fa.c.json`](examples/log/short.rr.fa.c.json)
+
+---
 
 ### Query
 
-Executes queries on a dynamic RLSLP from a TSV query file.
+Execute queries on a dynamic RLSLP using a TSV query file.
 
-```
-usage: ./query --input_index_path=string --input_query_path=string --output_log_path=string [options] ... 
+```text
+usage: ./query --input_index_path=string --input_query_path=string --output_log_path=string [options] ...
+
 options:
   -i, --input_index_path              Input index file path (.ds) (string)
-  -q, --input_query_path              Input query file path (TSV format) (string)
+  -q, --input_query_path              Input query file path in TSV format (string)
   -w, --output_log_path               Output log file path (string)
-  -o, --output_index_path             Save updated index (optional) (string [=])
-  -t, --alternative_tab_key           The alternative tab key for the query file (optional) (string [=])
-  -n, --alternative_line_break_key    The alternative line break key for the query file (optional) (string [=])
-  -?, --help                          print this message
+  -o, --output_index_path             Output path for saving the updated index (optional) (string [=])
+  -t, --alternative_tab_key           Alternative tab key for the query file (optional) (string [=])
+  -n, --alternative_line_break_key    Alternative line break key for the query file (optional) (string [=])
+  -?, --help                          Print this help message
 ```
 
 **Supported Queries:**
 
-| Query        | Param 1 | Param 2 | Description                                                                                     |
-| ------------ | ------- | ------- | ----------------------------------------------------------------------------------------------- |
-| `ACCESS`     | i       | m       | Return T[i..i+m-1]                                                                              |
-| `DECOMPRESS` | F       | -       | Write the string derived by the RLSLP using filepath F                                          |
-| `LCE`        | i       | j       | Return the length of the longest common prefix between two suffixes T[i..n-1] and T[j..n-1]     |
-| `INSERT`     | i       | P       | Update the input data structure for an insertion of a string P into T at position i             |
-| `DELETE`     | i       | m       | Update the input data structure for a deletion of substring T[i..i+m-1] from T                  |
-
+| Query        | Param 1 | Param 2 | Description                                                                                      |
+| ------------ | ------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `ACCESS`     | `i`     | `m`     | Returns $T[i..i+m-1]$.                                                                           |
+| `DECOMPRESS` | `F`     | `-`     | Writes the string derived by the RLSLP to the file path `F`.                                     |
+| `LCE`        | `i`     | `j`     | Returns the length of the longest common prefix of the two suffixes $T[i..n-1]$ and $T[j..n-1]$. |
+| `INSERT`     | `i`     | `P`     | Updates the input data structure by inserting string `P` into $T$ at position `i`.               |
+| `DELETE`     | `i`     | `m`     | Updates the input data structure by deleting substring $T[i..i+m-1]$ from $T$.                   |
 
 **Example:**
 
@@ -423,14 +424,18 @@ cat short.1.txt
 cat short.2.txt
 cat short.3.txt
 ```
-> ACCESS  5       15
-> LCE     5       10
-> DECOMPRESS      short.1.txt
-> DELETE  5       30
-> DECOMPRESS      short.2.txt
-> INSERT  5       _aaa
-> DECOMPRESS      short.3.txt
 
+```text
+ACCESS  5       15
+LCE     5       10
+DECOMPRESS      short.1.txt
+DELETE  5       30
+DECOMPRESS      short.2.txt
+INSERT  5       _aaa
+DECOMPRESS      short.3.txt
+```
+
+```text
 =============RESULT===============
 Index File:                 short.rr.fa.ds
 Query File:                 ../examples/query.tsv
@@ -439,46 +444,51 @@ Output Index File:          update.ds
 Alternative Tab Key:        
 Alternative Line Break Key: 
 ==================================
+```
 
-> cacao_cacao_cacao_cacao_cacao_cacao_cacao
+```text
+cacao_cacao_cacao_cacao_cacao_cacao_cacao
+```
 
-> cacao_cacao
+```text
+cacao_cacao
+```
 
-> cacao_aaa_cacao
+```text
+cacao_aaa_cacao
 ```
 
 ---
 
 ## API Documentation
 
-[Doxygen Documentation](https://TNishimoto.github.io/dynamic_r_index/index.html) *(in preparation)*
+[Doxygen Documentation](https://TNishimoto.github.io/dynamic_rlslp/index.html) *(in preparation)*
 
 ---
 
 ## Dependencies
 
-This project uses the following libraries:
+This project uses the following library:
 
-- [SDSL](https://github.com/simongog/sdsl-lite) — Succinct Data Structure Library
-- [STool](https://github.com/TNishimoto/stool) — String utilities
-- [B-tree_plus_alpha](https://github.com/TNishimoto/b_tree_plus_alpha) — B-tree implementation
+* [STool](https://github.com/TNishimoto/stool) — string utilities
 
 ---
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.  
-If you use the library, please cite the following paper:
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-```
-@misc{nishimoto2025dynamicrindexupdatableselfindex,
-      title={Dynamic r-index: An Updatable Self-Index in LCP-bounded Time}, 
-      author={Takaaki Nishimoto and Yasuo Tabei},
-      year={2025},
-      eprint={2504.19482},
-      archivePrefix={arXiv},
-      primaryClass={cs.DS},
-      url={https://arxiv.org/abs/2504.19482}, 
+If you use this library, please cite the following paper:
+
+```bibtex
+@article{DBLP:journals/corr/abs-2604-24080,
+  author       = {Takaaki Nishimoto and
+                  Yasuo Tabei},
+  title        = {Dynamic Grammar-Compressed Self-Index in {\(\delta\)}-Optimal Space},
+  journal      = {CoRR},
+  volume       = {abs/2604.24080},
+  year         = {2026},
+  url          = {https://doi.org/10.48550/arXiv.2604.24080}
 }
 ```
 
@@ -486,6 +496,4 @@ If you use the library, please cite the following paper:
 
 ## References
 
-- T. Nishimoto, "Dynamic r-index: An Updatable Self-Index in LCP-bounded Time," [arXiv:2504.19482](https://arxiv.org/abs/2504.19482), 2025.
-- T. Gagie, G. Navarro, N. Prezza, "Fully Functional Suffix Trees and Optimal Text Searching in BWT-Runs Bounded Space," [ACM DL](https://dl.acm.org/doi/10.1145/3375890), 2020.
-- M. Salson et al., "Dynamic extended suffix arrays," [ScienceDirect](https://www.sciencedirect.com/science/article/pii/S1570866709000343), 2010.
+* T. Nishimoto and Y. Tabei, “Dynamic Grammar-Compressed Self-Index in $\delta$-Optimal Space,” [arXiv:2604.24080](https://doi.org/10.48550/arXiv.2604.24080), 2026.

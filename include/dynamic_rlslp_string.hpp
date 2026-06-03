@@ -287,21 +287,22 @@ namespace dynRLSLP
             return result;
         }
 
-        void decompress(std::ofstream &ofs, uint64_t buffer_size = 1024 * 1024 * 1024) const{
+        void decompress(std::ofstream &ofs, uint64_t buffer_size = 1024 * 1024 * 1024) const
+        {
             uint64_t current_pos = 0;
             uint64_t length = this->size();
-        
-            while(current_pos < length){
-                if(current_pos + buffer_size > length){
+
+            while (current_pos < length)
+            {
+                if (current_pos + buffer_size > length)
+                {
                     buffer_size = length - current_pos;
                 }
                 std::vector<uint8_t> buffer = this->access_substring(current_pos, buffer_size);
                 ofs.write(reinterpret_cast<const char *>(buffer.data()), buffer.size());
                 current_pos += buffer_size;
-            }        
+            }
         }
-
-
 
         /**
          * @brief Compute the longest common prefix length of suffixes starting at \p i and \p j.
@@ -331,6 +332,72 @@ namespace dynRLSLP
             std::pair<uint64_t, int8_t> result = FastLCE::lce(st1, st2, small_dic);
             return result.first;
         }
+
+        uint64_t lcp(ExplicitNonterminal X1, ExplicitNonterminal X2) const
+        {
+            const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
+
+
+            RunRuleBody rbody1 = RunRuleBody(X1, 1);
+            RunRuleBody rbody2 = RunRuleBody(X2, 1);
+
+            if (this->get_dictionary_mode() == DictionaryMode::Fast)
+            {
+                const std::vector<uint64_t> &leftShortStringList = this->get_left_short_string_list();
+                auto result = FastLCE::lce(rbody1, rbody2, this->dynamic_grammar.get_alphabet_bit_size(), small_dic, leftShortStringList);
+                return result.first;
+            }
+            else
+            {
+                auto result = FastLCE::lce(rbody1, rbody2, small_dic);
+                return result.first;
+            }
+        }
+
+        uint64_t reverse_lce(uint64_t i, uint64_t j) const
+        {
+            const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
+
+            const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
+            std::vector<RunRuleBody> item1 = LevelSequenceFunction::substring(grammar.get_root(), 0, i + 1, small_dic);
+            std::vector<RunRuleBody> item2 = LevelSequenceFunction::substring(grammar.get_root(), 0, j + 1, small_dic);
+
+            VStack<RunRuleBody> st1;
+            for (auto &item : item1)
+            {
+                st1.push(item);
+            }
+            VStack<RunRuleBody> st2;
+            for (auto &item : item2)
+            {
+
+                st2.push(item);
+            }
+
+            std::pair<uint64_t, int8_t> result = FastLCE::reverse_lce(st1, st2, small_dic);
+            return result.first;
+        }
+
+        uint64_t lcs(ExplicitNonterminal X1, ExplicitNonterminal X2) const
+        {
+            const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
+
+
+            RunRuleBody rbody1 = RunRuleBody(X1, 1);
+            RunRuleBody rbody2 = RunRuleBody(X2, 1);
+
+            if(this->get_dictionary_mode() == DictionaryMode::Fast){
+                const std::vector<uint64_t> &rightShortStringList = this->get_right_short_string_list();
+                auto result = FastLCE::reverse_lce(rbody1, rbody2, this->dynamic_grammar.get_alphabet_bit_size(), small_dic, rightShortStringList);
+                return result.first;
+            }
+            else{
+                auto result = FastLCE::reverse_lce(rbody1, rbody2, small_dic);
+                return result.first;
+            }
+        }
+
+
         /**
          * @brief Resolve temporary occurrences to absolute text positions.
          * @param input List of temporary occurrence descriptors to expand.
@@ -346,6 +413,13 @@ namespace dynRLSLP
             {
                 return this->dynamic_grammar.faster_get_all_occurrences(input);
             }
+        }
+
+        std::vector<uint64_t> get_all_occurrences(ExplicitNonterminal explicit_nonterminal) const
+        {
+            std::vector<TemporaryOccurrence> input;
+            input.push_back(TemporaryOccurrence(explicit_nonterminal, 0));
+            return this->get_all_occurrences(input);
         }
 
         //}@
@@ -414,61 +488,62 @@ namespace dynRLSLP
             return this->dynamic_grammar.convert_to_canonized_rlslp();
         }
 
-
-		void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
-			ofs << stool::Message::get_paragraph_string(message_paragraph) << "{" << std::endl;
-			//ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"DynamicRLSLPString\"," << std::endl;
-			//ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "{" << std::endl;
+        void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
+        {
+            ofs << stool::Message::get_paragraph_string(message_paragraph) << "{" << std::endl;
+            // ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"DynamicRLSLPString\"," << std::endl;
+            // ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "{" << std::endl;
 
             std::string dictionaryMode_str;
-            if(this->dictionaryMode == DictionaryMode::Standard){
+            if (this->dictionaryMode == DictionaryMode::Standard)
+            {
                 dictionaryMode_str = "\"Standard\"";
-            }else{
+            }
+            else
+            {
                 dictionaryMode_str = "\"Fast\"";
             }
 
-            ofs << stool::Message::get_paragraph_string(message_paragraph+2) << "\"dictionaryMode\": " << dictionaryMode_str << ", " << std::endl;
-			this->dynamic_grammar.write_content_as_json_format(ofs, "dynamic_grammar", message_paragraph+2);
-			ofs << ", " << std::endl;
+            ofs << stool::Message::get_paragraph_string(message_paragraph + 2) << "\"dictionaryMode\": " << dictionaryMode_str << ", " << std::endl;
+            this->dynamic_grammar.write_content_as_json_format(ofs, "dynamic_grammar", message_paragraph + 2);
+            ofs << ", " << std::endl;
 
-			JsonHelper::write_content_as_json_format<uint64_t>(
-				"left_short_string_list(std::vector<uint64_t>)",
-				this->left_short_string_list,
-				[](const uint64_t &value){ return std::to_string(value); },
-				true,
-				ofs,
-				false,
-				message_paragraph+2
-			);
-			ofs << ", " << std::endl;
-
-			JsonHelper::write_content_as_json_format<uint64_t>(
-				"right_short_string_list(std::vector<uint64_t>)",
-				this->right_short_string_list,
-				[](const uint64_t &value){ return std::to_string(value); },
-				true,
-				ofs,
+            JsonHelper::write_content_as_json_format<uint64_t>(
+                "left_short_string_list(std::vector<uint64_t>)",
+                this->left_short_string_list,
+                [](const uint64_t &value)
+                { return std::to_string(value); },
+                true,
+                ofs,
                 false,
-				message_paragraph+2
-			);
-			ofs << ", " << std::endl;
+                message_paragraph + 2);
+            ofs << ", " << std::endl;
 
-			JsonHelper::write_content_as_json_format<TemporaryOccurrence>(
-				"ancestor_cache_list(std::vector<TemporaryOccurrence>)",
-				this->ancestor_cache_list,
-				[](const TemporaryOccurrence &value){ return value.to_string(); },
-				true,
-				ofs,
+            JsonHelper::write_content_as_json_format<uint64_t>(
+                "right_short_string_list(std::vector<uint64_t>)",
+                this->right_short_string_list,
+                [](const uint64_t &value)
+                { return std::to_string(value); },
+                true,
+                ofs,
                 false,
-				message_paragraph+2
-			);
-			ofs << std::endl;
+                message_paragraph + 2);
+            ofs << ", " << std::endl;
 
+            JsonHelper::write_content_as_json_format<TemporaryOccurrence>(
+                "ancestor_cache_list(std::vector<TemporaryOccurrence>)",
+                this->ancestor_cache_list,
+                [](const TemporaryOccurrence &value)
+                { return value.to_string(); },
+                true,
+                ofs,
+                false,
+                message_paragraph + 2);
+            ofs << std::endl;
 
-			//ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "}" << std::endl;
-			ofs << stool::Message::get_paragraph_string(message_paragraph) << "}" << std::endl;
+            // ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "}" << std::endl;
+            ofs << stool::Message::get_paragraph_string(message_paragraph) << "}" << std::endl;
         }
-
 
         //}@
 
@@ -892,7 +967,6 @@ namespace dynRLSLP
             const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
             const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
 
-
             std::vector<std::string> r = DerivationTreeVisualizer::compute_derivation_tree(items, explicit_nonterminal_rule_list, explicit_nonterminal_level_list, explicit_nonterminal_length_list);
             return r;
         }
@@ -910,8 +984,7 @@ namespace dynRLSLP
             std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Right Short Strings (Cache): " << this->right_short_string_list.size() << " * 8 bytes" << std::endl;
             std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Ancestor Cache List (Cache): " << this->ancestor_cache_list.size() << " * " << sizeof(TemporaryOccurrence) << " bytes" << std::endl;
 
-
-            this->dynamic_grammar.print_statistics(message_paragraph+1);
+            this->dynamic_grammar.print_statistics(message_paragraph + 1);
             std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
         }
 
@@ -919,16 +992,14 @@ namespace dynRLSLP
         {
             std::string mode = this->dictionaryMode == DictionaryMode::Fast ? "Fast" : "Standard";
             std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Memory Breakdown (DynamicRLSLPString): " << this->size_in_bytes() << " bytes" << std::endl;
-            std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "left_short_string_list: " << stool::Memory::estimate_memory_usage(this->left_short_string_list) << " bytes" << std::endl;
-            std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "right_short_string_list: " << stool::Memory::estimate_memory_usage(this->right_short_string_list) << " bytes" << std::endl;
-            std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "ancestor_cache_list: " << stool::Memory::estimate_memory_usage(this->ancestor_cache_list) << " bytes" << std::endl;
-            std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "dictionary_mode: " << sizeof(this->dictionaryMode) << " bytes" << std::endl;
-            this->dynamic_grammar.print_memory_breakdown(message_paragraph+1);
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "left_short_string_list: " << stool::Memory::estimate_memory_usage(this->left_short_string_list) << " bytes" << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "right_short_string_list: " << stool::Memory::estimate_memory_usage(this->right_short_string_list) << " bytes" << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "ancestor_cache_list: " << stool::Memory::estimate_memory_usage(this->ancestor_cache_list) << " bytes" << std::endl;
+            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "dictionary_mode: " << sizeof(this->dictionaryMode) << " bytes" << std::endl;
+            this->dynamic_grammar.print_memory_breakdown(message_paragraph + 1);
 
             std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
         }
-
-
 
         /*
         void print_summary(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
@@ -949,7 +1020,6 @@ namespace dynRLSLP
             std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Text length: " << text_length << std::endl;
         }
         */
-
 
         /**
          * @brief Print the information about the locate query.
