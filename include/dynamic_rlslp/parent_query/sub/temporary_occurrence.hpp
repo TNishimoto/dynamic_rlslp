@@ -44,6 +44,11 @@ namespace dynRLSLP
                 return TemporaryOccurrence(std::numeric_limits<ExplicitNonterminal>::max(), std::numeric_limits<uint64_t>::max());
             }
 
+            bool equals(const TemporaryOccurrence &other) const
+            {
+                return this->nonterminal == other.nonterminal && this->position == other.position;
+            }
+
             /**
              * @brief Tests whether this occurrence is the null sentinel.
              * @return True if both fields hold their maximum sentinel values.

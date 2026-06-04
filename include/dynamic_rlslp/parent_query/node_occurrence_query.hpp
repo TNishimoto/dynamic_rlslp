@@ -298,14 +298,16 @@ namespace dynRLSLP
                 level_to_occurrences_map.resize(tree_max_level + 1);
                 // std::vector<uint64_t> output;
                 VStack<TemporaryOccurrence> stk;
-                std::vector<OccurrencePointer> h_temp_occurrences;
                 std::vector<std::pair<uint64_t, uint64_t>> temp_vector_for_root;
+
 
                 for (uint64_t i = 0; i < input.size(); i++)
                 {
                     uint64_t level = NonterminalFunctions::get_level(input[i].nonterminal, explicit_nonterminal_level_list);
                     level_to_occurrences_map[level].push_back(OccurrencePointer(input[i].nonterminal, UINT64_MAX, input[i].position));
                 }
+                std::vector<OccurrencePointer> h_temp_occurrences;
+
 
                 uint64_t h = 0;
                 uint64_t root_idx = UINT64_MAX;
@@ -317,13 +319,16 @@ namespace dynRLSLP
                     }
                     else
                     {
+                        
                         h_temp_occurrences.swap(level_to_occurrences_map[h]);
                         std::sort(h_temp_occurrences.begin(), h_temp_occurrences.end(), [](const OccurrencePointer &a, const OccurrencePointer &b)
                                   { return a.nonterminal < b.nonterminal; });
 
                         uint64_t i = 0;
+
                         while (i < h_temp_occurrences.size())
                         {
+
                             NonterminalWithRelativeLevel sig = h_temp_occurrences[i].nonterminal;
                             int64_t p = find_type_2_secondary_occurrences_of_nonterminal(sig, fastParentDictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, occCacheList, stk);
                             uint64_t k = i;
@@ -377,8 +382,10 @@ namespace dynRLSLP
                             i = k;
                         }
                         h_temp_occurrences.clear();
+
                     }
                 }
+
 
                 uint64_t root_children_start_index = children_range_list.size();
                 uint64_t root_occ = 0;

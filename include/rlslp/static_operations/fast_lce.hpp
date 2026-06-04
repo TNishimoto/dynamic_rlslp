@@ -155,16 +155,30 @@ namespace dynRLSLP
                 }
 
                 #ifdef DEBUG
-                VStack<RunRuleBody> item1;
-                item1.push(body1);
-                VStack<RunRuleBody> item2;
-                item2.push(body2);
+                {
+                    VStack<RunRuleBody> dbg_item1;
+                    dbg_item1.push(body1);
+                    VStack<RunRuleBody> dbg_item2;
+                    dbg_item2.push(body2);
 
-                std::pair<uint64_t, int8_t> result2 = lce(item1, item2, small_dic);
-                if(result2.first != result.first || result2.second != result.second){
-                    std::cout << "result: " << result.first << ", " << result.second << std::endl;
-                    std::cout << "result2: " << result2.first << ", " << result2.second << std::endl;
-                    throw std::runtime_error("Error in lce: result != result2");
+                    std::pair<uint64_t, int8_t> correct_result = lce(dbg_item1, dbg_item2, small_dic);
+                    if (correct_result.first != result.first || correct_result.second != result.second)
+                    {
+                        std::cout << "result: " << result.first << ", " << (int)result.second << std::endl;
+                        std::cout << "correct_result: " << correct_result.first << ", " << (int)correct_result.second << std::endl;
+
+                        const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = small_dic.get_explicit_nonterminal_rule_list();
+                        std::vector<RunRuleBody> tmp1;
+                        tmp1.push_back(body1);
+                        std::vector<RunRuleBody> tmp2;
+                        tmp2.push_back(body2);
+                        std::string str1 = Access::get_string(tmp1, explicit_nonterminal_rule_list);
+                        std::string str2 = Access::get_string(tmp2, explicit_nonterminal_rule_list);
+                        std::cout << "str1: " << str1 << std::endl;
+                        std::cout << "str2: " << str2 << std::endl;
+
+                        throw std::runtime_error("Error in lce: result != correct_result");
+                    }
                 }
                 #endif
                 return result;
