@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
     if (output_dynamic_data_structure_file_path.size() > 0)
     {
         std::ofstream ofs(output_dynamic_data_structure_file_path);
-        ds.write_content_as_json_format(ofs);
+        ds.write_content_as_json_format(ofs, "DynamicRLSLPString");
         ofs.close();
         std::cout << "The dynamic data structure is written to the json file: " << output_dynamic_data_structure_file_path << std::endl;
     }

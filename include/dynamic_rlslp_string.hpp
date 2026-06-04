@@ -488,11 +488,9 @@ namespace dynRLSLP
             return this->dynamic_grammar.convert_to_canonized_rlslp();
         }
 
-        void write_content_as_json_format(std::ofstream &ofs, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
+        void write_content_as_json_format(std::ofstream &ofs, std::string name, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
         {
-            ofs << stool::Message::get_paragraph_string(message_paragraph) << "{" << std::endl;
-            // ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"data_structure\": " << "\"DynamicRLSLPString\"," << std::endl;
-            // ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"content\": " << "{" << std::endl;
+            ofs << stool::Message::get_paragraph_string(message_paragraph) << "\"" << name << "\": " << "{" << std::endl;
 
             std::string dictionaryMode_str;
             if (this->dictionaryMode == DictionaryMode::Standard)
