@@ -25,14 +25,13 @@ namespace dynRLSLP
         std::vector<uint64_t> right_short_string_list;
         std::vector<TemporaryOccurrence> ancestor_cache_list;
 
-
-        #ifdef DEBUG
+#ifdef DEBUG
         std::vector<uint64_t> __added_nonterminals_list;
         std::vector<uint64_t> __removed_nonterminals_list;
         std::vector<uint64_t> __changed_nonterminals_list;
-        #endif
+#endif
 
-        //inline static const uint64_t ANCESTOR_CACHE_DEPTH = 10;
+        // inline static const uint64_t ANCESTOR_CACHE_DEPTH = 10;
         inline static const uint64_t ANCESTOR_CACHE_DEPTH = 3;
 
     public:
@@ -345,7 +344,6 @@ namespace dynRLSLP
         {
             const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
 
-
             RunRuleBody rbody1 = RunRuleBody(X1, 1);
             RunRuleBody rbody2 = RunRuleBody(X2, 1);
 
@@ -390,21 +388,21 @@ namespace dynRLSLP
         {
             const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
 
-
             RunRuleBody rbody1 = RunRuleBody(X1, 1);
             RunRuleBody rbody2 = RunRuleBody(X2, 1);
 
-            if(this->get_dictionary_mode() == DictionaryMode::Fast){
+            if (this->get_dictionary_mode() == DictionaryMode::Fast)
+            {
                 const std::vector<uint64_t> &rightShortStringList = this->get_right_short_string_list();
                 auto result = FastLCE::reverse_lce(rbody1, rbody2, this->dynamic_grammar.get_alphabet_bit_size(), small_dic, rightShortStringList);
                 return result.first;
             }
-            else{
+            else
+            {
                 auto result = FastLCE::reverse_lce(rbody1, rbody2, small_dic);
                 return result.first;
             }
         }
-
 
         /**
          * @brief Resolve temporary occurrences to absolute text positions.
@@ -631,26 +629,28 @@ namespace dynRLSLP
             std::unordered_set<NonterminalWithRelativeLevel> changed_nonterminals;
             const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
 
-
-
+            std::unordered_set<NonterminalWithRelativeLevel> removed_nonterminal_set;
+            std::unordered_set<NonterminalWithRelativeLevel> unremoved_chidlren_of_removed_nonterminal_set;
+            std::unordered_set<NonterminalWithRelativeLevel> added_nonterminal_set;
+            std::unordered_set<NonterminalWithRelativeLevel> nonadded_chidlren_of_added_nonterminal_set;
 
             auto wrapped_preprocessor_for_removed_nonterminal = [&](NonterminalWithRelativeLevel sig)
             {
-                this->callback_for_removed_nonterminal(sig, changed_nonterminals);
+                this->callback_for_removed_nonterminal(sig, removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set);
                 preprocessor_for_removed_nonterminal(sig);
 
-            #ifdef DEBUG
-            this->__removed_nonterminals_list.push_back(sig);
-            #endif
+#ifdef DEBUG
+                this->__removed_nonterminals_list.push_back(sig);
+#endif
             };
             auto wrapped_postprocessor_for_inserted_nonterminal = [&](NonterminalWithRelativeLevel sig)
             {
-                this->callback_for_added_nonterminal(sig, changed_nonterminals);
+                this->callback_for_added_nonterminal(sig, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
                 postprocessor_for_inserted_nonterminal(sig);
 
-            #ifdef DEBUG
-            this->__added_nonterminals_list.push_back(sig);
-            #endif
+#ifdef DEBUG
+                this->__added_nonterminals_list.push_back(sig);
+#endif
             };
 
             uint64_t size = this->size();
@@ -664,7 +664,7 @@ namespace dynRLSLP
                 std::cout << "Insert-A1" << std::endl;
 
                 Compress::compress(this->dynamic_grammar, pattern, wrapped_postprocessor_for_inserted_nonterminal, stool::Message::NO_MESSAGE);
-                this->callback_for_finished_update(changed_nonterminals);
+                this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
 
                 assert(this->size() == size + pattern.size());
                 assert(this->dynamic_grammar.get_document_count() == 1);
@@ -678,28 +678,26 @@ namespace dynRLSLP
                     uint64_t leftLen = i;
 
                     std::cout << "Insert-B1" << std::endl;
-
                     NonterminalWithRelativeLevel root = grammar.get_root();
                     auto pair = SplitAndConcatenation::split(root, leftLen, true, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
-                    this->callback_for_finished_update(changed_nonterminals);
-                    changed_nonterminals.clear();
+
+                    this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
 
                     std::cout << "Insert-B2" << std::endl;
 
                     NonterminalWithRelativeLevel pattern_sig = Compress::compress(this->dynamic_grammar, pattern, wrapped_postprocessor_for_inserted_nonterminal, stool::Message::NO_MESSAGE);
-                    this->callback_for_finished_update(changed_nonterminals);
-                    changed_nonterminals.clear();
+                    this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
 
                     std::cout << "Insert-B3" << std::endl;
+                    this->write_all_parent_lists_to_file("all_parent_lists_before_split.txt");
                     NonterminalWithRelativeLevel LC = SplitAndConcatenation::concatenate(pair.first, pattern_sig, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
-                    this->callback_for_finished_update(changed_nonterminals);
-                    changed_nonterminals.clear();
+                    this->write_all_parent_lists_to_file("all_parent_lists_after_split.txt");
+
+                    this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
 
                     std::cout << "Insert-B4" << std::endl;
                     [[maybe_unused]] NonterminalWithRelativeLevel LCR = SplitAndConcatenation::concatenate(LC, pair.second, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
-                    this->callback_for_finished_update(changed_nonterminals);
-                    changed_nonterminals.clear();
-
+                    this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
 
                     assert(this->size() == size + pattern.size());
                     assert(this->dynamic_grammar.get_document_count() == 1);
@@ -714,14 +712,11 @@ namespace dynRLSLP
                         std::cout << "Insert-C1" << std::endl;
 
                         NonterminalWithRelativeLevel pattern_sig = Compress::compress(this->dynamic_grammar, pattern, wrapped_postprocessor_for_inserted_nonterminal, stool::Message::NO_MESSAGE);
-                        this->callback_for_finished_update(changed_nonterminals);
-                        changed_nonterminals.clear();    
+                        this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
 
                         std::cout << "Insert-C2" << std::endl;
                         SplitAndConcatenation::concatenate(pattern_sig, root, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
-                        this->callback_for_finished_update(changed_nonterminals);
-                        changed_nonterminals.clear();
-    
+                        this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
 
                         assert(this->size() == size + pattern.size());
                         assert(this->dynamic_grammar.get_document_count() == 1);
@@ -734,14 +729,12 @@ namespace dynRLSLP
                         std::cout << "Insert-D1" << std::endl;
 
                         NonterminalWithRelativeLevel pattern_sig = Compress::compress(this->dynamic_grammar, pattern, wrapped_postprocessor_for_inserted_nonterminal, stool::Message::NO_MESSAGE);
-                        this->callback_for_finished_update(changed_nonterminals);
-                        changed_nonterminals.clear();
-    
+                        this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
+
                         std::cout << "Insert-D2" << std::endl;
                         SplitAndConcatenation::concatenate(root, pattern_sig, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
-                        this->callback_for_finished_update(changed_nonterminals);
-                        changed_nonterminals.clear();
-    
+                        this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
+
                         assert(this->size() == size + pattern.size());
                         assert(this->dynamic_grammar.get_document_count() == 1);
                     }
@@ -752,11 +745,6 @@ namespace dynRLSLP
                     }
                 }
             }
-
-
-            
-
-
         }
 
         /**
@@ -811,25 +799,31 @@ namespace dynRLSLP
         void delete_substring_with_callback(uint64_t i, uint64_t len, const CALLBACK1 &preprocessor_for_removed_nonterminal = no_callback, const CALLBACK2 &postprocessor_for_inserted_nonterminal = no_callback)
         {
             const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
-            std::unordered_set<NonterminalWithRelativeLevel> changed_nonterminals;
+            // std::unordered_set<NonterminalWithRelativeLevel> changed_nonterminals;
+
+            std::unordered_set<NonterminalWithRelativeLevel> removed_nonterminal_set;
+            std::unordered_set<NonterminalWithRelativeLevel> unremoved_chidlren_of_removed_nonterminal_set;
+
+            std::unordered_set<NonterminalWithRelativeLevel> added_nonterminal_set;
+            std::unordered_set<NonterminalWithRelativeLevel> nonadded_chidlren_of_added_nonterminal_set;
 
             auto wrapped_preprocessor_for_removed_nonterminal = [&](NonterminalWithRelativeLevel sig)
             {
-                this->callback_for_removed_nonterminal(sig, changed_nonterminals);                
+                this->callback_for_removed_nonterminal(sig, removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set);
                 preprocessor_for_removed_nonterminal(sig);
 
-                #ifdef DEBUG
+#ifdef DEBUG
                 this->__removed_nonterminals_list.push_back(sig);
-                #endif
+#endif
             };
             auto wrapped_postprocessor_for_inserted_nonterminal = [&](NonterminalWithRelativeLevel sig)
             {
-                this->callback_for_added_nonterminal(sig, changed_nonterminals);
+                this->callback_for_added_nonterminal(sig, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
                 postprocessor_for_inserted_nonterminal(sig);
 
-                #ifdef DEBUG
+#ifdef DEBUG
                 this->__added_nonterminals_list.push_back(sig);
-                #endif
+#endif
             };
 
             if (len == 0)
@@ -850,33 +844,24 @@ namespace dynRLSLP
 
                 std::cout << "Delete-A1" << std::endl;
                 auto pair1 = SplitAndConcatenation::split(grammar.get_root(), leftLen1, true, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
-                this->callback_for_finished_update(changed_nonterminals);
-                changed_nonterminals.clear();
+                this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
 
                 std::cout << "Delete-A2" << std::endl;
-                this->write_all_parent_lists_to_file("all_parent_lists_before_split.txt");
                 auto pair2 = SplitAndConcatenation::split(pair1.first, leftLen2, true, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
-                this->write_all_parent_lists_to_file("all_parent_lists_after_split.txt");
 
-                this->callback_for_finished_update(changed_nonterminals);
-                changed_nonterminals.clear();
-
+                this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
 
                 NonterminalWithRelativeLevel L = pair2.first;
                 NonterminalWithRelativeLevel C = pair2.second;
                 NonterminalWithRelativeLevel R = pair1.second;
 
-
                 std::cout << "Delete-A3" << std::endl;
                 this->dynamic_grammar.remove_document(C, wrapped_preprocessor_for_removed_nonterminal);
-                this->callback_for_finished_update(changed_nonterminals);
-                changed_nonterminals.clear();
+                this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
 
                 std::cout << "Delete-A4" << std::endl;
                 SplitAndConcatenation::concatenate(L, R, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
-                this->callback_for_finished_update(changed_nonterminals);
-                changed_nonterminals.clear();
-
+                this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
             }
             else
             {
@@ -886,9 +871,7 @@ namespace dynRLSLP
                     {
                         std::cout << "Delete-B1" << std::endl;
                         this->dynamic_grammar.remove_document(grammar.get_root(), wrapped_preprocessor_for_removed_nonterminal);
-                        this->callback_for_finished_update(changed_nonterminals);
-                        changed_nonterminals.clear();
-    
+                        this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
                     }
                     else
                     {
@@ -896,16 +879,13 @@ namespace dynRLSLP
 
                         std::cout << "Delete-B2" << std::endl;
                         auto pair1 = SplitAndConcatenation::split(grammar.get_root(), leftLen1, true, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
-                        this->callback_for_finished_update(changed_nonterminals);
-                        changed_nonterminals.clear();
+                        this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
 
                         std::cout << "Delete-B3" << std::endl;
                         NonterminalWithRelativeLevel L = pair1.first;
                         // NonterminalWithRelativeLevel R = pair1.second;
                         this->dynamic_grammar.remove_document(L, wrapped_preprocessor_for_removed_nonterminal);
-                        this->callback_for_finished_update(changed_nonterminals);
-                        changed_nonterminals.clear();
-    
+                        this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
                     }
                 }
                 else
@@ -914,20 +894,16 @@ namespace dynRLSLP
 
                     std::cout << "Delete-C1" << std::endl;
                     auto pair1 = SplitAndConcatenation::split(grammar.get_root(), leftLen1, true, true, this->dynamic_grammar, wrapped_preprocessor_for_removed_nonterminal, wrapped_postprocessor_for_inserted_nonterminal);
-                    this->callback_for_finished_update(changed_nonterminals);
-                    changed_nonterminals.clear();
+                    this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
 
                     std::cout << "Delete-C2" << std::endl;
                     NonterminalWithRelativeLevel R = pair1.second;
                     this->dynamic_grammar.remove_document(R, wrapped_preprocessor_for_removed_nonterminal);
-                    this->callback_for_finished_update(changed_nonterminals);
-                    changed_nonterminals.clear();
-
+                    this->callback_for_finished_update(removed_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set);
                 }
             }
 
-
-            //this->callback_for_finished_update(changed_nonterminals);
+            // this->callback_for_finished_update(changed_nonterminals);
         }
 
         /**
@@ -961,50 +937,59 @@ namespace dynRLSLP
 
         bool verify_ancestor_cache_list() const
         {
-            if(this->dictionaryMode == DictionaryMode::Fast){
+            if (this->dictionaryMode == DictionaryMode::Fast)
+            {
                 auto dic = this->dynamic_grammar.get_dictionary();
                 auto explicit_nonterminal_rule_list = dic.get_explicit_nonterminal_rule_list();
                 auto parent_dictionary = this->dynamic_grammar.get_parent_dictionary();
 
-                if(this->ancestor_cache_list.size() != explicit_nonterminal_rule_list.size()){
+                if (this->ancestor_cache_list.size() != explicit_nonterminal_rule_list.size())
+                {
                     throw std::runtime_error("DynamicRLSLPString::verify: The size of ancestor cache list is not equal to the size of explicit nonterminal rule list.");
                 }
 
+                for (uint64_t i = 0; i < explicit_nonterminal_rule_list.size(); i++)
+                {
 
-                for(uint64_t i = 0; i < explicit_nonterminal_rule_list.size(); i++){
-                    
-                    if(explicit_nonterminal_rule_list[i].get_type() != RLSLPRuleType::Null){
+                    if (explicit_nonterminal_rule_list[i].get_type() != RLSLPRuleType::Null)
+                    {
                         auto correct_occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(i, parent_dictionary, explicit_nonterminal_rule_list, dic.get_explicit_nonterminal_length_list(), DynamicRLSLPString::ANCESTOR_CACHE_DEPTH, 0);
-                        if(!this->ancestor_cache_list[i].equals(correct_occurrence)){
+                        if (!this->ancestor_cache_list[i].equals(correct_occurrence))
+                        {
                             std::cout << "Explicit nonterminal: " << i << ", Correct occurrence: " << correct_occurrence.to_string() << ", Cache occurrence: " << this->ancestor_cache_list[i].to_string() << std::endl;
 
-                            #ifdef DEBUG
+#ifdef DEBUG
                             std::cout << "Added nonterminals: " << std::endl;
-                            for(auto sig : this->__added_nonterminals_list){
+                            for (auto sig : this->__added_nonterminals_list)
+                            {
                                 std::cout << NonterminalFunctions::to_string(sig) << ", ";
                             }
                             std::cout << std::endl;
                             std::cout << "Removed nonterminals: " << std::endl;
-                            for(auto sig : this->__removed_nonterminals_list){
+                            for (auto sig : this->__removed_nonterminals_list)
+                            {
                                 std::cout << NonterminalFunctions::to_string(sig) << ", ";
                             }
                             std::cout << std::endl;
                             std::cout << "Changed nonterminals: " << std::endl;
-                            for(auto sig : this->__changed_nonterminals_list){
-                                std::cout << sig << ", ";
+                            for (auto sig : this->__changed_nonterminals_list)
+                            {
+                                std::cout << NonterminalFunctions::to_string(sig) << ", ";
                             }
                             std::cout << std::endl;
-                            #endif
+#endif
 
                             throw std::runtime_error("DynamicRLSLPString::verify: The ancestor cache is not equal to the correct occurrence.");
                         }
-                    }else{
-                        if(!this->ancestor_cache_list[i].is_null()){
+                    }
+                    else
+                    {
+                        if (!this->ancestor_cache_list[i].is_null())
+                        {
                             throw std::runtime_error("DynamicRLSLPString::verify: The ancestor cache is not null.");
                         }
                     }
                 }
-
             }
 
             return true;
@@ -1017,43 +1002,49 @@ namespace dynRLSLP
         bool verify() const
         {
             bool b = this->dynamic_grammar.verify();
-            if(!b){
+            if (!b)
+            {
                 throw std::runtime_error("DynamicRLSLPString::verify: The grammar is not valid.");
             }
 
             this->verify_ancestor_cache_list();
 
-            if(this->dictionaryMode == DictionaryMode::Fast){
+            if (this->dictionaryMode == DictionaryMode::Fast)
+            {
                 auto dic = this->dynamic_grammar.get_dictionary();
                 auto explicit_nonterminal_rule_list = dic.get_explicit_nonterminal_rule_list();
                 auto parent_dictionary = this->dynamic_grammar.get_parent_dictionary();
 
-                if(this->right_short_string_list.size() != explicit_nonterminal_rule_list.size()){
+                if (this->right_short_string_list.size() != explicit_nonterminal_rule_list.size())
+                {
                     throw std::runtime_error("DynamicRLSLPString::verify: The size of right short string list is not equal to the size of explicit nonterminal rule list.");
                 }
-                if(this->ancestor_cache_list.size() != explicit_nonterminal_rule_list.size()){
+                if (this->ancestor_cache_list.size() != explicit_nonterminal_rule_list.size())
+                {
                     throw std::runtime_error("DynamicRLSLPString::verify: The size of ancestor cache list is not equal to the size of explicit nonterminal rule list.");
                 }
 
+                for (uint64_t i = 0; i < explicit_nonterminal_rule_list.size(); i++)
+                {
 
-                for(uint64_t i = 0; i < explicit_nonterminal_rule_list.size(); i++){
-                    
-                    if(explicit_nonterminal_rule_list[i].get_type() != RLSLPRuleType::Null){
+                    if (explicit_nonterminal_rule_list[i].get_type() != RLSLPRuleType::Null)
+                    {
                         ShortString::verify_left_short_string(i, this->dynamic_grammar.get_alphabet_bit_size(), explicit_nonterminal_rule_list, dic.get_explicit_nonterminal_length_list(), this->left_short_string_list, this->dynamic_grammar.get_character_id_map());
-                    }else{
-                        if(this->left_short_string_list[i] != UINT64_MAX){
+                    }
+                    else
+                    {
+                        if (this->left_short_string_list[i] != UINT64_MAX)
+                        {
                             throw std::runtime_error("DynamicRLSLPString::verify: The left short string is not UINT64_MAX.");
                         }
 
-                        if(this->right_short_string_list[i] != UINT64_MAX){
+                        if (this->right_short_string_list[i] != UINT64_MAX)
+                        {
                             throw std::runtime_error("DynamicRLSLPString::verify: The right short string is not UINT64_MAX.");
                         }
                     }
-
-
                 }
             }
-
 
             return true;
         }
@@ -1183,72 +1174,91 @@ namespace dynRLSLP
             const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
             const std::vector<uint16_t> &relative_max_level_list = this->dynamic_grammar.get_relative_max_level_list();
 
-            for(uint64_t i = 0; i < explicit_nonterminal_rule_list.size(); i++){
-                if(all_parent_lists.find(i) == all_parent_lists.end()){
+            for (uint64_t i = 0; i < explicit_nonterminal_rule_list.size(); i++)
+            {
+                if (all_parent_lists.find(i) == all_parent_lists.end())
+                {
                     all_parent_lists[i] = std::vector<NonterminalWithRelativeLevel>();
                 }
                 uint16_t relative_max_level = relative_max_level_list[i];
-                
-            
-                if(explicit_nonterminal_rule_list[i].get_type() != RLSLPRuleType::Null){
-                    for(uint64_t j = 1; j <= relative_max_level; j++){
+
+                if (explicit_nonterminal_rule_list[i].get_type() != RLSLPRuleType::Null)
+                {
+                    for (uint64_t j = 1; j <= relative_max_level; j++)
+                    {
                         NonterminalWithRelativeLevel parent = NonterminalFunctions::get_nonterminal(j, i);
-                        NonterminalWithRelativeLevel child = NonterminalFunctions::get_nonterminal(j-1, i);
-                        if(all_parent_lists.find(parent) == all_parent_lists.end()){
+                        NonterminalWithRelativeLevel child = NonterminalFunctions::get_nonterminal(j - 1, i);
+                        if (all_parent_lists.find(parent) == all_parent_lists.end())
+                        {
                             all_parent_lists[parent] = std::vector<NonterminalWithRelativeLevel>();
                         }
-                        if(all_parent_lists.find(child) == all_parent_lists.end()){
+                        if (all_parent_lists.find(child) == all_parent_lists.end())
+                        {
                             all_parent_lists[child] = std::vector<NonterminalWithRelativeLevel>();
                         }
                         all_parent_lists[child].push_back(parent);
-                    }    
-    
+                    }
 
                     RLSLPRuleBody rule = explicit_nonterminal_rule_list[i];
-                    if(rule.get_type() == RLSLPRuleType::Pair){
-                        if(all_parent_lists.find(rule.A) == all_parent_lists.end()){
+                    if (rule.get_type() == RLSLPRuleType::Pair)
+                    {
+                        if (all_parent_lists.find(rule.A) == all_parent_lists.end())
+                        {
                             all_parent_lists[rule.A] = std::vector<NonterminalWithRelativeLevel>();
                         }
-                        if(all_parent_lists.find(rule.B) == all_parent_lists.end()){
+                        if (all_parent_lists.find(rule.B) == all_parent_lists.end())
+                        {
                             all_parent_lists[rule.B] = std::vector<NonterminalWithRelativeLevel>();
                         }
 
                         all_parent_lists[rule.B].push_back(i);
-                        if(rule.B != rule.A){
+                        if (rule.B != rule.A)
+                        {
                             all_parent_lists[rule.A].push_back(i);
                         }
-                    }else if(rule.get_type() == RLSLPRuleType::Power){
-                        if(all_parent_lists.find(rule.A) == all_parent_lists.end()){
-                            all_parent_lists[rule.A] = std::vector<NonterminalWithRelativeLevel>();
-                        }
-                        all_parent_lists[rule.A].push_back(i);
-                    }else if(rule.get_type() == RLSLPRuleType::Nonterminal){
-                        if(all_parent_lists.find(rule.A) == all_parent_lists.end()){
-                            all_parent_lists[rule.A] = std::vector<NonterminalWithRelativeLevel>();
-                        }
-                        all_parent_lists[rule.A].push_back(i);
-                    }else if(rule.get_type() == RLSLPRuleType::Character){
                     }
-                    else{
+                    else if (rule.get_type() == RLSLPRuleType::Power)
+                    {
+                        if (all_parent_lists.find(rule.A) == all_parent_lists.end())
+                        {
+                            all_parent_lists[rule.A] = std::vector<NonterminalWithRelativeLevel>();
+                        }
+                        all_parent_lists[rule.A].push_back(i);
+                    }
+                    else if (rule.get_type() == RLSLPRuleType::Nonterminal)
+                    {
+                        if (all_parent_lists.find(rule.A) == all_parent_lists.end())
+                        {
+                            all_parent_lists[rule.A] = std::vector<NonterminalWithRelativeLevel>();
+                        }
+                        all_parent_lists[rule.A].push_back(i);
+                    }
+                    else if (rule.get_type() == RLSLPRuleType::Character)
+                    {
+                    }
+                    else
+                    {
                         throw std::runtime_error("DynamicRLSLPString::get_all_parent_lists: unknown rule type");
                     }
                 }
             }
             return all_parent_lists;
         }
-        void write_all_parent_lists_to_file(const std::string &file_path) const{
+        void write_all_parent_lists_to_file(const std::string &file_path) const
+        {
             auto all_parent_lists = this->get_all_parent_lists();
             std::ofstream ofs(file_path);
-            for(auto it : all_parent_lists){
+            for (auto it : all_parent_lists)
+            {
                 ofs << NonterminalFunctions::to_string(it.first) << " <- ";
-                for(auto parent : it.second){
+                for (auto parent : it.second)
+                {
                     ofs << NonterminalFunctions::to_string(parent) << ", ";
                 }
                 ofs << std::endl;
             }
             ofs.close();
         }
-
 
         /**
          * @brief Print statistics about this instance and its grammar to standard output.
@@ -1615,7 +1625,8 @@ namespace dynRLSLP
          * @param sig Nonterminal that was removed.
          * @param changed_nonterminals Set collecting base nonterminals whose caches must be refreshed.
          */
-        void callback_for_removed_nonterminal(NonterminalWithRelativeLevel sig, std::unordered_set<NonterminalWithRelativeLevel> &changed_nonterminals)
+        void callback_for_removed_nonterminal(NonterminalWithRelativeLevel sig, std::unordered_set<NonterminalWithRelativeLevel> &removed_nonterminal_set,
+                                              std::unordered_set<NonterminalWithRelativeLevel> &unremoved_chidlren_of_removed_nonterminal_set)
         {
 
             if (this->dictionaryMode == DictionaryMode::Fast)
@@ -1625,12 +1636,42 @@ namespace dynRLSLP
                 {
                     this->left_short_string_list[sig] = UINT64_MAX;
                     this->right_short_string_list[sig] = UINT64_MAX;
-
                 }
+
+                removed_nonterminal_set.insert(sig);
+                if (unremoved_chidlren_of_removed_nonterminal_set.find(sig) != unremoved_chidlren_of_removed_nonterminal_set.end())
+                {
+                    unremoved_chidlren_of_removed_nonterminal_set.erase(sig);
+                }
+
+                const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
+                RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, explicit_nonterminal_rule_list);
+                if (item.get_type() == RLSLPRuleType::Nonterminal)
+                {
+                    unremoved_chidlren_of_removed_nonterminal_set.insert(item.A);
+                }
+                else if (item.get_type() == RLSLPRuleType::Pair)
+                {
+                    unremoved_chidlren_of_removed_nonterminal_set.insert(item.A);
+                    unremoved_chidlren_of_removed_nonterminal_set.insert(item.B);
+                }
+                else if (item.get_type() == RLSLPRuleType::Power)
+                {
+                    unremoved_chidlren_of_removed_nonterminal_set.insert(item.A);
+                }
+                else if (item.get_type() == RLSLPRuleType::Character)
+                {
+                }
+                else
+                {
+                    throw std::runtime_error("callback_for_removed_nonterminal: item.get_type() is not valid");
+                }
+
+                /*
                 std::cout << "callback_for_removed_nonterminal: " << NonterminalFunctions::to_string(sig) << std::flush;
                 this->add_descendants(sig, changed_nonterminals, DynamicRLSLPString::ANCESTOR_CACHE_DEPTH + 1, 0);
                 std::cout << std::endl;
-
+                */
             }
         }
 
@@ -1639,7 +1680,8 @@ namespace dynRLSLP
          * @param sig Nonterminal that was added.
          * @param changed_nonterminals Set collecting base nonterminals whose caches must be refreshed.
          */
-        void callback_for_added_nonterminal(NonterminalWithRelativeLevel sig, std::unordered_set<NonterminalWithRelativeLevel> &changed_nonterminals)
+        void callback_for_added_nonterminal(NonterminalWithRelativeLevel sig, std::unordered_set<NonterminalWithRelativeLevel> &added_nonterminal_set,
+                                            std::unordered_set<NonterminalWithRelativeLevel> &nonadded_chidlren_of_added_nonterminal_set)
         {
             if (this->dictionaryMode == DictionaryMode::Fast)
             {
@@ -1647,9 +1689,9 @@ namespace dynRLSLP
                 const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
 
                 ExplicitNonterminal explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(sig);
+                RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, explicit_nonterminal_rule_list);
                 if (sig == explicit_nonterminal)
                 {
-                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, explicit_nonterminal_rule_list);
 
                     while ((uint64_t)this->left_short_string_list.size() <= (uint64_t)sig)
                     {
@@ -1682,20 +1724,118 @@ namespace dynRLSLP
                         this->right_short_string_list[sig] = right_short_string;
                     }
 
+                    /*
                     std::cout << "callback_for_add_nonterminal: " << sig << std::flush;
                     this->add_descendants(sig, changed_nonterminals, DynamicRLSLPString::ANCESTOR_CACHE_DEPTH + 1, 0);
                     std::cout << std::endl;
+                    */
+                }
+
+                added_nonterminal_set.insert(sig);
+                if (item.get_type() == RLSLPRuleType::Nonterminal)
+                {
+                    if (added_nonterminal_set.find(item.A) == added_nonterminal_set.end())
+                    {
+                        nonadded_chidlren_of_added_nonterminal_set.insert(item.A);
+                    }
+                }
+                else if (item.get_type() == RLSLPRuleType::Pair)
+                {
+                    if (added_nonterminal_set.find(item.A) == added_nonterminal_set.end())
+                    {
+                        nonadded_chidlren_of_added_nonterminal_set.insert(item.A);
+                    }
+                    if (added_nonterminal_set.find(item.B) == added_nonterminal_set.end())
+                    {
+                        nonadded_chidlren_of_added_nonterminal_set.insert(item.B);
+                    }
+                }
+                else if (item.get_type() == RLSLPRuleType::Power)
+                {
+                    if (added_nonterminal_set.find(item.A) == added_nonterminal_set.end())
+                    {
+                        nonadded_chidlren_of_added_nonterminal_set.insert(item.A);
+                    }
+                }
+                else if (item.get_type() == RLSLPRuleType::Character)
+                {
+                }
+                else
+                {
+                    throw std::runtime_error("callback_for_added_nonterminal: item.get_type() is not valid");
                 }
             }
         }
+
+        std::vector<NonterminalWithRelativeLevel> compute_changed_nonterminals(std::unordered_set<NonterminalWithRelativeLevel> &removed_nonterminal_set,
+            std::unordered_set<NonterminalWithRelativeLevel> &unremoved_chidlren_of_removed_nonterminal_set,
+            std::unordered_set<NonterminalWithRelativeLevel> &added_nonterminal_set,
+            std::unordered_set<NonterminalWithRelativeLevel> &nonadded_chidlren_of_added_nonterminal_set)
+        {
+
+            std::vector<NonterminalWithRelativeLevel> r;
+
+            std::unordered_set<NonterminalWithRelativeLevel> tmp_set;
+            tmp_set.insert(unremoved_chidlren_of_removed_nonterminal_set.begin(), unremoved_chidlren_of_removed_nonterminal_set.end());
+            tmp_set.insert(nonadded_chidlren_of_added_nonterminal_set.begin(), nonadded_chidlren_of_added_nonterminal_set.end());
+
+            /*
+            std::cout << "child_sig: " << std::flush;
+            for(auto child_sig : tmp_set){
+                std::cout << NonterminalFunctions::to_string(child_sig) << " " << std::flush;
+            }
+            std::cout << std::endl;
+            */
+
+
+
+            std::unordered_set<NonterminalWithRelativeLevel> descendants = this->add_descendants2(tmp_set, DynamicRLSLPString::ANCESTOR_CACHE_DEPTH);
+            tmp_set.insert(descendants.begin(), descendants.end());
+
+
+            tmp_set.insert(removed_nonterminal_set.begin(), removed_nonterminal_set.end());
+            tmp_set.insert(added_nonterminal_set.begin(), added_nonterminal_set.end());
+
+            /*
+            for (ExplicitNonterminal sig : unremoved_chidlren_of_removed_nonterminal_set)
+            {
+                std::cout << "callback_for_removed_nonterminal: " << NonterminalFunctions::to_string(sig) << std::flush;
+                this->add_descendants(sig, tmp_set, DynamicRLSLPString::ANCESTOR_CACHE_DEPTH + 1, 0);
+                std::cout << std::endl;
+            }
+
+            for (ExplicitNonterminal sig : nonadded_chidlren_of_added_nonterminal_set)
+            {
+                std::cout << "callback_for_added_nonterminal: " << NonterminalFunctions::to_string(sig) << std::flush;
+                this->add_descendants(sig, tmp_set, DynamicRLSLPString::ANCESTOR_CACHE_DEPTH + 1, 0);
+                std::cout << std::endl;
+            }
+            */
+
+            r.insert(r.end(), tmp_set.begin(), tmp_set.end());
+
+            removed_nonterminal_set.clear();
+            added_nonterminal_set.clear();
+            nonadded_chidlren_of_added_nonterminal_set.clear();
+            unremoved_chidlren_of_removed_nonterminal_set.clear();
+
+            return r;
+        }
+
         /**
          * @brief Refresh ancestor caches for all nonterminals changed during an update (Fast mode).
          * @param changed_nonterminals Base nonterminals whose ancestor occurrences were invalidated.
          */
-        void callback_for_finished_update(const std::unordered_set<NonterminalWithRelativeLevel> &changed_nonterminals)
+        void callback_for_finished_update(std::unordered_set<NonterminalWithRelativeLevel> &removed_nonterminal_set,
+            std::unordered_set<NonterminalWithRelativeLevel> &unremoved_chidlren_of_removed_nonterminal_set,
+            std::unordered_set<NonterminalWithRelativeLevel> &added_nonterminal_set,
+            std::unordered_set<NonterminalWithRelativeLevel> &nonadded_chidlren_of_added_nonterminal_set)
         {
             if (this->dictionaryMode == DictionaryMode::Fast)
             {
+                std::vector<NonterminalWithRelativeLevel> changed_nonterminals_list = compute_changed_nonterminals(removed_nonterminal_set, added_nonterminal_set, nonadded_chidlren_of_added_nonterminal_set, unremoved_chidlren_of_removed_nonterminal_set);
+
+                /*
                 std::vector<uint64_t> changed_nonterminals_list;
                 changed_nonterminals_list.resize(changed_nonterminals.size());
                 uint64_t index = 0;
@@ -1704,17 +1844,16 @@ namespace dynRLSLP
                     changed_nonterminals_list[index] = sig;
                     index++;
                 }
+                */
 
-                #ifdef DEBUG
+#ifdef DEBUG
                 std::sort(this->__added_nonterminals_list.begin(), this->__added_nonterminals_list.end());
                 std::sort(this->__removed_nonterminals_list.begin(), this->__removed_nonterminals_list.end());
-
 
                 this->__changed_nonterminals_list.clear();
                 this->__changed_nonterminals_list.insert(this->__changed_nonterminals_list.end(), changed_nonterminals_list.begin(), changed_nonterminals_list.end());
                 std::sort(this->__changed_nonterminals_list.begin(), this->__changed_nonterminals_list.end());
-                #endif
-
+#endif
 
                 const std::vector<uint64_t> &explicit_nonterminal_length_list = this->dynamic_grammar.get_explicit_nonterminal_length_list();
                 const FastParentDictionary &fast_parent_dictionary = this->dynamic_grammar.get_parent_dictionary();
@@ -1722,90 +1861,146 @@ namespace dynRLSLP
 
                 for (uint64_t i = 0; i < changed_nonterminals_list.size(); i++)
                 {
-                    ExplicitNonterminal sig = changed_nonterminals_list[i];
-                    RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, explicit_nonterminal_rule_list);
-                    if (item.get_type() != RLSLPRuleType::Null)
-                    {
-                        if ((uint64_t)this->ancestor_cache_list.size() <= (uint64_t)sig)
+                    if(NonterminalFunctions::is_explicit_nonterminal(changed_nonterminals_list[i])){
+                        ExplicitNonterminal sig = changed_nonterminals_list[i];
+                        RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, explicit_nonterminal_rule_list);
+                        if (item.get_type() != RLSLPRuleType::Null)
                         {
-                            while ((uint64_t)this->ancestor_cache_list.size() <= (uint64_t)sig)
+                            if ((uint64_t)this->ancestor_cache_list.size() <= (uint64_t)sig)
                             {
-                                this->ancestor_cache_list.push_back(TemporaryOccurrence::create_null_occurrence());
+                                while ((uint64_t)this->ancestor_cache_list.size() <= (uint64_t)sig)
+                                {
+                                    this->ancestor_cache_list.push_back(TemporaryOccurrence::create_null_occurrence());
+                                }
                             }
+                            TemporaryOccurrence occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(sig, fast_parent_dictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, DynamicRLSLPString::ANCESTOR_CACHE_DEPTH, 0);
+    
+                            this->ancestor_cache_list[sig] = occurrence;
                         }
-                        TemporaryOccurrence occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(sig, fast_parent_dictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, DynamicRLSLPString::ANCESTOR_CACHE_DEPTH, 0);
-
-
-                        this->ancestor_cache_list[sig] = occurrence;
-
-                    }
-                    else
-                    {
-                        if ((uint64_t)sig < (uint64_t)this->ancestor_cache_list.size())
+                        else
                         {
-                            this->ancestor_cache_list[sig] = TemporaryOccurrence::create_null_occurrence();
-                        }
+                            if ((uint64_t)sig < (uint64_t)this->ancestor_cache_list.size())
+                            {
+                                this->ancestor_cache_list[sig] = TemporaryOccurrence::create_null_occurrence();
+                            }
+                        }    
                     }
                 }
 
                 std::cout << "callback_for_finished_update: done" << std::endl;
 
-                #ifdef DEBUG
+#ifdef DEBUG
                 this->verify_ancestor_cache_list();
 
                 this->__changed_nonterminals_list.clear();
                 this->__added_nonterminals_list.clear();
                 this->__removed_nonterminals_list.clear();
-                #endif
+#endif
             }
-
         }
 
-        /**
-         * @brief Recursively mark descendant base nonterminals up to \p max_depth for cache invalidation.
-         * @param sig Root nonterminal whose descendants are collected.
-         * @param changed_nonterminals Output set of affected base nonterminals.
-         * @param max_depth Maximum recursion depth.
-         * @param current_depth Current recursion depth.
-         */
+
+         /*
         void add_descendants(NonterminalWithRelativeLevel sig, std::unordered_set<NonterminalWithRelativeLevel> &changed_nonterminals, uint64_t max_depth, uint64_t current_depth) const
         {
             ExplicitNonterminal explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(sig);
             const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
-            auto f = changed_nonterminals.find(explicit_nonterminal);
-            if (f == changed_nonterminals.end())
+
+            changed_nonterminals.insert(explicit_nonterminal);
+
+            std::cout << "," << sig << std::flush;
+
+            RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, explicit_nonterminal_rule_list);
+            if (item.get_type() == RLSLPRuleType::Pair)
             {
-                changed_nonterminals.insert(explicit_nonterminal);
-
-                std::cout << "," << sig << std::flush;
-
-                RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, explicit_nonterminal_rule_list);
-                if (item.get_type() == RLSLPRuleType::Pair)
+                ExplicitNonterminal left_explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.A);
+                ExplicitNonterminal right_explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.B);
+                if (current_depth < max_depth)
                 {
-                    ExplicitNonterminal left_explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.A);
-                    ExplicitNonterminal right_explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.B);
-                    if (current_depth < max_depth)
-                    {
-                        add_descendants(left_explicit_nonterminal, changed_nonterminals, max_depth, current_depth + 1);
-                        add_descendants(right_explicit_nonterminal, changed_nonterminals, max_depth, current_depth + 1);
-                    }
+                    add_descendants(left_explicit_nonterminal, changed_nonterminals, max_depth, current_depth + 1);
+                    add_descendants(right_explicit_nonterminal, changed_nonterminals, max_depth, current_depth + 1);
                 }
-                else if (item.get_type() == RLSLPRuleType::Power)
+            }
+            else if (item.get_type() == RLSLPRuleType::Power)
+            {
+                ExplicitNonterminal base_child_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.A);
+                if (current_depth < max_depth)
                 {
-                    ExplicitNonterminal base_child_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.A);
-                    if (current_depth < max_depth)
-                    {
-                        add_descendants(base_child_nonterminal, changed_nonterminals, max_depth, current_depth + 1);
-                    }
-                }else if (item.get_type() == RLSLPRuleType::Nonterminal){
-                    ExplicitNonterminal base_child_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.A);
-                    if (current_depth < max_depth)
-                    {
-                        add_descendants(base_child_nonterminal, changed_nonterminals, max_depth, current_depth + 1);
-                    }
+                    add_descendants(base_child_nonterminal, changed_nonterminals, max_depth, current_depth + 1);
+                }
+            }
+            else if (item.get_type() == RLSLPRuleType::Nonterminal)
+            {
+                ExplicitNonterminal base_child_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.A);
+                if (current_depth < max_depth)
+                {
+                    add_descendants(base_child_nonterminal, changed_nonterminals, max_depth, current_depth + 1);
                 }
             }
         }
+        */
+
+        std::unordered_set<ExplicitNonterminal> add_descendants2(const std::unordered_set<NonterminalWithRelativeLevel> &changed_nonterminals, uint64_t max_depth) const
+        {
+            std::unordered_set<ExplicitNonterminal> already_checked_nonterminal_set;
+            std::stack<ExplicitNonterminal> processing_nonterminal_stack;
+            std::stack<ExplicitNonterminal> next_stack;
+            const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
+
+            uint64_t current_depth = 0;
+
+            for(auto sig : changed_nonterminals){
+                ExplicitNonterminal explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(sig);
+                processing_nonterminal_stack.push(explicit_nonterminal);
+            }
+
+            while(current_depth <= max_depth){
+                while(processing_nonterminal_stack.size() > 0){
+                    ExplicitNonterminal sig = processing_nonterminal_stack.top();
+                    processing_nonterminal_stack.pop();
+
+                    if(already_checked_nonterminal_set.find(sig) == already_checked_nonterminal_set.end()){
+                        already_checked_nonterminal_set.insert(sig);
+                        RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, explicit_nonterminal_rule_list);
+
+                        if (item.get_type() == RLSLPRuleType::Pair)
+                        {
+                            ExplicitNonterminal left_explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.A);
+                            ExplicitNonterminal right_explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.B);
+                            next_stack.push(left_explicit_nonterminal);
+                            next_stack.push(right_explicit_nonterminal);
+                        }
+                        else if (item.get_type() == RLSLPRuleType::Power)
+                        {
+                            ExplicitNonterminal base_child_explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.A);
+                            next_stack.push(base_child_explicit_nonterminal);
+                        }
+                        else if (item.get_type() == RLSLPRuleType::Nonterminal)
+                        {
+                            ExplicitNonterminal base_child_explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.A);
+                            next_stack.push(base_child_explicit_nonterminal);
+                        }
+    
+                    }
+                }
+                processing_nonterminal_stack.swap(next_stack);
+                current_depth++;
+            }
+
+            return already_checked_nonterminal_set;
+
+            /*
+            ExplicitNonterminal explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(sig);
+
+            changed_nonterminals.insert(explicit_nonterminal);
+
+            std::cout << "," << sig << std::flush;
+            */
+
+        }
+
+
+
         /**
          * @brief Rebuild left and right short-string caches for all rules reachable from the grammar root (Fast mode).
          */
