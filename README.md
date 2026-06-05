@@ -70,12 +70,11 @@ The following table summarizes the properties of the RLSLPs constructed by these
 | ---------------------------------------- | ----------------------------------------------------------- | ------------------------ |
 | Height $H$ of the derivation tree        | Expected $O(\log n)$                                        | At most $2 \log n$       |
 | Number $M$ of explicit nonterminals      | Expected $O(\delta \log ((n \log \sigma)/(\delta \log n)))$ | $O(z \log n \log^{*} n)$ |
-| Number $M'$ of non-explicit nonterminals | $O(MH)$                                                     | At most $M$              |
+| Number M' of non-explicit nonterminals   | $O(MH)$                                                     | At most $M$              |
 
 > [!NOTE]
 >
 > * $H$: The height of the derivation tree corresponding to the RLSLP.
-> * $M = O(1)$ if the RLSLP is built by restricted recompression. Otherwise, $M = O(\log^{*} n)$.
 > * $\delta$: Substring complexity.
 > * $\sigma$: Alphabet size.
 > * $z$: The number of factors in the LZ77 factorization of $T$.
