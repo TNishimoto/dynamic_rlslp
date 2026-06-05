@@ -60,17 +60,20 @@ The grammar-based compression algorithm can be selected from the following two o
 * **Restricted recompression**
 * **Signature encoding**
 
-Restricted recompression is a randomized construction algorithm that outputs an RLSLP that can be stored in expected $\delta$-optimal space.
+Restricted recompression is a randomized construction algorithm that outputs an RLSLP that can be stored in expected $\delta$-optimal space. 
+See [the paper](https://doi.org/10.48550/arXiv.2604.24080) for the details of the algorithm.
 
-Signature encoding is a deterministic construction algorithm that outputs an RLSLP that can be stored in compressed space.
+Signature encoding is a deterministic construction algorithm that outputs an RLSLP that can be stored in compressed space. 
+See [the paper](https://doi.org/10.1016/j.dam.2019.01.014) for the details of the algorithm.
+
 
 The following table summarizes the properties of the RLSLPs constructed by these compression algorithms.
 
 | Value                                    | Restricted recompression                                    | Signature encoding       |
 | ---------------------------------------- | ----------------------------------------------------------- | ------------------------ |
-| Height $H$ of the derivation tree        | Expected $O(\log n)$                                        | At most $2 \log n$       |
-| Number $M$ of explicit nonterminals      | Expected $O(\delta \log ((n \log \sigma)/(\delta \log n)))$ | $O(z \log n \log^{*} n)$ |
-| Number M' of non-explicit nonterminals   | $O(MH)$                                                     | At most $M$              |
+| Height `H` of the derivation tree        | Expected $O(\log n)$                                        | At most $4 \log n$       |
+| Number `M` of explicit nonterminals      | Expected $O(\delta \log ((n \log \sigma)/(\delta \log n)))$ | $O(z \log n \log^{*} n)$ |
+| Number `M'` of non-explicit nonterminals | $O(MH)$                                                     | At most `M`              |
 
 > [!NOTE]
 >
@@ -78,6 +81,7 @@ The following table summarizes the properties of the RLSLPs constructed by these
 > * $\delta$: Substring complexity.
 > * $\sigma$: Alphabet size.
 > * $z$: The number of factors in the LZ77 factorization of $T$.
+> * An explicit nonterminal is a nonterminal corresponding a leaf or a branching node in the derivation tree.
 
 When constructing an instance of `DynamicRLSLPString`, you can choose either `standard` or `fast` as the data structure mode.
 
@@ -109,8 +113,8 @@ An instance of `DynamicRLSLPString` can be built using either `DynamicRLSLPStrin
 | `access_substring(i, d)` | $O(H + d)$       | Returns $T[i..i+d-1]$.                                                                                       |
 | `lce(i, j)`              | $O(Hb)$          | Returns the length of the longest common prefix of the two suffixes $T[i..n-1]$ and $T[j..n-1]$.             |
 | `reverse_lce(i, j)`      | $O(Hb)$          | Returns the length of the longest common suffix of the two prefixes $T[0..i]$ and $T[0..j]$.                 |
-| `lcp(X, X')`             | $O(Hb)$          | Returns the length of the longest common prefix of the two strings derived by the nonterminals $X$ and $X'$. |
-| `lcs(X, X')`             | $O(Hb)$          | Returns the length of the longest common suffix of the two strings derived by the nonterminals $X$ and $X'$. |
+| `lcp(X, X')`             | $O(Hb)$          | Returns the length of the longest common prefix of the two strings derived by the nonterminals `X` and `X'`. |
+| `lcs(X, X')`             | $O(Hb)$          | Returns the length of the longest common suffix of the two strings derived by the nonterminals `X` and `X'`. |
 | `decompress(ofs)`        | $O(n)$           | Writes $T$ to the given output file stream `ofs`.                                                            |
 | `get_all_occurrences(X)` | $O(vocc H)$      | Returns all occurrence positions of the explicit nonterminal `X` in the derivation tree.                     |
 | `insert_string(i, P)`    | Expected $O(HM)$ | Inserts the string $P[0..m-1]$ at position $i$.                                                              |
@@ -181,7 +185,7 @@ Options:
 ```
 
 > [!NOTE]
-> If `--offline_build=0`, `DynamicRLSLPString` is constructed using `dynRLSLP::DynamicRLSLPString::online_build_from_text_file`.
+> If `--offline_build=0`, `DynamicRLSLPString` is constructed using `dynRLSLP::DynamicRLSLPString::online_build_from_text_file`.  
 > If `--offline_build=1`, `DynamicRLSLPString` is constructed using `dynRLSLP::DynamicRLSLPString::offline_build_from_text`.
 
 **Example:**
@@ -287,7 +291,14 @@ This command can also output the following files:
 * A JSON file representing the input dynamic data structure.
 * A JSON file representing the input RLSLP.
 * A plain text file representing the derivation tree of the input RLSLP.
-* A JSON file representing the canonized RLSLP corresponding to the input RLSLP.
+* A JSON file representing the canonical RLSLP corresponding to the input RLSLP.
+
+> [!NOTE]
+> The canonical RLSLP corresponding to a RLSLP is the RLSLP obtained by removing non-explicit nonterminals from the grammar.
+
+> [!NOTE]
+> To clarify the behavior of the construction algorithm, we illustrate the derivation tree of the RLSLP built by the signature encoding as a 4-ary tree. See also Fig. 3 in [the paper](https://doi.org/10.1016/j.dam.2019.01.014).
+
 
 ```text
 Options:
@@ -295,7 +306,7 @@ Options:
   -j, --output_dynamic_data_structure_file_path    File path for writing the input dynamic data structure in JSON format (string [=])
   -r, --output_rlslp_file_path                     File path for writing the RLSLP in JSON format (string [=])
   -d, --output_derivation_tree_file_path           File path for writing the derivation tree of the RLSLP (string [=])
-  -c, --output_canonized_rlslp_file_path           File path for writing the canonized RLSLP corresponding to the RLSLP in JSON format (string [=])
+  -c, --output_canonical_rlslp_file_path           File path for writing the canonical RLSLP corresponding to the RLSLP in JSON format (string [=])
   -?, --help                                       Print this help message
 ```
 

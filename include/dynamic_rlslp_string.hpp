@@ -491,9 +491,9 @@ namespace dynRLSLP
             return this->dynamic_grammar.convert_to_rlslp();
         }
 
-        StaticRLSLP convert_to_canonized_rlslp() const
+        StaticRLSLP convert_to_canonical_rlslp() const
         {
-            return this->dynamic_grammar.convert_to_canonized_rlslp();
+            return this->dynamic_grammar.convert_to_canonical_rlslp();
         }
 
         void write_content_as_json_format(std::ofstream &ofs, std::string name, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
