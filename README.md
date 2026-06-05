@@ -287,7 +287,14 @@ This command can also output the following files:
 * A JSON file representing the input dynamic data structure.
 * A JSON file representing the input RLSLP.
 * A plain text file representing the derivation tree of the input RLSLP.
-* A JSON file representing the canonized RLSLP corresponding to the input RLSLP.
+* A JSON file representing the canonical RLSLP corresponding to the input RLSLP.
+
+> [!NOTE]
+> The canonical RLSLP corresponding to a RLSLP is the RLSLP obtained by removing non-explicit nonterminals from the grammar.
+
+> [!NOTE]
+> To clarify the behavior of the construction algorithm, we illustrate the derivation tree of the RLSLP built by the signature encoding as a 4-ary tree. See also Fig. 3 in [the paper](https://doi.org/10.1016/j.dam.2019.01.014).
+
 
 ```text
 Options:
@@ -295,7 +302,7 @@ Options:
   -j, --output_dynamic_data_structure_file_path    File path for writing the input dynamic data structure in JSON format (string [=])
   -r, --output_rlslp_file_path                     File path for writing the RLSLP in JSON format (string [=])
   -d, --output_derivation_tree_file_path           File path for writing the derivation tree of the RLSLP (string [=])
-  -c, --output_canonized_rlslp_file_path           File path for writing the canonized RLSLP corresponding to the RLSLP in JSON format (string [=])
+  -c, --output_canonical_rlslp_file_path           File path for writing the canonical RLSLP corresponding to the RLSLP in JSON format (string [=])
   -?, --help                                       Print this help message
 ```
 

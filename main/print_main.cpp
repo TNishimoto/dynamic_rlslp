@@ -53,13 +53,13 @@ int main(int argc, char *argv[])
     p.add<std::string>("output_dynamic_data_structure_file_path", 'j', "File path for writing the given dynamic data structure in JSON format", false, "");
     p.add<std::string>("output_rlslp_file_path", 'r', "File path for writing the RLSLP in JSON format", false, "");
     p.add<std::string>("output_derivation_tree_file_path", 'd', "File path for writing the derivation tree of the RLSLP", false, "");
-    p.add<std::string>("output_canonized_rlslp_file_path", 'c', "File path for writing the canonized RLSLP corresponding to the RLSLP in JSON format", false, "");
+    p.add<std::string>("output_canonical_rlslp_file_path", 'c', "File path for writing the canonical RLSLP corresponding to the RLSLP in JSON format", false, "");
 
     p.parse_check(argc, argv);
     std::string input_file_path = p.get<std::string>("input_file_path");
     std::string output_dynamic_data_structure_file_path = p.get<std::string>("output_dynamic_data_structure_file_path");
     std::string output_derivation_tree_file_path = p.get<std::string>("output_derivation_tree_file_path");
-    std::string output_canonized_rlslp_file_path = p.get<std::string>("output_canonized_rlslp_file_path");
+    std::string output_canonical_rlslp_file_path = p.get<std::string>("output_canonical_rlslp_file_path");
     std::string output_rlslp_file_path = p.get<std::string>("output_rlslp_file_path");
 
     if (!std::filesystem::exists(input_file_path))
@@ -114,14 +114,14 @@ int main(int argc, char *argv[])
         std::cout << "No output file path for the derivation tree is specified. Skipping..." << std::endl;
     }
 
-    if (output_canonized_rlslp_file_path.size() > 0)
+    if (output_canonical_rlslp_file_path.size() > 0)
     {
-        ds.convert_to_canonized_rlslp().write_to_file_as_json(output_canonized_rlslp_file_path);
-        std::cout << "The canonized RLSLP is written to the file: " << output_canonized_rlslp_file_path << std::endl;
+        ds.convert_to_canonical_rlslp().write_to_file_as_json(output_canonical_rlslp_file_path);
+        std::cout << "The canonical RLSLP is written to the file: " << output_canonical_rlslp_file_path << std::endl;
     }
     else
     {
-        std::cout << "No output file path for the canonized RLSLP is specified. Skipping..." << std::endl;
+        std::cout << "No output file path for the canonical RLSLP is specified. Skipping..." << std::endl;
     }
 
     if (output_rlslp_file_path.size() > 0)

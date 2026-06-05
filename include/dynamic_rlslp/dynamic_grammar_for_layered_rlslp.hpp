@@ -433,9 +433,9 @@ namespace dynRLSLP
 				return this->grammar.convert_to_rlslp();
 			}
 
-			StaticRLSLP convert_to_canonized_rlslp() const
+			StaticRLSLP convert_to_canonical_rlslp() const
 			{
-				return this->grammar.convert_to_canonized_rlslp();
+				return this->grammar.convert_to_canonical_rlslp();
 			}
 
 			//}@

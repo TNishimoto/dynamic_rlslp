@@ -222,7 +222,7 @@ namespace dynRLSLP
 		}
 
 
-		StaticRLSLP convert_to_canonized_rlslp() const
+		StaticRLSLP convert_to_canonical_rlslp() const
 		{
 			if(this->document_counter.size() != 1){
 				throw std::runtime_error("The size of document counter must be 1.");
