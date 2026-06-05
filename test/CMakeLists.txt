@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(test_dynamic_string_constructor CXX)
+project(test_dynamic_rlslp CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -22,7 +22,6 @@ set(CMAKE_CXX_FLAGS_DEBUG  "-g -O0 -DDEBUG -fsanitize=address -fno-omit-frame-po
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-Og -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE  "-O3 -DNDEBUG")
 
-# インクルードディレクトリを追加
 INCLUDE_DIRECTORIES(../modules)
 INCLUDE_DIRECTORIES(../include)
 

@@ -7,8 +7,8 @@
 #include "../include/all.hpp"
 
 /**
- * @brief 文字列からDictionaryModeを取得
- * @param mode_str モード文字列 ("standard", "lightweight", "fast")
+ * @brief Get DictionaryMode from a string
+ * @param mode_str Mode string ("standard", "lightweight", "fast")
  * @return DictionaryMode
  */
 dynRLSLP::DictionaryMode get_mode_from_string(const std::string &mode_str)
@@ -27,14 +27,14 @@ dynRLSLP::DictionaryMode get_mode_from_string(const std::string &mode_str)
     }
     else
     {
-        throw std::runtime_error("無効なモード: " + mode_str + " (standard, lightweight, fast のいずれかを指定してください)");
+        throw std::runtime_error("Invalid mode: " + mode_str + " (specify one of standard, lightweight, fast)");
     }
 }
 
 /**
- * @brief アルファベットタイプに応じたアルファベットを取得
- * @param alphabet_type アルファベットタイプ (1-4)
- * @return アルファベットのベクトル
+ * @brief Get alphabet characters for the given alphabet type
+ * @param alphabet_type Alphabet type (1-4)
+ * @return Vector of alphabet characters
  */
 std::vector<uint8_t> get_alphabet_by_type(uint64_t alphabet_type)
 {
@@ -60,28 +60,28 @@ std::vector<uint8_t> get_alphabet_by_type(uint64_t alphabet_type)
             return alphabet;
         }
     default:
-        throw std::runtime_error("無効なアルファベットタイプ: " + std::to_string(alphabet_type) + " (1-4の範囲で指定してください)");
+        throw std::runtime_error("Invalid alphabet type: " + std::to_string(alphabet_type) + " (specify a value in the range 1-4)");
     }
 }
 
 /**
- * @brief 文字列Tから構築されたDynamicStringについて、delete_substring操作をテストする関数
- * @param use_restricted_block_compression 制限付きブロック圧縮を使用するかどうか
- * @param seed 乱数のシード値
- * @param alphabet_type アルファベットタイプ (1-4)
+ * @brief Test delete_substring operations on a DynamicString built from string T
+ * @param use_restricted_block_compression Whether to use restricted block compression
+ * @param seed Random seed value
+ * @param alphabet_type Alphabet type (1-4)
  * @param mode DictionaryMode
- * @param num_trials 文字列Tを生成する回数（デフォルト: 1000）
- * @param num_deletes_per_string 各文字列Tに対してdelete操作を実行する回数（デフォルト: 10）
- * @param max_length 生成する文字列の最大長（デフォルト: 10000）
- * @return すべてのテストが成功した場合true、それ以外false
+ * @param num_trials Number of strings T to generate (default: 1000)
+ * @param num_deletes_per_string Number of delete operations per string T (default: 10)
+ * @param max_length Maximum string length to generate (default: 10000)
+ * @return true if all tests pass, false otherwise
  */
 bool delete_test(bool use_restricted_block_compression, int64_t seed, uint64_t alphabet_type, dynRLSLP::DictionaryMode mode, uint64_t num_trials = 1000, uint64_t num_deletes_per_string = 10, uint64_t max_length = 10000)
 {
-    // アルファベットを取得
+    // Get alphabet
     std::vector<uint8_t> alphabet = get_alphabet_by_type(alphabet_type);
 
     std::cout << "========================================" << std::endl;
-    std::cout << "DynamicString delete_substring テスト実行中" << std::endl;
+    std::cout << "Running DynamicString delete_substring test" << std::endl;
     std::cout << "========================================" << std::endl;
     std::cout << "use_restricted_block_compression: " << (use_restricted_block_compression ? "true" : "false") << std::endl;
     std::string mode_str = (mode == dynRLSLP::DictionaryMode::Standard) ? "standard" : (mode == dynRLSLP::DictionaryMode::Lightweight) ? "lightweight"
@@ -102,13 +102,13 @@ bool delete_test(bool use_restricted_block_compression, int64_t seed, uint64_t a
     std::cout << "max_length: " << max_length << std::endl;
     std::cout << "========================================" << std::endl;
     std::cout << std::endl;
-    std::cout << "各試行で以下の検証を行います:" << std::endl;
-    std::cout << "  1. ランダムな文字列Tを生成（長さは1からmax_lengthまでランダム）" << std::endl;
-    std::cout << "  2. dynRLSLP::DynamicRLSLPString::build_from_text(T) で構築" << std::endl;
-    std::cout << "  3. もしT.size() == 0ならば強制的に検証を終了" << std::endl;
-    std::cout << "  4. ランダムな位置iを選択 (0 <= i < T.size()) を " << num_deletes_per_string << " 回実行" << std::endl;
-    std::cout << "  5. 各回で ds.delete_substring(i) と T.erase(T.begin() + i) を実行" << std::endl;
-    std::cout << "  6. ds.get_text_str() == T_prime (Tを文字列に変換) を検証" << std::endl;
+    std::cout << "Each trial performs the following checks:" << std::endl;
+    std::cout << "  1. Generate a random string T (length uniformly random from 1 to max_length)" << std::endl;
+    std::cout << "  2. Build with dynRLSLP::DynamicRLSLPString::build_from_text(T)" << std::endl;
+    std::cout << "  3. If T.size() == 0, stop verification immediately" << std::endl;
+    std::cout << "  4. Select random position i (0 <= i < T.size()) " << num_deletes_per_string << " times" << std::endl;
+    std::cout << "  5. Each time, run ds.delete_substring(i) and T.erase(T.begin() + i)" << std::endl;
+    std::cout << "  6. Verify ds.get_text_str() == T_prime (T converted to string)" << std::endl;
     std::cout << std::endl;
 
     std::mt19937_64 mt(seed);
@@ -117,13 +117,13 @@ bool delete_test(bool use_restricted_block_compression, int64_t seed, uint64_t a
 
     int passed_tests = 0;
     int failed_tests = 0;
-    uint64_t last_length = 0; // 進捗表示用
+    uint64_t last_length = 0; // For progress display
 
     for (uint64_t trial = 0; trial < num_trials; trial++)
     {
-        // ランダムな文字列Tを生成
+        // Generate random string T
         uint64_t length = length_dist(mt);
-        last_length = length; // 進捗表示用に保存
+        last_length = length; // Save for progress display
         std::vector<uint8_t> T;
         for (uint64_t i = 0; i < length; i++)
         {
@@ -135,22 +135,22 @@ bool delete_test(bool use_restricted_block_compression, int64_t seed, uint64_t a
         //{
             auto parser = use_restricted_block_compression ? dynRLSLP::GrammarParsingType::RestrictedRecompression : dynRLSLP::GrammarParsingType::SignatureEncoding;
 
-            // DynamicStringを構築
+            // Build DynamicString
             dynRLSLP::DynamicRLSLPString ds = dynRLSLP::DynamicRLSLPString::offline_build_from_text(T, parser, alphabet, mode, seed + trial, stool::Message::NO_MESSAGE);
 
-            // もしT.size() == 0ならば強制的に検証を終了
+            // Stop verification if T.size() == 0
             if (T.size() == 0)
             {
-                continue; // 次の試行へ
+                continue; // Next trial
             }
 
-            // 各文字列Tに対して、num_deletes_per_string回delete操作を実行
+            // Run num_deletes_per_string delete operations for each string T
             for (uint64_t delete_op = 0; delete_op < num_deletes_per_string; delete_op++)
             {
-                // もしT.size() == 0ならば強制的に検証を終了
+                // Stop verification if T.size() == 0
                 if (T.size() == 0)
                 {
-                    break; // この文字列の処理を終了
+                    break; // Stop processing this string
                 }
 
                 uint64_t minLen = std::min(100ULL, static_cast<uint64_t>(T.size()));
@@ -158,20 +158,20 @@ bool delete_test(bool use_restricted_block_compression, int64_t seed, uint64_t a
                 std::uniform_int_distribution<int64_t> len_dist(0, minLen);
                 int64_t len = len_dist(mt);
 
-                // ランダムな位置iを選択 (0からT.size()-1の範囲でint64_t)
+                // Select random position i (int64_t in range 0 to T.size()-1)
                 std::uniform_int_distribution<int64_t> pos_dist(0, static_cast<int64_t>(T.size() - len));
                 int64_t i = pos_dist(mt);
 
-                // ds.delete_substring(i)でdsを更新
+                // Update ds with ds.delete_substring(i)
                 ds.delete_substring(i, len);
 
-                // Tのi文字目を削除
+                // Delete character at position i in T
                 T.erase(T.begin() + i, T.begin() + i + len);
 
-                // std::vector<uint8_t> Tからstd::string T_primeに変換
+                // Convert std::vector<uint8_t> T to std::string T_prime
                 std::string T_prime(T.begin(), T.end());
 
-                // ds.get_text_str() == T_primeを検証
+                // Verify ds.get_text_str() == T_prime
                 std::string ds_str = ds.get_text_str();
 
                 if (ds_str == T_prime)
@@ -181,26 +181,26 @@ bool delete_test(bool use_restricted_block_compression, int64_t seed, uint64_t a
                 else
                 {
                     failed_tests++;
-                    std::cout << "✗ テスト " << (trial + 1) << " delete操作 " << (delete_op + 1) << " 失敗 (位置i: " << i << ")" << std::endl;
-                    std::cout << "  期待値: \"" << T_prime << "\"" << std::endl;
-                    std::cout << "  実際の値: \"" << ds_str << "\"" << std::endl;
-                    std::cout << "  期待値の長さ: " << T_prime.size() << std::endl;
-                    std::cout << "  実際の値の長さ: " << ds_str.size() << std::endl;
+                    std::cout << "✗ Test " << (trial + 1) << " delete operation " << (delete_op + 1) << " failed (position i: " << i << ")" << std::endl;
+                    std::cout << "  Expected: \"" << T_prime << "\"" << std::endl;
+                    std::cout << "  Actual: \"" << ds_str << "\"" << std::endl;
+                    std::cout << "  Expected length: " << T_prime.size() << std::endl;
+                    std::cout << "  Actual length: " << ds_str.size() << std::endl;
 
-                    // 最初の10個の失敗のみ詳細を表示
+                    // Show details for only the first 10 failures
                     if (failed_tests <= 10)
                     {
-                        // 削除前のTの状態も表示
+                        // Also show T before deletion
                         std::vector<uint8_t> T_before_delete = T;
-                        T_before_delete.insert(T_before_delete.begin() + i, 0); // 削除前の状態を再現（文字は不明）
+                        T_before_delete.insert(T_before_delete.begin() + i, 0); // Reconstruct state before deletion (character unknown)
                         std::string T_before_delete_str(T_before_delete.begin(), T_before_delete.end());
                         if (T_before_delete_str.size() <= 100)
                         {
-                            std::cout << "  削除前の文字列T: (位置 " << i << " の文字を削除)" << std::endl;
+                            std::cout << "  String T before deletion: (delete character at position " << i << ")" << std::endl;
                         }
                         else
                         {
-                            std::cout << "  削除前の文字列T: (長さ " << (T_before_delete_str.size()) << ", 位置 " << i << " の文字を削除)" << std::endl;
+                            std::cout << "  String T before deletion: (length " << (T_before_delete_str.size()) << ", position " << i << ")" << std::endl;
                         }
                     }
                 }
@@ -211,109 +211,109 @@ bool delete_test(bool use_restricted_block_compression, int64_t seed, uint64_t a
         catch (const std::exception &e)
         {
             failed_tests++;
-            std::cout << "✗ テスト " << (trial + 1) << " 例外発生 (長さ: " << length << "): " << e.what() << std::endl;
+            std::cout << "✗ Test " << (trial + 1) << " exception (length: " << length << "): " << e.what() << std::endl;
         }
         catch (...)
         {
             failed_tests++;
-            std::cout << "✗ テスト " << (trial + 1) << " 未知の例外発生 (長さ: " << length << ")" << std::endl;
+            std::cout << "✗ Test " << (trial + 1) << " unknown exception (length: " << length << ")" << std::endl;
         }
         */
 
-        // 進捗表示（100回ごと）
+        // Progress report (every 100 trials)
         if ((trial + 1) % 100 == 0)
         {
             uint64_t total_operations = (trial + 1) * num_deletes_per_string;
-            std::cout << "進捗: " << (trial + 1) << "/" << num_trials << " 文字列 (長さ: " << last_length << ", 合計操作: " << total_operations << ", 成功: " << passed_tests << ", 失敗: " << failed_tests << ")" << std::endl;
+            std::cout << "Progress: " << (trial + 1) << "/" << num_trials << " strings (length: " << last_length << ", total operations: " << total_operations << ", passed: " << passed_tests << ", failed: " << failed_tests << ")" << std::endl;
         }
     }
 
     std::cout << std::endl;
     std::cout << "========================================" << std::endl;
-    std::cout << "テスト結果" << std::endl;
+    std::cout << "Test results" << std::endl;
     std::cout << "========================================" << std::endl;
-    std::cout << "成功: " << passed_tests << std::endl;
-    std::cout << "失敗: " << failed_tests << std::endl;
-    std::cout << "合計: " << (passed_tests + failed_tests) << std::endl;
+    std::cout << "Passed: " << passed_tests << std::endl;
+    std::cout << "Failed: " << failed_tests << std::endl;
+    std::cout << "Total: " << (passed_tests + failed_tests) << std::endl;
     std::cout << "========================================" << std::endl;
 
     if (failed_tests > 0)
     {
         if (use_restricted_block_compression)
         {
-            std::cerr << "警告: restricted_block_compressionモードで " << failed_tests << " 個のテストが失敗しました。" << std::endl;
-            std::cerr << "このモードは特定の条件下で動作しない可能性があります。" << std::endl;
+            std::cerr << "Warning: " << failed_tests << " test(s) failed in restricted_block_compression mode." << std::endl;
+            std::cerr << "This mode may not work under certain conditions." << std::endl;
         }
         else
         {
-            std::cerr << "エラー: " << failed_tests << " 個のテストが失敗しました。" << std::endl;
+            std::cerr << "Error: " << failed_tests << " test(s) failed." << std::endl;
         }
         return false;
     }
     else
     {
-        std::cout << "すべてのテストが成功しました！" << std::endl;
+        std::cout << "All tests passed!" << std::endl;
         return true;
     }
 }
 
 int main(int argc, char *argv[])
 {
-    // テストの説明を表示
+    // Show test description
     std::cout << "========================================" << std::endl;
-    std::cout << "dynRLSLP::DynamicRLSLPString::delete_substring() メソッドのテスト" << std::endl;
+    std::cout << "Test for dynRLSLP::DynamicRLSLPString::delete_substring()" << std::endl;
     std::cout << "========================================" << std::endl;
     std::cout << std::endl;
-    std::cout << "【テストの目的】" << std::endl;
-    std::cout << "文字列Tから構築されたDynamicStringについて、" << std::endl;
-    std::cout << "delete_substring操作を行った後、ds.get_text_str() == T_prime が" << std::endl;
-    std::cout << "成り立つことを検証します。" << std::endl;
+    std::cout << "[Test purpose]" << std::endl;
+    std::cout << "For a DynamicString built from string T," << std::endl;
+    std::cout << "After delete_substring, verify ds.get_text_str() == T_prime" << std::endl;
+    std::cout << "holds for random position i." << std::endl;
     std::cout << std::endl;
-    std::cout << "【テストの実行内容】" << std::endl;
-    std::cout << "1. ランダムな文字列Tを生成します（長さは1からmax_lengthまでランダム）" << std::endl;
-    std::cout << "2. 文字列TからDynamicStringインスタンスを構築します" << std::endl;
-    std::cout << "3. もしT.size() == 0ならば強制的に検証を終了します" << std::endl;
-    std::cout << "4. ランダムな位置iを選択します（0 <= i < T.size()）を指定回数実行" << std::endl;
-    std::cout << "5. 各回で ds.delete_substring(i) と T.erase(T.begin() + i) を実行" << std::endl;
-    std::cout << "6. ds.get_text_str() == T_prime (Tを文字列に変換) を検証" << std::endl;
+    std::cout << "[Test procedure]" << std::endl;
+    std::cout << "1. Generate a random string T (length uniformly random from 1 to max_length)" << std::endl;
+    std::cout << "2. Build a DynamicString instance from string T" << std::endl;
+    std::cout << "3. If T.size() == 0, stop verification immediately" << std::endl;
+    std::cout << "4. Select random position i (0 <= i < T.size()) for the specified number of operations" << std::endl;
+    std::cout << "5. Each time, run ds.delete_substring(i) and T.erase(T.begin() + i)" << std::endl;
+    std::cout << "6. Verify ds.get_text_str() == T_prime (T converted to string)" << std::endl;
     std::cout << std::endl;
     std::cout << "========================================" << std::endl;
     std::cout << std::endl;
 
-    // デフォルト値
+    // Default values
     bool use_restricted_block_compression = false;
     int64_t seed = 42;
-    uint64_t alphabet_type = 0; // 0は未指定を意味する（全てのタイプをテスト）
+    uint64_t alphabet_type = 0; // 0 means unspecified (test all types)
     dynRLSLP::DictionaryMode mode = dynRLSLP::DictionaryMode::Standard;
     uint64_t num_trials = 1000;
     uint64_t num_deletes_per_string = 10;
     uint64_t max_length = 10000;
 
-    // コマンドライン引数の解析
+    // Parse command-line arguments
     for (int i = 1; i < argc; i++)
     {
         std::string arg = argv[i];
 
         if (arg == "--use-restricted" || arg == "-r" || arg == "--x")
         {
-            // -r の後に値が指定されているかチェック
+            // Check if a value follows -r
             if (i + 1 < argc)
             {
                 std::string next_arg = argv[i + 1];
                 if (next_arg == "true" || next_arg == "false")
                 {
                     use_restricted_block_compression = (next_arg == "true");
-                    i++; // 次の引数をスキップ
+                    i++; // Skip next argument
                 }
                 else
                 {
-                    // 値が指定されていない場合はデフォルトでtrue
+                    // Default to true when no value is specified
                     use_restricted_block_compression = true;
                 }
             }
             else
             {
-                // 値が指定されていない場合はデフォルトでtrue
+                // Default to true when no value is specified
                 use_restricted_block_compression = true;
             }
         }
@@ -328,15 +328,15 @@ int main(int argc, char *argv[])
                 seed = std::stoll(argv[++i]);
                 if (seed == -1)
                 {
-                    // ランダムなseedを生成
+                    // Generate random seed
                     std::random_device rd;
                     seed = static_cast<int64_t>(rd());
-                    std::cout << "ランダムなseedが生成されました: " << seed << std::endl;
+                    std::cout << "Generated random seed: " << seed << std::endl;
                 }
             }
             else
             {
-                std::cerr << "エラー: --seed オプションには値が必要です" << std::endl;
+                std::cerr << "Error: --seed option requires a value" << std::endl;
                 return 1;
             }
         }
@@ -348,7 +348,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                std::cerr << "エラー: --trials オプションには値が必要です" << std::endl;
+                std::cerr << "Error: --trials option requires a value" << std::endl;
                 return 1;
             }
         }
@@ -360,7 +360,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                std::cerr << "エラー: --deletes-per-string オプションには値が必要です" << std::endl;
+                std::cerr << "Error: --deletes-per-string option requires a value" << std::endl;
                 return 1;
             }
         }
@@ -371,13 +371,13 @@ int main(int argc, char *argv[])
                 alphabet_type = std::stoull(argv[++i]);
                 if (alphabet_type < 1 || alphabet_type > 4)
                 {
-                    std::cerr << "エラー: アルファベットタイプは1-4の範囲で指定してください" << std::endl;
+                    std::cerr << "Error: alphabet type must be in the range 1-4" << std::endl;
                     return 1;
                 }
             }
             else
             {
-                std::cerr << "エラー: --alphabet-type オプションには値が必要です" << std::endl;
+                std::cerr << "Error: --alphabet-type option requires a value" << std::endl;
                 return 1;
             }
         }
@@ -389,7 +389,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                std::cerr << "エラー: --max-length オプションには値が必要です" << std::endl;
+                std::cerr << "Error: --max-length option requires a value" << std::endl;
                 return 1;
             }
         }
@@ -403,39 +403,39 @@ int main(int argc, char *argv[])
                 }
                 catch (const std::exception &e)
                 {
-                    std::cerr << "エラー: " << e.what() << std::endl;
+                    std::cerr << "Error: " << e.what() << std::endl;
                     return 1;
                 }
             }
             else
             {
-                std::cerr << "エラー: --mode オプションには値が必要です" << std::endl;
+                std::cerr << "Error: --mode option requires a value" << std::endl;
                 return 1;
             }
         }
         else if (arg == "--help" || arg == "-h")
         {
-            std::cout << "使用方法: " << argv[0] << " [オプション]" << std::endl;
+            std::cout << "Usage: " << argv[0] << " [options]" << std::endl;
             std::cout << std::endl;
-            std::cout << "オプション:" << std::endl;
-            std::cout << "  --use-restricted, -r, --x    制限付きブロック圧縮を使用 (デフォルト: false)" << std::endl;
-            std::cout << "  --no-restricted, -n           制限付きブロック圧縮を使用しない (デフォルト)" << std::endl;
-            std::cout << "  --seed, -s <値>               乱数のシード値を指定 (デフォルト: 42, -1でランダム生成)" << std::endl;
-            std::cout << "  --alphabet-type, -a, --type <値> アルファベットタイプを指定 (未指定の場合は全タイプをテスト)" << std::endl;
+            std::cout << "Options:" << std::endl;
+            std::cout << "  --use-restricted, -r, --x    Use restricted block compression (default: false)" << std::endl;
+            std::cout << "  --no-restricted, -n           Do not use restricted block compression (default)" << std::endl;
+            std::cout << "  --seed, -s <value>            Random seed (default: 42, -1 to generate randomly)" << std::endl;
+            std::cout << "  --alphabet-type, -a, --type <value> Alphabet type (test all types if omitted)" << std::endl;
             std::cout << "                                1: Σ={a, b}" << std::endl;
             std::cout << "                                2: Σ={A, C, G, T}" << std::endl;
             std::cout << "                                3: Σ={0,1,2,3,4,5,6,7,8,9}" << std::endl;
             std::cout << "                                4: Σ={a-z}" << std::endl;
-            std::cout << "  --trials, -t <値>             文字列Tを生成する回数を指定 (デフォルト: 1000)" << std::endl;
-            std::cout << "  --deletes-per-string, -d <値> 各文字列Tに対してdelete操作を実行する回数を指定 (デフォルト: 10)" << std::endl;
-            std::cout << "  --max-length <値>              生成する文字列の最大長を指定 (デフォルト: 10000)" << std::endl;
-            std::cout << "  --mode, -m <値>                DictionaryModeを指定 (デフォルト: standard)" << std::endl;
-            std::cout << "                                standard: Standardモード" << std::endl;
-            std::cout << "                                lightweight: Lightweightモード" << std::endl;
-            std::cout << "                                fast: Fastモード" << std::endl;
-            std::cout << "  --help, -h                    このヘルプを表示" << std::endl;
+            std::cout << "  --trials, -t <value>          Number of strings T to generate (default: 1000)" << std::endl;
+            std::cout << "  --deletes-per-string, -d <value> Number of delete operations per string T (default: 10)" << std::endl;
+            std::cout << "  --max-length <value>          Maximum string length to generate (default: 10000)" << std::endl;
+            std::cout << "  --mode, -m <value>            DictionaryMode (default: standard)" << std::endl;
+            std::cout << "                                standard: Standard mode" << std::endl;
+            std::cout << "                                lightweight: Lightweight mode" << std::endl;
+            std::cout << "                                fast: Fast mode" << std::endl;
+            std::cout << "  --help, -h                    Show this help" << std::endl;
             std::cout << std::endl;
-            std::cout << "例:" << std::endl;
+            std::cout << "Examples:" << std::endl;
             std::cout << "  " << argv[0] << " --seed 123" << std::endl;
             std::cout << "  " << argv[0] << " --seed 123 --alphabet-type 2" << std::endl;
             std::cout << "  " << argv[0] << " --seed 123 --trials 500 --deletes-per-string 20" << std::endl;
@@ -445,13 +445,13 @@ int main(int argc, char *argv[])
         }
         else
         {
-            std::cerr << "警告: 不明なオプション '" << arg << "' を無視します" << std::endl;
+            std::cerr << "Warning: ignoring unknown option '" << arg << "'" << std::endl;
         }
     }
 
-    // 実際に使用される設定値を表示
+    // Show effective configuration
     std::cout << "========================================" << std::endl;
-    std::cout << "テスト設定" << std::endl;
+    std::cout << "Test configuration" << std::endl;
     std::cout << "========================================" << std::endl;
     std::cout << "use_restricted_block_compression: " << (use_restricted_block_compression ? "true" : "false") << std::endl;
     std::string mode_str = (mode == dynRLSLP::DictionaryMode::Standard) ? "standard" : (mode == dynRLSLP::DictionaryMode::Lightweight) ? "lightweight"
@@ -460,7 +460,7 @@ int main(int argc, char *argv[])
     std::cout << "seed: " << seed << std::endl;
     if (alphabet_type == 0)
     {
-        std::cout << "alphabet_type: 未指定（全タイプ1-4をテスト）" << std::endl;
+        std::cout << "alphabet_type: unspecified (test all types 1-4)" << std::endl;
     }
     else
     {
@@ -472,19 +472,19 @@ int main(int argc, char *argv[])
     std::cout << "========================================" << std::endl;
     std::cout << std::endl;
 
-    // テストを実行
+    // Run tests
     bool all_success = true;
 
     if (alphabet_type == 0)
     {
-        // アルファベットタイプが指定されていない場合は、全てのタイプをテスト
-        std::cout << "アルファベットタイプが指定されていないため、全タイプ（1-4）をテストします。" << std::endl;
+        // Test all alphabet types when none is specified
+        std::cout << "Alphabet type not specified; testing all types (1-4)." << std::endl;
         std::cout << std::endl;
 
         for (uint64_t type = 1; type <= 4; type++)
         {
             std::cout << "========================================" << std::endl;
-            std::cout << "アルファベットタイプ " << type << " のテスト開始" << std::endl;
+            std::cout << "Starting tests for alphabet type " << type << std::endl;
             std::cout << "========================================" << std::endl;
             std::cout << std::endl;
 
@@ -495,7 +495,7 @@ int main(int argc, char *argv[])
                 all_success = false;
                 if (!use_restricted_block_compression)
                 {
-                    // restricted_block_compressionモード以外で失敗した場合はエラー終了
+                    // Exit with error on failure outside restricted_block_compression mode
                     return 1;
                 }
             }
@@ -505,12 +505,12 @@ int main(int argc, char *argv[])
     }
     else
     {
-        // 指定されたアルファベットタイプのみをテスト
+        // Test only the specified alphabet type
         all_success = delete_test(use_restricted_block_compression, seed, alphabet_type, mode, num_trials, num_deletes_per_string, max_length);
 
         if (!all_success && !use_restricted_block_compression)
         {
-            // restricted_block_compressionモード以外で失敗した場合はエラー終了
+            // Exit with error on failure outside restricted_block_compression mode
             return 1;
         }
     }

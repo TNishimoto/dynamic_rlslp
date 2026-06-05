@@ -1,0 +1,7 @@
+ACCESS	5	15
+LCE	5	10
+DECOMPRESS	short.1.txt
+DELETE	5	30
+DECOMPRESS	short.2.txt
+INSERT	5	_aaa
+DECOMPRESS	short.3.txt

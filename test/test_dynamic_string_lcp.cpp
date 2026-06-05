@@ -21,7 +21,7 @@ dynRLSLP::DictionaryMode get_mode_from_string(const std::string &mode_str)
     }
     else
     {
-        throw std::runtime_error("無効なモード: " + mode_str + " (standard, lightweight, fast のいずれかを指定してください)");
+        throw std::runtime_error("Invalid mode: " + mode_str + " (specify one of standard, lightweight, fast)");
     }
 }
 
@@ -45,12 +45,12 @@ std::vector<uint8_t> get_alphabet_by_type(uint64_t alphabet_type)
         return alphabet;
     }
     default:
-        throw std::runtime_error("無効なアルファベットタイプ: " + std::to_string(alphabet_type) + " (1-4の範囲で指定してください)");
+        throw std::runtime_error("Invalid alphabet type: " + std::to_string(alphabet_type) + " (specify a value in the range 1-4)");
     }
 }
 
 /**
- * @brief 明示的非終端 X が導出する文字列を展開する
+ * @brief Expand the string derived by explicit nonterminal X
  */
 std::vector<uint8_t> derive_string(
     dynRLSLP::ExplicitNonterminal explicit_nonterminal,
@@ -63,7 +63,7 @@ std::vector<uint8_t> derive_string(
 }
 
 /**
- * @brief 2つの明示的非終端が導出する文字列の最長共通接頭辞の長さ（ナイーブ実装）
+ * @brief Length of the longest common prefix of strings derived by two explicit nonterminals (naive implementation)
  */
 uint64_t naive_lcp(
     dynRLSLP::ExplicitNonterminal X1,
@@ -80,7 +80,7 @@ bool lcp_test(bool use_restricted_block_compression, int64_t seed, uint64_t alph
     std::vector<uint8_t> alphabet = get_alphabet_by_type(alphabet_type);
 
     std::cout << "========================================" << std::endl;
-    std::cout << "DynamicString lcp テスト実行中" << std::endl;
+    std::cout << "Running DynamicString lcp test" << std::endl;
     std::cout << "========================================" << std::endl;
     std::cout << "use_restricted_block_compression: " << (use_restricted_block_compression ? "true" : "false") << std::endl;
     std::string mode_str = (mode == dynRLSLP::DictionaryMode::Standard) ? "standard" : (mode == dynRLSLP::DictionaryMode::Lightweight) ? "lightweight"
@@ -92,11 +92,11 @@ bool lcp_test(bool use_restricted_block_compression, int64_t seed, uint64_t alph
     std::cout << "max_length: " << max_length << std::endl;
     std::cout << "========================================" << std::endl;
     std::cout << std::endl;
-    std::cout << "各試行で以下の検証を行います:" << std::endl;
-    std::cout << "  1. ランダムな文字列Tを生成" << std::endl;
-    std::cout << "  2. DynamicRLSLPString を構築" << std::endl;
-    std::cout << "  3. 各非Null明示的非終端の組 (X1, X2) について lcp(X1, X2) を検証" << std::endl;
-    std::cout << "  4. dynRLSLP::DynamicRLSLPString::lcp(X1, X2) == naive_lcp(X1, X2) を確認" << std::endl;
+    std::cout << "Each trial performs the following checks:" << std::endl;
+    std::cout << "  1. Generate a random string T" << std::endl;
+    std::cout << "  2. Build DynamicRLSLPString" << std::endl;
+    std::cout << "  3. For each pair of non-null explicit nonterminals (X1, X2), verify lcp(X1, X2)" << std::endl;
+    std::cout << "  4. Verify dynRLSLP::DynamicRLSLPString::lcp(X1, X2) == naive_lcp(X1, X2)" << std::endl;
     std::cout << std::endl;
 
     std::mt19937_64 mt(seed);
@@ -158,9 +158,9 @@ bool lcp_test(bool use_restricted_block_compression, int64_t seed, uint64_t alph
                 else
                 {
                     failed_tests++;
-                    std::cout << "✗ テスト " << (trial + 1) << " 失敗 (長さ: " << length << ", X1: " << X1 << ", X2: " << X2 << ")" << std::endl;
-                    std::cout << "  期待値: " << expected << std::endl;
-                    std::cout << "  実際の値: " << actual << std::endl;
+                    std::cout << "✗ Test " << (trial + 1) << " failed (length: " << length << ", X1: " << X1 << ", X2: " << X2 << ")" << std::endl;
+                    std::cout << "  Expected: " << expected << std::endl;
+                    std::cout << "  Actual: " << actual << std::endl;
 
                     if (failed_tests <= 10)
                     {
@@ -184,55 +184,55 @@ bool lcp_test(bool use_restricted_block_compression, int64_t seed, uint64_t alph
         catch (const std::exception &e)
         {
             failed_tests++;
-            std::cout << "✗ テスト " << (trial + 1) << " 例外発生 (長さ: " << length << "): " << e.what() << std::endl;
+            std::cout << "✗ Test " << (trial + 1) << " exception (length: " << length << "): " << e.what() << std::endl;
         }
         catch (...)
         {
             failed_tests++;
-            std::cout << "✗ テスト " << (trial + 1) << " 未知の例外発生 (長さ: " << length << ")" << std::endl;
+            std::cout << "✗ Test " << (trial + 1) << " unknown exception (length: " << length << ")" << std::endl;
         }
 
         if ((trial + 1) % 100 == 0)
         {
-            std::cout << "進捗: " << (trial + 1) << "/" << num_trials << " 文字列 (長さ: " << last_length << ", 成功: " << passed_tests << ", 失敗: " << failed_tests << ")" << std::endl;
+            std::cout << "Progress: " << (trial + 1) << "/" << num_trials << " strings (length: " << last_length << ", passed: " << passed_tests << ", failed: " << failed_tests << ")" << std::endl;
         }
     }
 
     std::cout << std::endl;
     std::cout << "========================================" << std::endl;
-    std::cout << "テスト結果" << std::endl;
+    std::cout << "Test results" << std::endl;
     std::cout << "========================================" << std::endl;
-    std::cout << "成功: " << passed_tests << std::endl;
-    std::cout << "失敗: " << failed_tests << std::endl;
-    std::cout << "合計: " << (passed_tests + failed_tests) << std::endl;
+    std::cout << "Passed: " << passed_tests << std::endl;
+    std::cout << "Failed: " << failed_tests << std::endl;
+    std::cout << "Total: " << (passed_tests + failed_tests) << std::endl;
     std::cout << "========================================" << std::endl;
 
     if (failed_tests > 0)
     {
         if (use_restricted_block_compression)
         {
-            std::cerr << "警告: restricted_block_compressionモードで " << failed_tests << " 個のテストが失敗しました。" << std::endl;
+            std::cerr << "Warning: " << failed_tests << " test(s) failed in restricted_block_compression mode." << std::endl;
         }
         else
         {
-            std::cerr << "エラー: " << failed_tests << " 個のテストが失敗しました。" << std::endl;
+            std::cerr << "Error: " << failed_tests << " test(s) failed." << std::endl;
         }
         return false;
     }
 
-    std::cout << "すべてのテストが成功しました！" << std::endl;
+    std::cout << "All tests passed!" << std::endl;
     return true;
 }
 
 int main(int argc, char *argv[])
 {
     std::cout << "========================================" << std::endl;
-    std::cout << "dynRLSLP::DynamicRLSLPString::lcp() のテスト" << std::endl;
+    std::cout << "Test for dynRLSLP::DynamicRLSLPString::lcp()" << std::endl;
     std::cout << "========================================" << std::endl;
     std::cout << std::endl;
-    std::cout << "【テストの目的】" << std::endl;
-    std::cout << "明示的非終端 X1, X2 が導出する2つの文字列の最長共通接頭辞の長さについて、" << std::endl;
-    std::cout << "DynamicRLSLPString::lcp(X1, X2) がナイーブ実装と一致することを検証します。" << std::endl;
+    std::cout << "[Test purpose]" << std::endl;
+    std::cout << "For the longest common prefix length of strings derived by explicit nonterminals X1 and X2," << std::endl;
+    std::cout << "verify that DynamicRLSLPString::lcp(X1, X2) matches the naive implementation." << std::endl;
     std::cout << std::endl;
 
     bool use_restricted_block_compression = false;
@@ -279,12 +279,12 @@ int main(int argc, char *argv[])
                 {
                     std::random_device rd;
                     seed = static_cast<int64_t>(rd());
-                    std::cout << "ランダムなseedが生成されました: " << seed << std::endl;
+                    std::cout << "Generated random seed: " << seed << std::endl;
                 }
             }
             else
             {
-                std::cerr << "エラー: --seed オプションには値が必要です" << std::endl;
+                std::cerr << "Error: --seed option requires a value" << std::endl;
                 return 1;
             }
         }
@@ -296,7 +296,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                std::cerr << "エラー: --trials オプションには値が必要です" << std::endl;
+                std::cerr << "Error: --trials option requires a value" << std::endl;
                 return 1;
             }
         }
@@ -307,13 +307,13 @@ int main(int argc, char *argv[])
                 alphabet_type = std::stoull(argv[++i]);
                 if (alphabet_type < 1 || alphabet_type > 4)
                 {
-                    std::cerr << "エラー: アルファベットタイプは1-4の範囲で指定してください" << std::endl;
+                    std::cerr << "Error: alphabet type must be in the range 1-4" << std::endl;
                     return 1;
                 }
             }
             else
             {
-                std::cerr << "エラー: --alphabet-type オプションには値が必要です" << std::endl;
+                std::cerr << "Error: --alphabet-type option requires a value" << std::endl;
                 return 1;
             }
         }
@@ -325,7 +325,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                std::cerr << "エラー: --max-length オプションには値が必要です" << std::endl;
+                std::cerr << "Error: --max-length option requires a value" << std::endl;
                 return 1;
             }
         }
@@ -339,34 +339,34 @@ int main(int argc, char *argv[])
                 }
                 catch (const std::exception &e)
                 {
-                    std::cerr << "エラー: " << e.what() << std::endl;
+                    std::cerr << "Error: " << e.what() << std::endl;
                     return 1;
                 }
             }
             else
             {
-                std::cerr << "エラー: --mode オプションには値が必要です" << std::endl;
+                std::cerr << "Error: --mode option requires a value" << std::endl;
                 return 1;
             }
         }
         else if (arg == "--help" || arg == "-h")
         {
-            std::cout << "使用方法: " << argv[0] << " [オプション]" << std::endl;
+            std::cout << "Usage: " << argv[0] << " [options]" << std::endl;
             std::cout << std::endl;
-            std::cout << "オプション:" << std::endl;
-            std::cout << "  --use-restricted, -r, --x    制限付きブロック圧縮を使用 (デフォルト: false)" << std::endl;
-            std::cout << "  --no-restricted, -n           制限付きブロック圧縮を使用しない (デフォルト)" << std::endl;
-            std::cout << "  --seed, -s <値>               乱数のシード値を指定 (デフォルト: 42, -1でランダム生成)" << std::endl;
-            std::cout << "  --alphabet-type, -a, --type <値> アルファベットタイプ (未指定時は全タイプ1-4をテスト)" << std::endl;
-            std::cout << "  --trials, -t <値>             試行回数 (デフォルト: 1000)" << std::endl;
-            std::cout << "  --max-length <値>              生成する文字列の最大長 (デフォルト: 10000)" << std::endl;
-            std::cout << "  --mode, -m <値>                DictionaryMode (デフォルト: standard)" << std::endl;
-            std::cout << "  --help, -h                    このヘルプを表示" << std::endl;
+            std::cout << "Options:" << std::endl;
+            std::cout << "  --use-restricted, -r, --x    Use restricted block compression (default: false)" << std::endl;
+            std::cout << "  --no-restricted, -n           Do not use restricted block compression (default)" << std::endl;
+            std::cout << "  --seed, -s <value>            Random seed (default: 42, -1 to generate randomly)" << std::endl;
+            std::cout << "  --alphabet-type, -a, --type <value> Alphabet type (test all types 1-4 if omitted)" << std::endl;
+            std::cout << "  --trials, -t <value>          Number of trials (default: 1000)" << std::endl;
+            std::cout << "  --max-length <value>          Maximum string length to generate (default: 10000)" << std::endl;
+            std::cout << "  --mode, -m <value>            DictionaryMode (default: standard)" << std::endl;
+            std::cout << "  --help, -h                    Show this help" << std::endl;
             return 0;
         }
         else
         {
-            std::cerr << "警告: 不明なオプション '" << arg << "' を無視します" << std::endl;
+            std::cerr << "Warning: ignoring unknown option '" << arg << "'" << std::endl;
         }
     }
 
@@ -377,7 +377,7 @@ int main(int argc, char *argv[])
         for (uint64_t type = 1; type <= 4; type++)
         {
             std::cout << "========================================" << std::endl;
-            std::cout << "アルファベットタイプ " << type << " のテスト開始" << std::endl;
+            std::cout << "Starting tests for alphabet type " << type << std::endl;
             std::cout << "========================================" << std::endl;
             std::cout << std::endl;
 

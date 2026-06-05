@@ -22,7 +22,7 @@ enum class RandomOpType : uint8_t
 constexpr size_t kRandomOpCount = 8;
 
 /**
- * @brief ランダム操作テストの実行統計
+ * @brief Execution statistics for the random operations test
  */
 struct RandomOpStats
 {
@@ -127,30 +127,30 @@ void print_random_op_statistics(const RandomOpStats &stats)
 {
     std::cout << std::endl;
     std::cout << "========================================" << std::endl;
-    std::cout << "操作別統計" << std::endl;
+    std::cout << "Per-operation statistics" << std::endl;
     std::cout << "========================================" << std::endl;
-    std::cout << "ランダム抽選回数:           " << stats.random_draws << std::endl;
-    std::cout << "実行された操作 (検証あり): " << stats.total_executed() << std::endl;
-    std::cout << "スキップ (前提不成立):      " << stats.total_skipped() << std::endl;
-    std::cout << "成功:                       " << stats.total_passed() << std::endl;
-    std::cout << "失敗:                       " << stats.total_failed() << std::endl;
+    std::cout << "Random draws:               " << stats.random_draws << std::endl;
+    std::cout << "Executed operations (verified): " << stats.total_executed() << std::endl;
+    std::cout << "Skipped (precondition not met): " << stats.total_skipped() << std::endl;
+    std::cout << "Passed:                     " << stats.total_passed() << std::endl;
+    std::cout << "Failed:                     " << stats.total_failed() << std::endl;
     if (stats.trial_build_failures > 0)
     {
-        std::cout << "試行失敗 (初期構築不一致):  " << stats.trial_build_failures << std::endl;
+        std::cout << "Trial failed (initial build mismatch): " << stats.trial_build_failures << std::endl;
     }
     if (stats.trial_exceptions > 0)
     {
-        std::cout << "試行失敗 (例外):            " << stats.trial_exceptions << std::endl;
+        std::cout << "Trial failed (exception):   " << stats.trial_exceptions << std::endl;
     }
     std::cout << std::endl;
 
-    std::cout << std::left << std::setw(22) << "操作"
-              << std::right << std::setw(10) << "抽選"
-              << "\t" << "実行"
-              << "\t" << "スキップ"
-              << "\t" << "成功"
-              << "\t" << "失敗"
-              << "\t" << "実行率"
+    std::cout << std::left << std::setw(22) << "Operation"
+              << std::right << std::setw(10) << "Draws"
+              << "\t" << "Executed"
+              << "\t" << "Skipped"
+              << "\t" << "Passed"
+              << "\t" << "Failed"
+              << "\t" << "Exec rate"
               << std::endl;
     std::cout << std::string(82, '-') << std::endl;
 
@@ -179,7 +179,7 @@ void print_random_op_statistics(const RandomOpStats &stats)
     double total_exec_rate = sum_attempted > 0
                                  ? 100.0 * static_cast<double>(stats.total_executed()) / static_cast<double>(sum_attempted)
                                  : 0.0;
-    std::cout << std::left << std::setw(22) << "合計"
+    std::cout << std::left << std::setw(22) << "Total"
               << std::right << std::setw(10) << sum_attempted
               << "\t" << stats.total_executed()
               << "\t" << stats.total_skipped()
@@ -205,7 +205,7 @@ dynRLSLP::DictionaryMode get_mode_from_string(const std::string &mode_str)
     {
         return dynRLSLP::DictionaryMode::Fast;
     }
-    throw std::runtime_error("無効なモード: " + mode_str);
+    throw std::runtime_error("Invalid mode: " + mode_str);
 }
 
 std::vector<uint8_t> get_alphabet_by_type(uint64_t alphabet_type)
@@ -228,7 +228,7 @@ std::vector<uint8_t> get_alphabet_by_type(uint64_t alphabet_type)
         return alphabet;
     }
     default:
-        throw std::runtime_error("無効なアルファベットタイプ: " + std::to_string(alphabet_type));
+        throw std::runtime_error("Invalid alphabet type: " + std::to_string(alphabet_type));
     }
 }
 
@@ -513,7 +513,7 @@ bool random_ops_test(
     std::vector<uint8_t> alphabet = get_alphabet_by_type(alphabet_type);
 
     std::cout << "========================================" << std::endl;
-    std::cout << "DynamicString ランダム操作テスト実行中" << std::endl;
+    std::cout << "Running DynamicString random operations test" << std::endl;
     std::cout << "========================================" << std::endl;
     std::cout << "use_restricted_block_compression: " << (use_restricted_block_compression ? "true" : "false") << std::endl;
     std::string mode_str = (mode == dynRLSLP::DictionaryMode::Standard) ? "standard" :
@@ -558,7 +558,7 @@ bool random_ops_test(
             {
                 failed_tests++;
                 stats.trial_build_failures++;
-                std::cout << "✗ 試行 " << (trial + 1) << " 初期構築後の文字列不一致" << std::endl;
+                std::cout << "✗ Trial " << (trial + 1) << " string mismatch after initial build" << std::endl;
                 continue;
             }
 
@@ -682,8 +682,8 @@ bool random_ops_test(
                 else
                 {
                     failed_tests++;
-                    std::cout << "✗ 試行 " << (trial + 1) << " 操作 " << (op_idx + 1)
-                              << " (" << random_op_name(op) << ") 失敗 (|T|=" << T.size() << ")" << std::endl;
+                    std::cout << "✗ Trial " << (trial + 1) << " operation " << (op_idx + 1)
+                              << " (" << random_op_name(op) << ") failed (|T|=" << T.size() << ")" << std::endl;
                     if (failed_tests <= 10)
                     {
                         if (T.size() <= 80)
@@ -698,16 +698,16 @@ bool random_ops_test(
         {
             failed_tests++;
             stats.trial_exceptions++;
-            std::cout << "✗ 試行 " << (trial + 1) << " 例外: " << e.what() << std::endl;
+            std::cout << "✗ Trial " << (trial + 1) << " exception: " << e.what() << std::endl;
         }
 
         if ((trial + 1) % 20 == 0)
         {
-            std::cout << "進捗: " << (trial + 1) << "/" << num_trials
+            std::cout << "Progress: " << (trial + 1) << "/" << num_trials
                       << " (|T|=" << last_length
-                      << ", 実行: " << stats.total_executed()
-                      << ", 成功: " << passed_tests
-                      << ", 失敗: " << failed_tests << ")" << std::endl;
+                      << ", executed: " << stats.total_executed()
+                      << ", passed: " << passed_tests
+                      << ", failed: " << failed_tests << ")" << std::endl;
         }
     }
 
@@ -715,30 +715,30 @@ bool random_ops_test(
 
     std::cout << std::endl;
     std::cout << "========================================" << std::endl;
-    std::cout << "テスト結果" << std::endl;
+    std::cout << "Test results" << std::endl;
     std::cout << "========================================" << std::endl;
-    std::cout << "成功: " << passed_tests << std::endl;
-    std::cout << "失敗: " << failed_tests << std::endl;
-    std::cout << "合計: " << (passed_tests + failed_tests) << std::endl;
+    std::cout << "Passed: " << passed_tests << std::endl;
+    std::cout << "Failed: " << failed_tests << std::endl;
+    std::cout << "Total: " << (passed_tests + failed_tests) << std::endl;
     std::cout << "========================================" << std::endl;
 
     if (failed_tests > 0)
     {
-        std::cerr << "エラー: " << failed_tests << " 個の操作が失敗しました。" << std::endl;
+        std::cerr << "Error: " << failed_tests << " operation(s) failed." << std::endl;
         return false;
     }
 
-    std::cout << "すべてのテストが成功しました！" << std::endl;
+    std::cout << "All tests passed!" << std::endl;
     return true;
 }
 
 int main(int argc, char *argv[])
 {
     std::cout << "========================================" << std::endl;
-    std::cout << "DynamicRLSLPString ランダム操作テスト" << std::endl;
+    std::cout << "DynamicRLSLPString random operations test" << std::endl;
     std::cout << "========================================" << std::endl;
-    std::cout << "各試行で insert / delete / access / get_all_occurrences /" << std::endl;
-    std::cout << "lce / lcp / lcs / reverse_lce をランダムに実行し、参照実装と比較します。" << std::endl;
+    std::cout << "Each trial randomly runs insert / delete / access / get_all_occurrences /" << std::endl;
+    std::cout << "Randomly runs lce / lcp / lcs / reverse_lce and compares against reference implementations." << std::endl;
     std::cout << std::endl;
 
     bool use_restricted_block_compression = false;
@@ -809,16 +809,16 @@ int main(int argc, char *argv[])
         }
         else if (arg == "--help" || arg == "-h")
         {
-            std::cout << "使用方法: " << argv[0] << " [オプション]" << std::endl;
-            std::cout << "  --seed, -s <値>                 シード (デフォルト: 42, -1でランダム)" << std::endl;
-            std::cout << "  --trials, -t <値>               試行回数 (デフォルト: 100)" << std::endl;
-            std::cout << "  --operations, -o <値>           各試行の操作回数 (デフォルト: 50)" << std::endl;
-            std::cout << "  --initial-max-length <値>       初期文字列の最大長 (デフォルト: 500)" << std::endl;
-            std::cout << "  --max-length <値>               操作中の文字列の最大長 (デフォルト: 2000)" << std::endl;
-            std::cout << "  --max-pattern-length <値>       insert/delete の最大長 (デフォルト: 20)" << std::endl;
-            std::cout << "  --alphabet-type, -a <1-4>       アルファベットタイプ" << std::endl;
+            std::cout << "Usage: " << argv[0] << " [options]" << std::endl;
+            std::cout << "  --seed, -s <value>              Seed (default: 42, -1 for random)" << std::endl;
+            std::cout << "  --trials, -t <value>            Number of trials (default: 100)" << std::endl;
+            std::cout << "  --operations, -o <value>        Operations per trial (default: 50)" << std::endl;
+            std::cout << "  --initial-max-length <value>    Maximum initial string length (default: 500)" << std::endl;
+            std::cout << "  --max-length <value>            Maximum string length during operations (default: 2000)" << std::endl;
+            std::cout << "  --max-pattern-length <value>    Maximum insert/delete length (default: 20)" << std::endl;
+            std::cout << "  --alphabet-type, -a <1-4>       Alphabet type" << std::endl;
             std::cout << "  --mode, -m <standard|fast|...>  DictionaryMode" << std::endl;
-            std::cout << "  --use-restricted, -r            制限付きブロック圧縮" << std::endl;
+            std::cout << "  --use-restricted, -r            Use restricted block compression" << std::endl;
             return 0;
         }
     }
