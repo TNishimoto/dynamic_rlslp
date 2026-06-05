@@ -506,4 +506,6 @@ If you use this library, please cite the following paper:
 
 ## References
 
-* T. Nishimoto and Y. Tabei, “Dynamic Grammar-Compressed Self-Index in $\delta$-Optimal Space,” [arXiv:2604.24080](https://doi.org/10.48550/arXiv.2604.24080), 2026.
+* T. Nishimoto and Y. Tabei, “Dynamic Grammar-Compressed Self-Index in $\delta$-Optimal Space”, [arXiv:2604.24080](https://doi.org/10.48550/arXiv.2604.24080), 2026.
+* T. Nishimoto et al., "Dynamic index and LZ factorization in compressed space", [Discret. Appl. Math.](https://doi.org/10.1016/j.dam.2019.01.014), 2020.  
+* T. Kociumaka et al., "Toward a Definitive Compressibility Measure for Repetitive Sequences" [IEEE Trans. Inf. Theory](https://doi.org/10.1109/TIT.2022.3224382), 2023.  
