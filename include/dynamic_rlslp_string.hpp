@@ -1154,6 +1154,17 @@ namespace dynRLSLP
             return r;
         }
 
+        void print_derivation_tree(std::string output_file_path) const
+        {
+            std::ofstream ofs(output_file_path);
+            auto derivation_tree = this->get_derivation_tree_as_plain_text();
+            for (auto line : derivation_tree)
+            {   
+                ofs << line << std::endl;
+            }
+            ofs.close();
+        }
+
         std::map<NonterminalWithRelativeLevel, std::vector<NonterminalWithRelativeLevel>> get_all_parent_lists() const
         {
             std::map<NonterminalWithRelativeLevel, std::vector<NonterminalWithRelativeLevel>> all_parent_lists;
