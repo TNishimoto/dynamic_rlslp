@@ -8,31 +8,10 @@
 #include <filesystem>
 #include "dynamic_rlslp/dynamic_grammar_for_layered_rlslp.hpp"
 #include "updates/all.hpp"
+#include "temporary_set_for_cache_update.hpp"
 
 namespace dynRLSLP
 {
-    class TemporarySetForCacheUpdate{
-        public: 
-        std::unordered_set<ExplicitNonterminal> removed_nonterminal_set;
-        std::unordered_set<ExplicitNonterminal> unremoved_chidlren_of_removed_nonterminal_set;
-        std::unordered_set<ExplicitNonterminal> added_nonterminal_set;
-        std::unordered_set<ExplicitNonterminal> nonadded_chidlren_of_added_nonterminal_set;
-
-        TemporarySetForCacheUpdate(){
-
-        }
-        void import(TemporarySetForCacheUpdate& other){
-            this->removed_nonterminal_set.insert(other.removed_nonterminal_set.begin(), other.removed_nonterminal_set.end());
-            this->unremoved_chidlren_of_removed_nonterminal_set.insert(other.unremoved_chidlren_of_removed_nonterminal_set.begin(), other.unremoved_chidlren_of_removed_nonterminal_set.end());
-            this->added_nonterminal_set.insert(other.added_nonterminal_set.begin(), other.added_nonterminal_set.end());
-            this->nonadded_chidlren_of_added_nonterminal_set.insert(other.nonadded_chidlren_of_added_nonterminal_set.begin(), other.nonadded_chidlren_of_added_nonterminal_set.end());
-
-            other.removed_nonterminal_set.clear();
-            other.unremoved_chidlren_of_removed_nonterminal_set.clear();
-            other.added_nonterminal_set.clear();
-            other.nonadded_chidlren_of_added_nonterminal_set.clear();
-        }        
-    }; 
 
 
     /**
@@ -363,25 +342,6 @@ namespace dynRLSLP
             return result.first;
         }
 
-        uint64_t lcp(ExplicitNonterminal X1, ExplicitNonterminal X2) const
-        {
-            const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
-
-            RunRuleBody rbody1 = RunRuleBody(X1, 1);
-            RunRuleBody rbody2 = RunRuleBody(X2, 1);
-
-            if (this->get_dictionary_mode() == DictionaryMode::Fast)
-            {
-                const std::vector<uint64_t> &leftShortStringList = this->get_left_short_string_list();
-                auto result = FastLCE::lce(rbody1, rbody2, this->dynamic_grammar.get_alphabet_bit_size(), small_dic, leftShortStringList);
-                return result.first;
-            }
-            else
-            {
-                auto result = FastLCE::lce(rbody1, rbody2, small_dic);
-                return result.first;
-            }
-        }
 
         uint64_t reverse_lce(uint64_t i, uint64_t j) const
         {
@@ -405,6 +365,25 @@ namespace dynRLSLP
 
             std::pair<uint64_t, int8_t> result = FastLCE::reverse_lce(st1, st2, small_dic);
             return result.first;
+        }
+        uint64_t lcp(ExplicitNonterminal X1, ExplicitNonterminal X2) const
+        {
+            const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
+
+            RunRuleBody rbody1 = RunRuleBody(X1, 1);
+            RunRuleBody rbody2 = RunRuleBody(X2, 1);
+
+            if (this->get_dictionary_mode() == DictionaryMode::Fast)
+            {
+                const std::vector<uint64_t> &leftShortStringList = this->get_left_short_string_list();
+                auto result = FastLCE::lce(rbody1, rbody2, this->dynamic_grammar.get_alphabet_bit_size(), small_dic, leftShortStringList);
+                return result.first;
+            }
+            else
+            {
+                auto result = FastLCE::lce(rbody1, rbody2, small_dic);
+                return result.first;
+            }
         }
 
         uint64_t lcs(ExplicitNonterminal X1, ExplicitNonterminal X2) const

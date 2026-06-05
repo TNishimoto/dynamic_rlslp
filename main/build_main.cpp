@@ -78,7 +78,6 @@ void main_func(std::string input_filepath, std::string output_filepath, dynRLSLP
 
 
 	std::cout << "Time : " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
-	// dic.print_info();
 	std::cout << "Finish." << std::endl;
 
 	std::cout << "\033[36m" << std::endl;
@@ -87,8 +86,6 @@ void main_func(std::string input_filepath, std::string output_filepath, dynRLSLP
 	std::cout << "Output : " << output_filepath << std::endl;
 	std::cout << "Build mode : " << (offline_build ? "Offline" : "Online") << std::endl;
 	ds.print_statistics(1);
-	//ds.print_memory_breakdown(1);
-	//dic.print_info(false, 1);
 	double charperms = (double)text_size / elapsed;
 	std::cout << "Excecution time : " << elapsed << "ms";
 	std::cout << " [" << charperms << "chars/ms]" << std::endl;

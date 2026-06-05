@@ -29,3 +29,4 @@
 #include "./rlslp/grammar_for_layered_rlslp.hpp"
 #include "./dynamic_rlslp_string.hpp"
 #include "./commands/tsv_parser.hpp"
+#include "./dynamic_rlslp/parent_query/naive_parent_query.hpp"

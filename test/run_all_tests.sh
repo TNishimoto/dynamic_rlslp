@@ -113,6 +113,27 @@ run_test "test_dynamic_string_lce (RR-FAST)    " "./test_dynamic_string_lce -r t
 run_test "test_dynamic_string_lce (SE-STANDARD)" "./test_dynamic_string_lce -r false -s -1 -m standard"
 run_test "test_dynamic_string_lce (SE-FAST)    " "./test_dynamic_string_lce -r false -s -1 -m fast"
 
+run_test "test_dynamic_string_reverse_lce (RR-STANDARD)" "./test_dynamic_string_reverse_lce -r true -s -1 -m standard"
+run_test "test_dynamic_string_reverse_lce (RR-FAST)    " "./test_dynamic_string_reverse_lce -r true -s -1 -m fast"
+run_test "test_dynamic_string_reverse_lce (SE-STANDARD)" "./test_dynamic_string_reverse_lce -r false -s -1 -m standard"
+run_test "test_dynamic_string_reverse_lce (SE-FAST)    " "./test_dynamic_string_reverse_lce -r false -s -1 -m fast"
+
+run_test "test_dynamic_string_get_all_occurrences (RR-STANDARD)" "./test_dynamic_string_get_all_occurrences -r true -s -1 -m standard"
+run_test "test_dynamic_string_get_all_occurrences (RR-FAST)    " "./test_dynamic_string_get_all_occurrences -r true -s -1 -m fast"
+run_test "test_dynamic_string_get_all_occurrences (SE-STANDARD)" "./test_dynamic_string_get_all_occurrences -r false -s -1 -m standard"
+run_test "test_dynamic_string_get_all_occurrences (SE-FAST)    " "./test_dynamic_string_get_all_occurrences -r false -s -1 -m fast"
+
+run_test "test_dynamic_string_lcp (RR-STANDARD)" "./test_dynamic_string_lcp -r true -s -1 -m standard"
+run_test "test_dynamic_string_lcp (RR-FAST)    " "./test_dynamic_string_lcp -r true -s -1 -m fast"
+run_test "test_dynamic_string_lcp (SE-STANDARD)" "./test_dynamic_string_lcp -r false -s -1 -m standard"
+run_test "test_dynamic_string_lcp (SE-FAST)    " "./test_dynamic_string_lcp -r false -s -1 -m fast"
+
+run_test "test_dynamic_string_lcs (RR-STANDARD)" "./test_dynamic_string_lcs -r true -s -1 -m standard"
+run_test "test_dynamic_string_lcs (RR-FAST)    " "./test_dynamic_string_lcs -r true -s -1 -m fast"
+run_test "test_dynamic_string_lcs (SE-STANDARD)" "./test_dynamic_string_lcs -r false -s -1 -m standard"
+run_test "test_dynamic_string_lcs (SE-FAST)    " "./test_dynamic_string_lcs -r false -s -1 -m fast"
+
+
 run_test "test_dynamic_string_insert (RR-STANDARD)" "./test_dynamic_string_insert -r true -s -1 -m standard"
 run_test "test_dynamic_string_insert (RR-FAST)    " "./test_dynamic_string_insert -r true -s -1 -m fast"
 run_test "test_dynamic_string_insert (SE-STANDARD)" "./test_dynamic_string_insert -r false -s -1 -m standard"
@@ -122,6 +143,11 @@ run_test "test_dynamic_string_delete (RR-STANDARD)" "./test_dynamic_string_delet
 run_test "test_dynamic_string_delete (RR-FAST)    " "./test_dynamic_string_delete -r true -s -1 -m fast"
 run_test "test_dynamic_string_delete (SE-STANDARD)" "./test_dynamic_string_delete -r false -s -1 -m standard"
 run_test "test_dynamic_string_delete (SE-FAST)    " "./test_dynamic_string_delete -r false -s -1 -m fast"
+
+run_test "test_dynamic_string_random_ops (RR-STANDARD)" "./test_dynamic_string_random_ops -r true -s -1 -m standard -t 100 -o 50 -l 5000 -L 10000 -p 100"
+run_test "test_dynamic_string_random_ops (RR-FAST)    " "./test_dynamic_string_random_ops -r true -s -1 -m fast -t 100 -o 50 -l 5000 -L 10000 -p 100"
+run_test "test_dynamic_string_random_ops (SE-STANDARD)" "./test_dynamic_string_random_ops -r false -s -1 -m standard -t 100 -o 50 -l 5000 -L 10000 -p 100"
+run_test "test_dynamic_string_random_ops (SE-FAST)    " "./test_dynamic_string_random_ops -r false -s -1 -m fast -t 100 -o 50 -l 5000 -L 10000 -p 100"
 
 run_test "test_dynamic_string_file_io (RR-STANDARD)" "./test_dynamic_string_file_io -r true -s -1 -m standard"
 run_test "test_dynamic_string_file_io (RR-FAST)    " "./test_dynamic_string_file_io -r true -s -1 -m fast"
