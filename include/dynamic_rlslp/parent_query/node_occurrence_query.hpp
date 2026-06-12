@@ -110,6 +110,7 @@ namespace dynRLSLP
             }
 
         public:
+            //inline static uint64_t FIND_TYPE_2_PRIMARY_OCCURRENCE_OF_NONTERMINAL_USING_LIMITED_DEPTH_COUNTER = 0;
             /**
              * @brief Finds a type-2 primary occurrence with a bounded ancestor-walk depth.
              * @param sig Base nonterminal to locate.
@@ -135,6 +136,9 @@ namespace dynRLSLP
                     }
                     else if (fastParentDictionary.has_single_ancestor(sig, explicit_nonterminal_rule_list))
                     {
+                        //FIND_TYPE_2_PRIMARY_OCCURRENCE_OF_NONTERMINAL_USING_LIMITED_DEPTH_COUNTER++;
+
+
                         NonterminalWithRelativeLevel parent = fastParentDictionary.take_any_important_ancestor(sig);
                         uint64_t position = ManyParentsManager::get_any_occurrence_position(sig, parent, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, true);
 
@@ -287,6 +291,11 @@ namespace dynRLSLP
              */
             static std::vector<uint64_t> faster_get_all_occurrences_using_low_memory(const std::vector<TemporaryOccurrence> &input, const FastParentDictionary &fastParentDictionary, const DictionaryForLayeredRLSLP &rlslp_dictionary, uint64_t tree_max_level, const std::vector<TemporaryOccurrence> *occCacheList)
             {
+                if (input.empty())
+                {
+                    return std::vector<uint64_t>();
+                }
+
                 const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = rlslp_dictionary.get_explicit_nonterminal_rule_list();
                 const std::vector<uint64_t> &explicit_nonterminal_length_list = rlslp_dictionary.get_explicit_nonterminal_length_list();
                 const std::vector<uint16_t> &explicit_nonterminal_level_list = rlslp_dictionary.get_explicit_nonterminal_level_list();
