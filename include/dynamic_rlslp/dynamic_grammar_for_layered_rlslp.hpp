@@ -388,6 +388,24 @@ namespace dynRLSLP
 			{
 				return this->character_id_map;
 			}
+			/**
+			 * @brief Registers a character in character_id_map when it is not already present.
+			 * @param character Raw character value.
+			 * @return True if a new entry was added to character_id_map.
+			 */
+			bool register_character_in_id_map(int64_t character)
+			{
+				if (!this->has_explicit_alphabet())
+				{
+					return false;
+				}
+				if (this->character_id_map.find(character) != this->character_id_map.end())
+				{
+					return false;
+				}
+				this->character_id_map[character] = this->character_id_map.size();
+				return true;
+			}
 
 			/**
 			 * @brief Return the nonterminal of the nonterminal \p v_{i} -> \p body if such a nonterminal exists. Otherwise, return -1.
@@ -1117,8 +1135,8 @@ namespace dynRLSLP
 							assert(false);
 						}
 #endif
-						// uint64_t current_bit_size = this->get_alphabet_bit_size();
 						this->character_nonterminal_item_map[c] = new_nonterminal;
+						this->register_character_in_id_map(c);
 					}
 					else
 					{

@@ -16,40 +16,37 @@ namespace dynRLSLP
              * @param replacement_code_to_line_break Escape sequence representing a newline.
              * @return Sanitized line with real tab and newline characters.
              */
-            static std::string get_sanitized_line(const std::string line, const std::string replacement_code_to_tab, const std::string replacement_code_to_line_break)
+            static std::string get_sanitized_line(
+                const std::string& line,
+                const std::string& replacement_code_to_tab,
+                const std::string& replacement_code_to_line_break)
             {
                 std::string r;
                 uint64_t i = 0;
+            
                 while (i < line.size())
                 {
-                    uint64_t len = line.size() - i;
-                    std::string cand1 = "";
-                    if (len <= replacement_code_to_tab.size())
-                    {
-                        cand1 = line.substr(i, len);
-                    }
-                    std::string cand2 = "";
-                    if (len <= replacement_code_to_line_break.size())
-                    {
-                        cand2 = line.substr(i, len);
-                    }
-
-                    if (cand1.size() > 0 && cand1 == replacement_code_to_tab)
+                    if (!replacement_code_to_tab.empty() &&
+                        i + replacement_code_to_tab.size() <= line.size() &&
+                        line.compare(i, replacement_code_to_tab.size(), replacement_code_to_tab) == 0)
                     {
                         r.push_back('\t');
                         i += replacement_code_to_tab.size();
                     }
-                    else if (cand2.size() > 0 && cand2 == replacement_code_to_line_break)
+                    else if (!replacement_code_to_line_break.empty() &&
+                             i + replacement_code_to_line_break.size() <= line.size() &&
+                             line.compare(i, replacement_code_to_line_break.size(), replacement_code_to_line_break) == 0)
                     {
                         r.push_back('\n');
                         i += replacement_code_to_line_break.size();
                     }
                     else
                     {
-                        r += line[i];
+                        r.push_back(line[i]);
                         i++;
                     }
                 }
+            
                 return r;
             }
 

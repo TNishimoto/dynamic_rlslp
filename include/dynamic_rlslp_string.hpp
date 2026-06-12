@@ -631,6 +631,19 @@ namespace dynRLSLP
             std::unordered_set<NonterminalWithRelativeLevel> changed_nonterminals;
             const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
 
+            if (this->dictionaryMode == DictionaryMode::Fast && this->dynamic_grammar.has_explicit_alphabet())
+            {
+                uint64_t alphabet_bit_size_before = this->dynamic_grammar.get_alphabet_bit_size();
+                for (uint8_t c : pattern)
+                {
+                    this->dynamic_grammar.register_character_in_id_map(c);
+                }
+                if (this->dynamic_grammar.get_alphabet_bit_size() != alphabet_bit_size_before)
+                {
+                    this->rebuild_short_string_list();
+                }
+            }
+
             TemporarySetForCacheUpdate temp_set_for_cache_update;
             TemporarySetForCacheUpdate final_set_for_cache_update;
 
