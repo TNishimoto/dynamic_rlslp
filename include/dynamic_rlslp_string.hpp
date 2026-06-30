@@ -26,6 +26,7 @@ namespace dynRLSLP
         std::vector<uint64_t> left_short_string_list;
         std::vector<uint64_t> right_short_string_list;
         std::vector<TemporaryOccurrence> ancestor_cache_list;
+        uint64_t ancestor_cache_depth = 6;
 
 #ifdef DEBUG
         std::vector<uint64_t> __added_nonterminals_list;
@@ -33,7 +34,11 @@ namespace dynRLSLP
         std::vector<uint64_t> __changed_nonterminals_list;
 #endif
 
-        inline static const uint64_t ANCESTOR_CACHE_DEPTH = 6;
+        inline static const uint64_t ANCESTOR_DEFAULT_CACHE_DEPTH_FOR_SMALL_TEXT = 6;
+        inline static const uint64_t ANCESTOR_DEFAULT_CACHE_DEPTH_FOR_LONG_TEXT = 8;
+        inline static const uint64_t SMALL_TEXT_LENGTH_THRESHOLD = 1000000000;
+
+
         //inline static const uint64_t ANCESTOR_CACHE_DEPTH = 10;
 
     public:
@@ -907,13 +912,20 @@ namespace dynRLSLP
             const FastParentDictionary &fast_parent_dictionary = this->dynamic_grammar.get_parent_dictionary();
             const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
             this->ancestor_cache_list.resize(this->dynamic_grammar.count_explicit_nonterminals(), TemporaryOccurrence::create_null_occurrence());
-
+            if (this->size() < SMALL_TEXT_LENGTH_THRESHOLD)
+            {
+                this->ancestor_cache_depth = ANCESTOR_DEFAULT_CACHE_DEPTH_FOR_SMALL_TEXT;
+            }
+            else
+            {
+                this->ancestor_cache_depth = ANCESTOR_DEFAULT_CACHE_DEPTH_FOR_LONG_TEXT;
+            }
             for (ExplicitNonterminal i = 0; i < (int64_t)this->dynamic_grammar.count_explicit_nonterminals(); i++)
             {
                 RLSLPRuleBody item = RLSLPRuleBody::decode_rule(i, explicit_nonterminal_rule_list);
                 if (item.get_type() != RLSLPRuleType::Null)
                 {
-                    TemporaryOccurrence occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(i, fast_parent_dictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, DynamicRLSLPString::ANCESTOR_CACHE_DEPTH, 0);
+                    TemporaryOccurrence occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(i, fast_parent_dictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, this->ancestor_cache_depth, 0);
                     this->ancestor_cache_list[i] = occurrence;
                 }
             }
@@ -944,7 +956,7 @@ namespace dynRLSLP
 
                     if (explicit_nonterminal_rule_list[i].get_type() != RLSLPRuleType::Null)
                     {
-                        auto correct_occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(i, parent_dictionary, explicit_nonterminal_rule_list, dic.get_explicit_nonterminal_length_list(), DynamicRLSLPString::ANCESTOR_CACHE_DEPTH, 0);
+                        auto correct_occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(i, parent_dictionary, explicit_nonterminal_rule_list, dic.get_explicit_nonterminal_length_list(), this->ancestor_cache_depth, 0);
                         if (!this->ancestor_cache_list[i].equals(correct_occurrence))
                         {
                             std::cout << "Explicit nonterminal: " << i << ", Correct occurrence: " << correct_occurrence.to_string() << ", Cache occurrence: " << this->ancestor_cache_list[i].to_string() << std::endl;
@@ -1554,6 +1566,10 @@ namespace dynRLSLP
             os.read(reinterpret_cast<char *>(&modeValue), sizeof(int));
             r.dictionaryMode = static_cast<DictionaryMode>(modeValue);
 
+            uint64_t _ancestor_cache_depth;
+            os.read(reinterpret_cast<char *>(&_ancestor_cache_depth), sizeof(uint64_t));
+            r.ancestor_cache_depth = _ancestor_cache_depth;
+
             // Code 7
             uint64_t _left_short_string_list_size;
             os.read(reinterpret_cast<char *>(&_left_short_string_list_size), sizeof(_left_short_string_list_size));
@@ -1602,6 +1618,9 @@ namespace dynRLSLP
 
             int modeValue = static_cast<int>(item.dictionaryMode);
             os.write(reinterpret_cast<const char *>(&modeValue), sizeof(int));
+
+            uint64_t _ancestor_cache_depth = item.ancestor_cache_depth;
+            os.write(reinterpret_cast<const char *>(&_ancestor_cache_depth), sizeof(uint64_t));
 
             // Code 7
             uint64_t left_short_string_list_size = item.left_short_string_list.size();
@@ -1776,7 +1795,7 @@ namespace dynRLSLP
             tmp_set.insert(final_set_for_cache_update.unremoved_chidlren_of_removed_nonterminal_set.begin(), final_set_for_cache_update.unremoved_chidlren_of_removed_nonterminal_set.end());
             tmp_set.insert(final_set_for_cache_update.nonadded_chidlren_of_added_nonterminal_set.begin(), final_set_for_cache_update.nonadded_chidlren_of_added_nonterminal_set.end());
 
-            std::unordered_set<NonterminalWithRelativeLevel> descendants = this->add_descendants2(tmp_set, DynamicRLSLPString::ANCESTOR_CACHE_DEPTH);
+            std::unordered_set<NonterminalWithRelativeLevel> descendants = this->add_descendants2(tmp_set, this->ancestor_cache_depth);
 
 
             tmp_set.insert(descendants.begin(), descendants.end());
@@ -1844,7 +1863,7 @@ namespace dynRLSLP
                                     this->ancestor_cache_list.push_back(TemporaryOccurrence::create_null_occurrence());
                                 }
                             }
-                            TemporaryOccurrence occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(sig, fast_parent_dictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, DynamicRLSLPString::ANCESTOR_CACHE_DEPTH, 0);
+                            TemporaryOccurrence occurrence = NodeOccurrenceQuery::find_type_2_primary_occurrence_of_nonterminal_using_limited_depth(sig, fast_parent_dictionary, explicit_nonterminal_rule_list, explicit_nonterminal_length_list, this->ancestor_cache_depth, 0);
 
                             this->ancestor_cache_list[sig] = occurrence;
 
