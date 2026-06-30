@@ -23,6 +23,7 @@ namespace dynRLSLP
             {
                 std::string r;
                 uint64_t i = 0;
+
             
                 while (i < line.size())
                 {
@@ -60,14 +61,14 @@ namespace dynRLSLP
              */
             static std::vector<std::string> line_parse(const std::string line, const std::string replacement_code_to_tab = "", const std::string replacement_code_to_line_break = "")
             {
-                std::string sanitized_line = get_sanitized_line(line, replacement_code_to_tab, replacement_code_to_line_break);
+                //std::string sanitized_line = get_sanitized_line(line, replacement_code_to_tab, replacement_code_to_line_break);
                 std::vector<std::string> result;
-                std::stringstream ss(sanitized_line);
+                std::stringstream ss(line);
                 std::string item;
 
                 while (std::getline(ss, item, '\t'))
                 {
-                    result.push_back(item);
+                    result.push_back(get_sanitized_line(item, replacement_code_to_tab, replacement_code_to_line_break));
                 }
 
                 return result;
