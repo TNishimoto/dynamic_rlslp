@@ -117,8 +117,8 @@ An instance of `DynamicRLSLPString` can be built using either `DynamicRLSLPStrin
 | `lcs(X, X')`             | $O(Hb)$          | Returns the length of the longest common suffix of the two strings derived by the nonterminals `X` and `X'`. |
 | `decompress(ofs)`        | $O(n)$           | Writes $T$ to the given output file stream `ofs`.                                                            |
 | `get_all_occurrences(X)` | $O(vocc H)$      | Returns all occurrence positions of the explicit nonterminal `X` in the derivation tree.                     |
-| `insert_string(i, P)`    | Expected $O(HM)$ | Inserts the string $P[0..m-1]$ at position $i$.                                                              |
-| `delete_string(i, m)`    | Expected $O(HM)$ | Deletes $T[i..i+m-1]$ from $T$.                                                                              |
+| `insert_string(i, P)`    | Expected $O(Hb)$ | Inserts the string $P[0..m-1]$ at position $i$.                                                              |
+| `delete_string(i, m)`    | Expected $O(Hb)$ | Deletes $T[i..i+m-1]$ from $T$.                                                                              |
 
 > [!NOTE]
 >
