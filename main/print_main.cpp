@@ -7,6 +7,8 @@
 #include <filesystem>
 #include "stool/include/all.hpp"
 #include "../include/all.hpp"
+#include "cmdline/cmdline.h"
+
 
 int64_t count_r(uint64_t len, const dynRLSLP::DynamicRLSLPString &ds)
 {

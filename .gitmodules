@@ -1,3 +1,6 @@
 [submodule "modules/stool"]
 	path = modules/stool
 	url = git@github.com:TNishimoto/stool.git
+[submodule "modules/cmdline"]
+	path = modules/cmdline
+	url = https://github.com/tanakh/cmdline.git

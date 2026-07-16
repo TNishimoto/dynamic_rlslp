@@ -7,6 +7,8 @@
 // #include "qgram_tree.h"
 #include "stool/include/all.hpp"
 #include "../include/all.hpp"
+#include "cmdline/cmdline.h"
+
 
 // using namespace std;
 

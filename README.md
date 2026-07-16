@@ -480,7 +480,8 @@ cacao_aaa_cacao
 
 This project uses the following library:
 
-* [STool](https://github.com/TNishimoto/stool) — string utilities
+* [STool](https://github.com/TNishimoto/stool) — string utilities (MIT License)
+* [cmdline](https://github.com/tanakh/cmdline) (BSD 3-Clause License)
 
 ---
 
