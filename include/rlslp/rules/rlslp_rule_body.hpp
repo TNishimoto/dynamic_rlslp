@@ -294,7 +294,7 @@ namespace dynRLSLP
 			}
 			else if (this->get_type() == RLSLPRuleType::Power)
 			{
-				std::vector<uint8_t> tmp;
+				OUTPUT_VEC_TYPE tmp;
 				assert(NonterminalFunctions::get_explicit_nonterminal(this->A) < itemList.size());
 				itemList[NonterminalFunctions::get_explicit_nonterminal(this->A)].decompress(itemList, tmp);
 				for (int64_t i = 0; i < this->B; i++)

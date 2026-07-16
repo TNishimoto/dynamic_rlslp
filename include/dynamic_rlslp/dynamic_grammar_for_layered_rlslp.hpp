@@ -490,6 +490,23 @@ namespace dynRLSLP
 					this->character_id_map[tmp[i]] = i;
 				}
 			}
+			/**
+			 * @brief Initializes an empty grammar and registers an explicit int64 alphabet with numeric IDs.
+			 * @param parser Grammar parsing strategy.
+			 * @param alphabet Sorted list of symbols defining the alphabet.
+			 * @param seed Random seed for internal randomized structures.
+			 */
+			void initialize(GrammarParsingType parser, const std::vector<int64_t> &alphabet, uint64_t seed)
+			{
+				this->initialize(parser, seed);
+				std::vector<int64_t> tmp = alphabet;
+				std::sort(tmp.begin(), tmp.end());
+				tmp.erase(std::unique(tmp.begin(), tmp.end()), tmp.end());
+				for (uint64_t i = 0; i < tmp.size(); i++)
+				{
+					this->character_id_map[tmp[i]] = i;
+				}
+			}
 
 			/**
 			 * @brief Clear the grammar \p G

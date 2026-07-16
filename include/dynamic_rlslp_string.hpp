@@ -68,6 +68,16 @@ namespace dynRLSLP
         {
             dynamic_grammar.initialize(parser, alphabet, seed);
         }
+        /**
+         * @brief Construct an empty dynamic string with an explicit int64 alphabet.
+         * @param parser Grammar parsing strategy.
+         * @param alphabet Explicit alphabet as int64 values.
+         * @param seed Random seed for compression and hashing.
+         */
+        DynamicRLSLPString(GrammarParsingType parser, const std::vector<int64_t> &alphabet, int64_t seed) : dynamic_grammar()
+        {
+            dynamic_grammar.initialize(parser, alphabet, seed);
+        }
 
         /**
          * @brief Deleted copy constructor.
@@ -122,6 +132,18 @@ namespace dynRLSLP
          */
         uint8_t operator[](size_t pos) const
         {
+            return this->access_value<uint8_t>(pos);
+        }
+
+        /**
+         * @brief Random access to an element of \p T cast to the requested type.
+         * @tparam VALUE_TYPE Output value type.
+         * @param pos Position in the string (0-based).
+         * @return Element at position \p pos.
+         */
+        template <typename VALUE_TYPE = int64_t>
+        VALUE_TYPE access_value(size_t pos) const
+        {
             if (this->dynamic_grammar.get_distinct_document_count() == 0)
             {
                 throw std::runtime_error("DynamicRLSLPString::operator[]: No document");
@@ -136,7 +158,7 @@ namespace dynRLSLP
                 uint64_t nonterminal = grammar.get_root();
                 RLSLPRuleBody item = small_dic.get_rule_body(nonterminal);
                 auto c = Access::random_access(item, pos, explicit_nonterminal_rule_list, explicit_nonterminal_length_list);
-                return c;
+                return static_cast<VALUE_TYPE>(c);
             }
         }
 
@@ -284,7 +306,7 @@ namespace dynRLSLP
          */
         uint8_t access_char(uint64_t i) const
         {
-            return this->operator[](i);
+            return this->access_value<uint8_t>(i);
         }
 
         std::vector<uint8_t> access_substring(uint64_t i, uint64_t len) const
@@ -472,15 +494,16 @@ namespace dynRLSLP
          * @brief Return \p T as a byte vector by decompressing the grammar root.
          * @return Decompressed text as \p std::vector<uint8_t>.
          */
-        std::vector<uint8_t> to_vector() const
+        template <typename VALUE_TYPE = uint8_t>
+        std::vector<VALUE_TYPE> to_vector_as() const
         {
             if (this->is_empty())
             {
-                return std::vector<uint8_t>();
+                return std::vector<VALUE_TYPE>();
             }
             else
             {
-                std::vector<uint8_t> text;
+                std::vector<VALUE_TYPE> text;
                 const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
                 const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
                 NonterminalWithRelativeLevel root = grammar.get_root();
@@ -488,6 +511,11 @@ namespace dynRLSLP
                 rootBody.decompress(explicit_nonterminal_rule_list, text);
                 return text;
             }
+        }
+
+        std::vector<uint8_t> to_vector() const
+        {
+            return this->to_vector_as<uint8_t>();
         }
 
         StaticRLSLP convert_to_rlslp() const
@@ -629,8 +657,8 @@ namespace dynRLSLP
          * @param preprocessor_for_removed_nonterminal Callback run before nonterminal removal.
          * @param postprocessor_for_inserted_nonterminal Callback run after nonterminal insertion.
          */
-        template <typename CALLBACK1 = decltype(no_callback), typename CALLBACK2 = decltype(no_callback)>
-        void insert_string_with_callback(int64_t i, const std::vector<uint8_t> &pattern, const CALLBACK1 &preprocessor_for_removed_nonterminal = no_callback, const CALLBACK2 &postprocessor_for_inserted_nonterminal = no_callback)
+        template <typename CHAR_TYPE = uint8_t, typename CALLBACK1 = decltype(no_callback), typename CALLBACK2 = decltype(no_callback)>
+        void insert_string_with_callback(int64_t i, const std::vector<CHAR_TYPE> &pattern, const CALLBACK1 &preprocessor_for_removed_nonterminal = no_callback, const CALLBACK2 &postprocessor_for_inserted_nonterminal = no_callback)
         {
             std::unordered_set<NonterminalWithRelativeLevel> changed_nonterminals;
             const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
@@ -638,7 +666,7 @@ namespace dynRLSLP
             if (this->dictionaryMode == DictionaryMode::Fast && this->dynamic_grammar.has_explicit_alphabet())
             {
                 uint64_t alphabet_bit_size_before = this->dynamic_grammar.get_alphabet_bit_size();
-                for (uint8_t c : pattern)
+                for (CHAR_TYPE c : pattern)
                 {
                     this->dynamic_grammar.register_character_in_id_map(c);
                 }
@@ -763,11 +791,31 @@ namespace dynRLSLP
         }
 
         /**
+         * @brief Insert an int64 symbol \p c at the position \p i in \p T.
+         * @param i Insert position (0 .. |T|).
+         * @param c Symbol to insert.
+         */
+        void insert_string(int64_t i, int64_t c)
+        {
+            this->insert_string_with_callback(i, std::vector<int64_t>(1, c), dynRLSLP::no_callback, dynRLSLP::no_callback);
+        }
+
+        /**
          * @brief Insert a byte pattern into \p T at position \p i.
          * @param i Insert position (0 .. |T|).
          * @param pattern Byte sequence to insert.
          */
         void insert_string(int64_t i, const std::vector<uint8_t> &pattern)
+        {
+            this->insert_string_with_callback(i, pattern, dynRLSLP::no_callback, dynRLSLP::no_callback);
+        }
+
+        /**
+         * @brief Insert an int64 pattern into \p T at position \p i.
+         * @param i Insert position (0 .. |T|).
+         * @param pattern Integer sequence to insert.
+         */
+        void insert_string(int64_t i, const std::vector<int64_t> &pattern)
         {
             this->insert_string_with_callback(i, pattern, dynRLSLP::no_callback, dynRLSLP::no_callback);
         }
@@ -1429,6 +1477,45 @@ namespace dynRLSLP
             DynamicRLSLPString r(parser, alphabet, seed);
             Compress::compress(r.dynamic_grammar, text, dynRLSLP::no_callback, message_paragraph);
 
+            r.set_mode(mode);
+
+            return r;
+        }
+        /**
+         * @brief Return a new DynamicRLSLPString built from a given int64 text (alphabet inferred from \p text).
+         * @param text Input integer sequence to compress.
+         * @param parser Grammar parsing strategy.
+         * @param mode Dictionary operating mode after build.
+         * @param seed Random seed for compression.
+         * @param message_paragraph The paragraph depth of message logs.
+         * @return Compressed \p DynamicRLSLPString representing \p text.
+         */
+        static DynamicRLSLPString offline_build_from_text(const std::vector<int64_t> &text, GrammarParsingType parser, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
+        {
+            std::vector<int64_t> alphabet = text;
+            std::sort(alphabet.begin(), alphabet.end());
+            alphabet.erase(std::unique(alphabet.begin(), alphabet.end()), alphabet.end());
+
+            return DynamicRLSLPString::offline_build_from_text(text, parser, alphabet, mode, seed, message_paragraph);
+        }
+        /**
+         * @brief Return a new DynamicRLSLPString built from a given int64 text with an explicit alphabet.
+         * @param text Input integer sequence to compress.
+         * @param parser Grammar parsing strategy.
+         * @param alphabet Explicit alphabet as int64 values.
+         * @param mode Dictionary operating mode after build.
+         * @param seed Random seed for compression.
+         * @param message_paragraph The paragraph depth of message logs.
+         * @return Compressed \p DynamicRLSLPString representing \p text.
+         */
+        static DynamicRLSLPString offline_build_from_text(const std::vector<int64_t> &text, GrammarParsingType parser, const std::vector<int64_t> &alphabet, DictionaryMode mode, int64_t seed, int message_paragraph = stool::Message::SHOW_MESSAGE)
+        {
+            if (message_paragraph != stool::Message::NO_MESSAGE)
+            {
+                std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Building DynamicRLSLPString from int64 text in offline mode... " << std::endl;
+            }
+            DynamicRLSLPString r(parser, alphabet, seed);
+            Compress::compress(r.dynamic_grammar, text, dynRLSLP::no_callback, message_paragraph);
             r.set_mode(mode);
 
             return r;

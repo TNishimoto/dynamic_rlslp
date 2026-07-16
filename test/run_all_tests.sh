@@ -103,10 +103,20 @@ run_test "test_dynamic_string_constructor (RR-FAST)    " "./test_dynamic_string_
 run_test "test_dynamic_string_constructor (SE-STANDARD)" "./test_dynamic_string_constructor -r false -s -1 -m standard"
 run_test "test_dynamic_string_constructor (SE-FAST)    " "./test_dynamic_string_constructor -r false -s -1 -m fast"
 
+run_test "test_dynamic_string_constructor_int64 (RR-STANDARD)" "./test_dynamic_string_constructor_int64 -r true -s -1 -m standard"
+run_test "test_dynamic_string_constructor_int64 (RR-FAST)    " "./test_dynamic_string_constructor_int64 -r true -s -1 -m fast"
+run_test "test_dynamic_string_constructor_int64 (SE-STANDARD)" "./test_dynamic_string_constructor_int64 -r false -s -1 -m standard"
+run_test "test_dynamic_string_constructor_int64 (SE-FAST)    " "./test_dynamic_string_constructor_int64 -r false -s -1 -m fast"
+
 run_test "test_dynamic_string_access (RR-STANDARD)" "./test_dynamic_string_access -r true -s -1 -m standard"
 run_test "test_dynamic_string_access (RR-FAST)    " "./test_dynamic_string_access -r true -s -1 -m fast"
 run_test "test_dynamic_string_access (SE-STANDARD)" "./test_dynamic_string_access -r false -s -1 -m standard"
 run_test "test_dynamic_string_access (SE-FAST)    " "./test_dynamic_string_access -r false -s -1 -m fast"
+
+run_test "test_dynamic_string_access_int64 (RR-STANDARD)" "./test_dynamic_string_access_int64 -r true -s -1 -m standard"
+run_test "test_dynamic_string_access_int64 (RR-FAST)    " "./test_dynamic_string_access_int64 -r true -s -1 -m fast"
+run_test "test_dynamic_string_access_int64 (SE-STANDARD)" "./test_dynamic_string_access_int64 -r false -s -1 -m standard"
+run_test "test_dynamic_string_access_int64 (SE-FAST)    " "./test_dynamic_string_access_int64 -r false -s -1 -m fast"
 
 run_test "test_dynamic_string_lce (RR-STANDARD)" "./test_dynamic_string_lce -r true -s -1 -m standard"
 run_test "test_dynamic_string_lce (RR-FAST)    " "./test_dynamic_string_lce -r true -s -1 -m fast"
@@ -139,10 +149,20 @@ run_test "test_dynamic_string_insert (RR-FAST)    " "./test_dynamic_string_inser
 run_test "test_dynamic_string_insert (SE-STANDARD)" "./test_dynamic_string_insert -r false -s -1 -m standard"
 run_test "test_dynamic_string_insert (SE-FAST)    " "./test_dynamic_string_insert -r false -s -1 -m fast"
 
+run_test "test_dynamic_string_insert_int64 (RR-STANDARD)" "./test_dynamic_string_insert_int64 -r true -s -1 -m standard"
+run_test "test_dynamic_string_insert_int64 (RR-FAST)    " "./test_dynamic_string_insert_int64 -r true -s -1 -m fast"
+run_test "test_dynamic_string_insert_int64 (SE-STANDARD)" "./test_dynamic_string_insert_int64 -r false -s -1 -m standard"
+run_test "test_dynamic_string_insert_int64 (SE-FAST)    " "./test_dynamic_string_insert_int64 -r false -s -1 -m fast"
+
 run_test "test_dynamic_string_delete (RR-STANDARD)" "./test_dynamic_string_delete -r true -s -1 -m standard"
 run_test "test_dynamic_string_delete (RR-FAST)    " "./test_dynamic_string_delete -r true -s -1 -m fast"
 run_test "test_dynamic_string_delete (SE-STANDARD)" "./test_dynamic_string_delete -r false -s -1 -m standard"
 run_test "test_dynamic_string_delete (SE-FAST)    " "./test_dynamic_string_delete -r false -s -1 -m fast"
+
+run_test "test_dynamic_string_delete_int64 (RR-STANDARD)" "./test_dynamic_string_delete_int64 -r true -s -1 -m standard"
+run_test "test_dynamic_string_delete_int64 (RR-FAST)    " "./test_dynamic_string_delete_int64 -r true -s -1 -m fast"
+run_test "test_dynamic_string_delete_int64 (SE-STANDARD)" "./test_dynamic_string_delete_int64 -r false -s -1 -m standard"
+run_test "test_dynamic_string_delete_int64 (SE-FAST)    " "./test_dynamic_string_delete_int64 -r false -s -1 -m fast"
 
 run_test "test_dynamic_string_random_ops (RR-STANDARD)" "./test_dynamic_string_random_ops -r true -s -1 -m standard -t 100 -o 50 -l 5000 -L 10000 -p 100"
 run_test "test_dynamic_string_random_ops (RR-FAST)    " "./test_dynamic_string_random_ops -r true -s -1 -m fast -t 100 -o 50 -l 5000 -L 10000 -p 100"

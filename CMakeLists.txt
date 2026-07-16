@@ -40,6 +40,7 @@ set(CMAKE_CXX_FLAGS_RELEASE  "-O3 -DNDEBUG -DNTIME_DEBUG")
 INCLUDE_DIRECTORIES(./modules)
 
 add_executable(build main/build_main.cpp)
+add_executable(build_int64 main/build_int64_main.cpp)
 add_executable(print main/print_main.cpp)
 add_executable(query main/query_main.cpp)
 
