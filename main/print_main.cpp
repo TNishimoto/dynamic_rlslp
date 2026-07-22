@@ -55,7 +55,8 @@ int main(int argc, char *argv[])
     p.add<std::string>("output_dynamic_data_structure_file_path", 'j', "File path for writing the given dynamic data structure in JSON format", false, "");
     p.add<std::string>("output_rlslp_file_path", 'r', "File path for writing the RLSLP in JSON format", false, "");
     p.add<std::string>("output_derivation_tree_file_path", 'd', "File path for writing the derivation tree of the RLSLP", false, "");
-    p.add<std::string>("output_canonical_rlslp_file_path", 'c', "File path for writing the canonical RLSLP corresponding to the RLSLP in JSON format", false, "");
+    p.add<std::string>("output_canonical_rlslp_file_path", 'c', "File path for writing the canonical RLSLP corresponding to the RLSLP in TSV format", false, "");
+
 
     p.parse_check(argc, argv);
     std::string input_file_path = p.get<std::string>("input_file_path");
@@ -128,7 +129,7 @@ int main(int argc, char *argv[])
 
     if (output_rlslp_file_path.size() > 0)
     {
-        ds.convert_to_rlslp().write_to_file_as_json(output_rlslp_file_path);
+        ds.convert_to_rlslp().write_to_file_as_tsv(output_rlslp_file_path);
         std::cout << "The RLSLP is written to the file: " << output_rlslp_file_path << std::endl;
     }
     else

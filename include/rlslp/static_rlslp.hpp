@@ -21,6 +21,9 @@ namespace dynRLSLP
         public:
         std::vector<NonterminalWithRelativeLevel> nonterminal_list;
         std::vector<RLSLPRuleBody> rule_list;
+        std::vector<uint64_t> length_list;
+        std::vector<uint16_t> height_list;
+
         NonterminalWithRelativeLevel root_id;
 
 
@@ -47,5 +50,15 @@ namespace dynRLSLP
             ofs.close();
             
         }
+        void write_to_file_as_tsv(const std::string &file_path) const{
+            std::ofstream ofs(file_path);
+            ofs << "Production Rule ID\tRule Body\tString Length\tNode Height" << std::endl;
+            for(uint64_t i = 0; i < this->rule_list.size(); i++){
+                RLSLPRuleBody rule = this->rule_list[i];
+                ofs << std::to_string(i) << "\t" << rule.to_string() << "\t" << std::to_string(this->length_list[i]) << "\t" << std::to_string(this->height_list[i]) << std::endl;
+            }
+            ofs.close();
+        }
+
     };
 }

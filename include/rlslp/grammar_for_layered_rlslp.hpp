@@ -186,26 +186,29 @@ namespace dynRLSLP
 
 		StaticRLSLP convert_to_rlslp() const
 		{
-			if(this->document_counter.size() != 1){
+			if (this->document_counter.size() != 1)
+			{
 				throw std::runtime_error("The size of document counter must be 1.");
 			}
 			const DictionaryForLayeredRLSLP &rlslp_dictionary = this->get_rlslp_dictionary();
 			const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = rlslp_dictionary.get_explicit_nonterminal_rule_list();
 			const std::vector<uint16_t> &relative_max_level_list = rlslp_dictionary.get_relative_max_level_list();
 
-
 			StaticRLSLP r;
 			r.root_id = this->get_root();
 
-			for(uint64_t i = 0; i < explicit_nonterminal_rule_list.size(); i++){
+			for (uint64_t i = 0; i < explicit_nonterminal_rule_list.size(); i++)
+			{
 				RLSLPRuleBody rule = explicit_nonterminal_rule_list[i];
 
-				if(rule.get_type() != RLSLPRuleType::Null){
+				if (rule.get_type() != RLSLPRuleType::Null)
+				{
 					uint16_t relative_level = relative_max_level_list[i];
-					for(uint64_t j = 1; j <= relative_level; j++){
+					for (uint64_t j = 1; j <= relative_level; j++)
+					{
 						NonterminalWithRelativeLevel nonterminal = NonterminalFunctions::get_nonterminal(j, i);
-						NonterminalWithRelativeLevel child_nonterminal = NonterminalFunctions::get_nonterminal(j-1, i);
-	
+						NonterminalWithRelativeLevel child_nonterminal = NonterminalFunctions::get_nonterminal(j - 1, i);
+
 						RLSLPRuleBody new_rule = RLSLPRuleBody::create_nonterminal_item(child_nonterminal);
 						r.nonterminal_list.push_back(nonterminal);
 						r.rule_list.push_back(new_rule);
@@ -214,51 +217,56 @@ namespace dynRLSLP
 					r.rule_list.push_back(rule);
 				}
 			}
-			
-
 
 			return r;
-
 		}
-
 
 		StaticRLSLP convert_to_canonical_rlslp() const
 		{
-			if(this->document_counter.size() != 1){
+			if (this->document_counter.size() != 1)
+			{
 				throw std::runtime_error("The size of document counter must be 1.");
 			}
-			//NonterminalWithRelativeLevel root = this->get_root();
+			// NonterminalWithRelativeLevel root = this->get_root();
 			const DictionaryForLayeredRLSLP &rlslp_dictionary = this->get_rlslp_dictionary();
 			const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = rlslp_dictionary.get_explicit_nonterminal_rule_list();
 			const std::vector<uint64_t> &explicit_nonterminal_length_list = rlslp_dictionary.get_explicit_nonterminal_length_list();
 			uint64_t list_size = rlslp_dictionary.count_explicit_nonterminals();
 
 			std::vector<uint64_t> id_list;
-			for(uint64_t i = 0; i < list_size; i++){
-				if(!rlslp_dictionary.check_null_item(i)){
+			for (uint64_t i = 0; i < list_size; i++)
+			{
+				if (!rlslp_dictionary.check_null_item(i))
+				{
 					id_list.push_back(i);
 				}
 			}
-			
-			std::sort(id_list.begin(), id_list.end(), [&](uint64_t a, uint64_t b){ return explicit_nonterminal_length_list[a] < explicit_nonterminal_length_list[b]; });
+
+			std::sort(id_list.begin(), id_list.end(), [&](uint64_t a, uint64_t b)
+					  { return explicit_nonterminal_length_list[a] < explicit_nonterminal_length_list[b]; });
 
 			std::vector<uint64_t> id_mapper;
 			id_mapper.resize(list_size, UINT64_MAX);
-			for(uint64_t i = 0; i < id_list.size(); i++){
+			for (uint64_t i = 0; i < id_list.size(); i++)
+			{
 				id_mapper[id_list[i]] = i;
 			}
 
 			StaticRLSLP r;
 			r.root_id = id_mapper[this->get_root()];
 
-			for(uint64_t i = 0; i < id_list.size(); i++){
+			for (uint64_t i = 0; i < id_list.size(); i++)
+			{
 				RLSLPRuleBody rule = explicit_nonterminal_rule_list[id_list[i]];
 				r.nonterminal_list.push_back(i);
 
-				if(rule.get_type() == RLSLPRuleType::Character){
+				if (rule.get_type() == RLSLPRuleType::Character)
+				{
 					r.rule_list.push_back(rule);
-				}else if(rule.get_type() == RLSLPRuleType::Pair){
-					NonterminalWithRelativeLevel left = NonterminalFunctions::get_explicit_nonterminal(rule.A);					
+				}
+				else if (rule.get_type() == RLSLPRuleType::Pair)
+				{
+					NonterminalWithRelativeLevel left = NonterminalFunctions::get_explicit_nonterminal(rule.A);
 					NonterminalWithRelativeLevel right = NonterminalFunctions::get_explicit_nonterminal(rule.B);
 					uint64_t left_sig = NonterminalFunctions::get_explicit_nonterminal(left);
 					uint64_t right_sig = NonterminalFunctions::get_explicit_nonterminal(right);
@@ -266,22 +274,48 @@ namespace dynRLSLP
 					uint64_t right_id = id_mapper[right_sig];
 					RLSLPRuleBody new_rule = RLSLPRuleBody::create_pair_item(left_id, right_id);
 					r.rule_list.push_back(new_rule);
-				}else if(rule.get_type() == RLSLPRuleType::Power){
+				}
+				else if (rule.get_type() == RLSLPRuleType::Power)
+				{
 					NonterminalWithRelativeLevel X = NonterminalFunctions::get_explicit_nonterminal(rule.A);
 					uint64_t X_sig = NonterminalFunctions::get_explicit_nonterminal(X);
 					uint64_t X_id = id_mapper[X_sig];
 					RLSLPRuleBody new_rule = RLSLPRuleBody::create_run_rule_body(X_id, rule.B);
 					r.rule_list.push_back(new_rule);
-				}else{
+				}
+				else
+				{
+					throw std::runtime_error("The rule type is not supported.");
+				}
+			}
+
+			r.length_list.resize(r.nonterminal_list.size(), UINT64_MAX);
+			r.height_list.resize(r.nonterminal_list.size(), UINT16_MAX);
+
+			for (uint64_t i = 0; i < r.nonterminal_list.size(); i++)
+			{
+				if (r.rule_list[i].get_type() == RLSLPRuleType::Character)
+				{
+					r.length_list[i] = 1;
+					r.height_list[i] = 0;
+				}
+				else if (r.rule_list[i].get_type() == RLSLPRuleType::Pair)
+				{
+					r.length_list[i] = r.length_list[r.rule_list[i].A] + r.length_list[r.rule_list[i].B];
+					r.height_list[i] = std::max(r.height_list[r.rule_list[i].A], r.height_list[r.rule_list[i].B]) + 1;
+				}
+				else if (r.rule_list[i].get_type() == RLSLPRuleType::Power)
+				{
+					r.length_list[i] = r.length_list[r.rule_list[i].A] * r.rule_list[i].B;
+					r.height_list[i] = r.height_list[r.rule_list[i].A] + 1;
+				}
+				else
+				{
 					throw std::runtime_error("The rule type is not supported.");
 				}
 			}
 			return r;
 		}
-
-
-
-
 
 		/**
 		 * @brief Reset the grammar and select a parsing algorithm.
@@ -491,7 +525,7 @@ namespace dynRLSLP
 		 */
 		void print_statistics(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
 		{
-			//std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Documents:\t" << this->get_document_counter().size() << std::endl;
+			// std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Documents:\t" << this->get_document_counter().size() << std::endl;
 
 			std::string copmression_algorithm = this->get_grammar_parsing_type() == dynRLSLP::GrammarParsingType::RestrictedRecompression ? "Restricted Recompression" : "Signature Encoding";
 
@@ -504,7 +538,7 @@ namespace dynRLSLP
 			{
 				int64_t root = this->get_root();
 				uint64_t text_length = NonterminalFunctions::get_length(root, explicit_nonterminal_length_list);
-	
+
 				std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Text Length:\t" << text_length << std::endl;
 				std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "The level of the derivation tree: " << this->get_rlslp_dictionary().get_explicit_nonterminal_level_list()[this->get_root()] << std::endl;
 			}
@@ -515,31 +549,29 @@ namespace dynRLSLP
 			rlslp_dictionary.print_statistics(message_paragraph + 1);
 			random_bit_dictionary.print_statistics(message_paragraph + 1);
 			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
-
 		}
 
 		void print_memory_breakdown(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
 		{
-			//std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Documents:\t" << this->get_document_counter().size() << std::endl;
-
+			// std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Documents:\t" << this->get_document_counter().size() << std::endl;
 
 			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Memory Breakdown (GrammarForLayeredRLSLP): " << this->size_in_bytes() << " bytes" << std::endl;
-			std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "document_counter: " << stool::Memory::estimate_memory_usage(this->document_counter) << " bytes" << std::endl;
-			std::cout << stool::Message::get_paragraph_string(message_paragraph+1) << "grammar_parsing_type: " << sizeof(grammar_parsing_type) << " bytes" << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "document_counter: " << stool::Memory::estimate_memory_usage(this->document_counter) << " bytes" << std::endl;
+			std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "grammar_parsing_type: " << sizeof(grammar_parsing_type) << " bytes" << std::endl;
 
 			const DictionaryForLayeredRLSLP &rlslp_dictionary = this->get_rlslp_dictionary();
 
 			rlslp_dictionary.print_memory_breakdown(message_paragraph + 1);
 			random_bit_dictionary.print_memory_breakdown(message_paragraph + 1);
 			std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
-
 		}
 
-		void write_content_as_json_format(std::ofstream &ofs, std::string name, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const{
+		void write_content_as_json_format(std::ofstream &ofs, std::string name, int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
+		{
 			ofs << stool::Message::get_paragraph_string(message_paragraph) << "\"" << name << "\": " << "{" << std::endl;
 
 			std::stringstream grammarParsingType_ss;
-			if(this->grammar_parsing_type == GrammarParsingType::RestrictedRecompression)
+			if (this->grammar_parsing_type == GrammarParsingType::RestrictedRecompression)
 			{
 				grammarParsingType_ss << "\"Restricted Recompression\"";
 			}
@@ -548,24 +580,24 @@ namespace dynRLSLP
 				grammarParsingType_ss << "\"Signature Encoding\"";
 			}
 
-			ofs << stool::Message::get_paragraph_string(message_paragraph+1) << "\"grammar_parsing_type\": " << grammarParsingType_ss.str() << ", " << std::endl;
+			ofs << stool::Message::get_paragraph_string(message_paragraph + 1) << "\"grammar_parsing_type\": " << grammarParsingType_ss.str() << ", " << std::endl;
 
 			JsonHelper::write_content_as_json_format<NonterminalWithRelativeLevel, uint64_t>(
-                "document_counter(std::unordered_map<int64_t, uint64_t>)",
-                this->document_counter,
-                [](const NonterminalWithRelativeLevel &key){ return NonterminalFunctions::to_string(key); },
-                [](const uint64_t &value){ return std::to_string(value); },
-                true,
-                ofs,
-                message_paragraph+1
-            );
+				"document_counter(std::unordered_map<int64_t, uint64_t>)",
+				this->document_counter,
+				[](const NonterminalWithRelativeLevel &key)
+				{ return NonterminalFunctions::to_string(key); },
+				[](const uint64_t &value)
+				{ return std::to_string(value); },
+				true,
+				ofs,
+				message_paragraph + 1);
 			ofs << ", " << std::endl;
-			this->random_bit_dictionary.write_content_as_json_format(ofs, "random_bit_dictionary", message_paragraph+1);
+			this->random_bit_dictionary.write_content_as_json_format(ofs, "random_bit_dictionary", message_paragraph + 1);
 			ofs << ", " << std::endl;
-			this->rlslp_dictionary.write_content_as_json_format(ofs, "rlslp_dictionary", message_paragraph+1);			
+			this->rlslp_dictionary.write_content_as_json_format(ofs, "rlslp_dictionary", message_paragraph + 1);
 			ofs << "}";
-        }
-
+		}
 
 		/**
 		 * @brief Verify structural near-equality with another instance.

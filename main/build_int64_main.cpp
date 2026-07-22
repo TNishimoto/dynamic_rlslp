@@ -90,6 +90,18 @@ void main_func(std::string input_filepath, std::string output_filepath, dynRLSLP
 
 int main(int argc, char *argv[])
 {
+
+    std::cout << "\033[41m";
+    #ifdef RELEASE_BUILD
+        std::cout << "Running in Release mode";
+    #elif defined(DEBUG_BUILD)
+    
+        std::cout << "Running in Debug mode";
+    #else
+        std::cout << "Running in Unknown mode";
+    #endif
+        std::cout << "\e[m" << std::endl;
+
     cmdline::parser p;
 
     p.add<std::string>("input_file_path", 'i', "Input text file path", true);

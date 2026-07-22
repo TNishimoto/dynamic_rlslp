@@ -38,8 +38,7 @@ namespace dynRLSLP
         inline static const uint64_t ANCESTOR_DEFAULT_CACHE_DEPTH_FOR_LONG_TEXT = 8;
         inline static const uint64_t SMALL_TEXT_LENGTH_THRESHOLD = 1000000000;
 
-
-        //inline static const uint64_t ANCESTOR_CACHE_DEPTH = 10;
+        // inline static const uint64_t ANCESTOR_CACHE_DEPTH = 10;
 
     public:
         inline static const uint64_t FINGERPRINT = 12737564839;
@@ -348,6 +347,9 @@ namespace dynRLSLP
          */
         uint64_t lce(uint64_t i, uint64_t j) const
         {
+            return this->lce_with_lexicographical_comparison(i, j).first;
+        }
+        std::pair<uint64_t, int8_t> lce_with_lexicographical_comparison(uint64_t i, uint64_t j) const{
             const DictionaryForLayeredRLSLP &small_dic = this->dynamic_grammar.get_dictionary();
 
             const GrammarForLayeredRLSLP &grammar = this->dynamic_grammar.get_grammar();
@@ -366,7 +368,7 @@ namespace dynRLSLP
             }
 
             std::pair<uint64_t, int8_t> result = FastLCE::lce(st1, st2, small_dic);
-            return result.first;
+            return result;
         }
 
         uint64_t reverse_lce(uint64_t i, uint64_t j) const
@@ -512,6 +514,69 @@ namespace dynRLSLP
                 return text;
             }
         }
+
+        /*
+        template <typename CHAR_TYPE = uint8_t>
+        std::vector<uint64_t> build_suffix_array() const
+        {
+            uint64_t text_size = this->size();
+            std::vector<CHAR_TYPE> text = this->to_vector_as<CHAR_TYPE>();
+
+            std::vector<uint64_t> suffix_array;
+            suffix_array.resize(text_size);
+            for (uint64_t i = 0; i < text_size; i++)
+            {
+                suffix_array[i] = i;
+            }
+
+            auto compare_function_for_short_substring = [&](uint64_t i, uint64_t j) -> int8_t
+            {
+                uint64_t threshold = 256;
+                uint64_t i_substr_length = std::min(text_size - i, threshold);
+                uint64_t j_substr_length = std::min(text_size - j, threshold);
+                uint64_t min_length = std::min(i_substr_length, j_substr_length);
+
+                for (uint64_t k = 0; k < min_length; k++)
+                {
+                    if (text[i + k] < text[j + k])
+                    {
+                        return -1;
+                    }
+                    else if (text[i + k] > text[j + k])
+                    {
+                        return 1;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                return 0;
+            };
+
+            uint64_t counter = 0;
+            uint64_t expected_comparison_max = text_size * std::log2(text_size);
+            uint64_t unit = 10000000;
+
+            std::sort(suffix_array.begin(), suffix_array.end(), [&](uint64_t a, uint64_t b)
+                      { 
+                        counter++;
+                        if(counter % unit == 0){
+                            std::cout << "Processed " << (counter / unit) << " / " << (expected_comparison_max / unit) << std::endl;
+                        }
+
+
+                        int8_t result = compare_function_for_short_substring(a, b);
+                        if(result == 0){
+                            auto [lce_length, lce_result] = this->lce_with_lexicographical_comparison(a, b);
+                            return lce_result < 0;
+                        }else{
+                            return result < 0;
+                        }
+                     });
+            return suffix_array;
+        }
+        */
 
         std::vector<uint8_t> to_vector() const
         {
@@ -1352,26 +1417,6 @@ namespace dynRLSLP
             std::cout << stool::Message::get_paragraph_string(message_paragraph) << "[END]" << std::endl;
         }
 
-        /*
-        void print_summary(int64_t message_paragraph = stool::Message::SHOW_MESSAGE) const
-        {
-            std::cout << stool::Message::get_paragraph_string(message_paragraph) << "Summary" << std::endl;
-            uint64_t text_length = this->size();
-            auto& grammar = this->dynamic_grammar.get_grammar();
-            auto& dictionary = this->dynamic_grammar.get_dictionary();
-            auto& random_bit_dictionary = this->dynamic_grammar.get_random_bit_dictionary();
-            std::string mode = this->dictionaryMode == DictionaryMode::Fast ? "Fast" : (this->dictionaryMode == DictionaryMode::Standard ? "Standard" : "Lightweight");
-
-
-            std::string parser = this->dynamic_grammar.get_grammar_parsing_type() == GrammarParsingType::RestrictedRecompression ? "Restricted Recompression" : "Signature Encoding";
-
-            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Parser: " << parser << std::endl;
-            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Mode: " << mode << std::endl;
-            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Seed: " << random_bit_dictionary.get_seed() << std::endl;
-            std::cout << stool::Message::get_paragraph_string(message_paragraph + 1) << "Text length: " << text_length << std::endl;
-        }
-        */
-
         /**
          * @brief Print the information about the locate query.
          */
@@ -1884,7 +1929,6 @@ namespace dynRLSLP
 
             std::unordered_set<NonterminalWithRelativeLevel> descendants = this->add_descendants2(tmp_set, this->ancestor_cache_depth);
 
-
             tmp_set.insert(descendants.begin(), descendants.end());
 
             tmp_set.insert(final_set_for_cache_update.removed_nonterminal_set.begin(), final_set_for_cache_update.removed_nonterminal_set.end());
@@ -1904,8 +1948,8 @@ namespace dynRLSLP
             if (this->dictionaryMode == DictionaryMode::Fast)
             {
 
-                //std::chrono::system_clock::time_point st1, st2;
-                //st1 = std::chrono::system_clock::now();
+                // std::chrono::system_clock::time_point st1, st2;
+                // st1 = std::chrono::system_clock::now();
 
                 std::vector<NonterminalWithRelativeLevel> changed_nonterminals_list = compute_changed_nonterminals(final_set_for_cache_update);
 
@@ -1974,56 +2018,9 @@ namespace dynRLSLP
                 this->__removed_nonterminals_list.clear();
 #endif
 
-                //st2 = std::chrono::system_clock::now();
-
-                /*
-                uint64_t micro_time = std::chrono::duration_cast<std::chrono::microseconds>(st2 - st1).count();
-                uint64_t xp = NodeOccurrenceQuery::FIND_TYPE_2_PRIMARY_OCCURRENCE_OF_NONTERMINAL_USING_LIMITED_DEPTH_COUNTER / (counter + 1);
-                std::cout << "callback_for_finished_update: " << micro_time << " / " << xp << std::endl;
-                NodeOccurrenceQuery::FIND_TYPE_2_PRIMARY_OCCURRENCE_OF_NONTERMINAL_USING_LIMITED_DEPTH_COUNTER = 0;
-                */
+                // st2 = std::chrono::system_clock::now();
             }
         }
-
-        /*
-       void add_descendants(NonterminalWithRelativeLevel sig, std::unordered_set<NonterminalWithRelativeLevel> &changed_nonterminals, uint64_t max_depth, uint64_t current_depth) const
-       {
-           ExplicitNonterminal explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(sig);
-           const std::vector<RLSLPRuleBody> &explicit_nonterminal_rule_list = this->dynamic_grammar.get_explicit_nonterminal_rule_list();
-
-           changed_nonterminals.insert(explicit_nonterminal);
-
-           std::cout << "," << sig << std::flush;
-
-           RLSLPRuleBody item = RLSLPRuleBody::decode_rule(sig, explicit_nonterminal_rule_list);
-           if (item.get_type() == RLSLPRuleType::Pair)
-           {
-               ExplicitNonterminal left_explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.A);
-               ExplicitNonterminal right_explicit_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.B);
-               if (current_depth < max_depth)
-               {
-                   add_descendants(left_explicit_nonterminal, changed_nonterminals, max_depth, current_depth + 1);
-                   add_descendants(right_explicit_nonterminal, changed_nonterminals, max_depth, current_depth + 1);
-               }
-           }
-           else if (item.get_type() == RLSLPRuleType::Power)
-           {
-               ExplicitNonterminal base_child_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.A);
-               if (current_depth < max_depth)
-               {
-                   add_descendants(base_child_nonterminal, changed_nonterminals, max_depth, current_depth + 1);
-               }
-           }
-           else if (item.get_type() == RLSLPRuleType::Nonterminal)
-           {
-               ExplicitNonterminal base_child_nonterminal = NonterminalFunctions::get_explicit_nonterminal(item.A);
-               if (current_depth < max_depth)
-               {
-                   add_descendants(base_child_nonterminal, changed_nonterminals, max_depth, current_depth + 1);
-               }
-           }
-       }
-       */
 
         std::unordered_set<ExplicitNonterminal> add_descendants2(const std::unordered_set<NonterminalWithRelativeLevel> &changed_nonterminals, uint64_t max_depth) const
         {
